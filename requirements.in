@@ -16,12 +16,10 @@ pandas
 pint
 pint-pandas
 pydot
-pytest
 python-dateutil
 pyxsteam
 scipy
 semver
-setuptools
 sphinx
 sphinx-argparse
 sphinx_rtd_theme
