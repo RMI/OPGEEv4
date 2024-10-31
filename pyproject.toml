@@ -57,6 +57,7 @@ opg = "opgee.tool:main"
 
 [tool.pdm]
 distribution = true
+src-layout = true
 
 [tool.pdm.scripts]
 test = {cmd = "pytest --basetemp=tests/tmp"}
@@ -66,3 +67,6 @@ dev = [
     "pytest>=8.3.3",
     "ruff>=0.7.1",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
