@@ -5,6 +5,7 @@
 # Copyright (c) 2024 the author and RMI
 # See the https://opensource.org/licenses/MIT for license details.
 #
+from abc import abstractmethod
 import glob
 import os
 from .config import getParam
@@ -24,6 +25,7 @@ class PostProcessor(OpgeeObject):
     def __init__(self):
         pass
 
+    @abstractmethod
     def run(self, analysis, field, results):
         # to avoid an import cycle, args have no type specs
 
