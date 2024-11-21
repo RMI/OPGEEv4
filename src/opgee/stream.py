@@ -15,11 +15,11 @@ import pint_pandas
 
 from . import ureg
 from .attributes import AttributeMixin
-from .core import XmlInstantiable, elt_name, magnitude, TemperaturePressure
-from .error import OpgeeException, ModelValidationError
+from .core import TemperaturePressure, XmlInstantiable, elt_name, magnitude
+from .error import ModelValidationError, OpgeeException
 from .log import getLogger
 from .table_manager import TableManager
-from .utils import getBooleanXML, coercible
+from .utils import coercible, getBooleanXML
 
 _logger = getLogger(__name__)
 
@@ -324,7 +324,7 @@ class Stream(AttributeMixin, XmlInstantiable):
 
     def flow_rate(self, name, phase):
         """
-        Set the value of the stream component `name` for `phase` to `rate`.
+        Get the value of the stream component `name` for `phase`.
 
         :param name: (str) the name of a stream component
         :param phase: (str) the name of a phase of matter ('gas', 'liquid' or 'solid')
