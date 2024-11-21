@@ -8,9 +8,10 @@
    See the https://opensource.org/licenses/MIT for license details.
 '''
 import argparse
-from contextlib import contextmanager
 import os
 import sys
+from contextlib import contextmanager
+from typing import List, TypeVar
 
 from .config import unixPath
 from .error import OpgeeException
@@ -121,7 +122,7 @@ def removeTree(path, ignore_errors=True):
 
 def filecopy(src, dst, removeDst=True):
     'Copy src file to dst, optionally removing dst first to avoid writing through symlinks'
-    from shutil import copy2        # equivalent to "cp -p"
+    from shutil import copy2  # equivalent to "cp -p"
 
     _logger.debug(f"copyfile({src}, dst, removeDst)")
     if removeDst and os.path.islink(dst):
@@ -249,8 +250,8 @@ def parseTrialString(string):
         res = res.union(set(r))
     return list(res)
 
-
-def flatten(listOfLists):
+T = TypeVar('T')
+def flatten(listOfLists: List[List[T]]) -> List[T]:
     """
     Flatten one level of nesting given a list of lists. That is, convert
     [[1, 2, 3], [4, 5, 6]] to [1, 2, 3, 4, 5, 6].

@@ -7,26 +7,27 @@
 # Junior University. See LICENSE.txt for license details.
 #
 import asyncio
-import dask
-from dask_jobqueue import SLURMCluster
-from dask.distributed import Client, LocalCluster, as_completed
-from glob import glob
 import os
+import re
+from glob import glob
+from typing import Any, Dict, List, Sequence
+
+import dask
 import pandas as pd
 import pint
-import re
-from typing import Sequence
+from dask.distributed import Client, LocalCluster, as_completed
+from dask_jobqueue import SLURMCluster
 
+from .config import getParam, getParamAsBoolean, getParamAsInt, pathjoin
+from .constants import CLUSTER_NONE, DETAILED_RESULT, ERROR_RESULT, SIMPLE_RESULT
 from .core import OpgeeObject, Timer
-from .config import getParam, getParamAsInt, getParamAsBoolean, pathjoin
-from .constants import CLUSTER_NONE, SIMPLE_RESULT, DETAILED_RESULT, ERROR_RESULT
-from .error import McsSystemError, AbstractMethodError
-from .field import FieldResult
+from .error import AbstractMethodError, McsSystemError
+from .field import Field, FieldResult
 from .log import getLogger, setLogFile
+from .mcs.simulation import FAILURES_CSV, RESULTS_CSV, Simulation
 from .model_file import extract_model
 from .post_processor import PostProcessor
-from .utils import flatten, pushd, mkdirs
-from .mcs.simulation import Simulation, RESULTS_CSV, FAILURES_CSV
+from .utils import flatten, mkdirs, pushd
 
 # To debug dask, uncomment the following 2 lines
 # import logging
@@ -298,7 +299,7 @@ class Manager(OpgeeObject):
         self.client = self.cluster = None
 
     def run_packets(self,
-                    packets: list[AbsPacket],
+                    packets: Sequence[AbsPacket],
                     result_type: str = None,
                     num_engines: int = 0,
                     minutes_per_task: int = 10):
@@ -364,8 +365,10 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
                                        analysis_names=[analysis_name],
                                        field_names=[field_name])
 
+        if mf.model is None:
+            return
         analysis = mf.model.get_analysis(analysis_name)
-        field = analysis.get_field(field_name)
+        field: Field = analysis.get_field(field_name)
         field.run(analysis)
         result = field.get_result(analysis, result_type)
 
@@ -391,7 +394,7 @@ def run_serial(model_xml_file, analysis_name, field_names, result_type=DETAILED_
     _logger.info(timer.stop())
     return results
 
-def save_results(results, output_dir, batch_num=None):
+def save_results(results: List[List[FieldResult]], output_dir, batch_num=None):
     """
     Save "detailed" results, comprising top-level carbon intensity (CI) from
     ``results``, and per-process energy use, emissions details, and total output
@@ -418,11 +421,11 @@ def save_results(results, output_dir, batch_num=None):
     error_rows = []
     stream_dfs = []
 
-    def create_dict(analysis, field, trial,
+    def create_dict(analysis: str, field: str, trial,
                     name=None, value=None, unit_col=True):
         # create the common portion of result dicts
-        d = {"analysis": analysis_name,
-             "field": field_name}
+        d: Dict[str, Any] = {"analysis": analysis,
+             "field": field}
 
         if trial is not None:
             d["trial"] = trial
