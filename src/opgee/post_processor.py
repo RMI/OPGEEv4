@@ -5,12 +5,14 @@
 # Copyright (c) 2024 the author and RMI
 # See the https://opensource.org/licenses/MIT for license details.
 #
-from abc import abstractmethod
 import glob
 import os
+from abc import abstractmethod
+
 from .config import getParam
 from .core import OpgeeObject
 from .error import AbstractMethodError, McsUserError
+
 
 class PostProcessor(OpgeeObject):
     """
@@ -118,6 +120,7 @@ class PostProcessor(OpgeeObject):
         """
         import inspect
         import os.path
+
         from .utils import loadModuleFromPath
 
         if not os.path.exists(path):
@@ -162,6 +165,7 @@ class PostProcessor(OpgeeObject):
         for dir in dirs:
             files = sorted(glob.glob(os.path.join(dir, '*.py')))
             for file in files:
+                print(f"\t >>>>>>>> LOADING {file} PLUGIN")
                 cls.load_plugin(file)
 
     @classmethod
