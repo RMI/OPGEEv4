@@ -142,27 +142,23 @@ def _get_xml_str(model_xml, analysis_name, field_name, with_model_elt=False):
     if field_name not in analysis_fields:
         raise OpgeeException(f"Field '{field_name}' was not referenced in Analysis '{analysis_name}'")
 
-    # might be the declaration of the field inside the <Analysis>, or the full field definition
-    field_decl = root.find(f'./Analysis[@name="{analysis_name}"]/Field[@name="{field_name}"]')
+    field_defs = root.xpath(f'/Model/Field[@name="{field_name}"]')
 
-    # <Field> under <Analysis> can be just a declaration, or an entire <Field> definition
-    # The difference is that <Field> definitions have sub-elements.
-    # This is the actual <Field> definition
-    if field_decl is not None and len(field_decl) > 0: # has children => a Field definition
-        field_def = field_decl
-    else:
-        field_defs = root.xpath(f'/Model/Field[@name="{field_name}"]')
+    # xpath() returns a list
+    if len(field_defs) > 1:
+        raise OpgeeException(f"Field '{field_name}' appears multiple times in model XML")
 
-        # xpath() returns a list
-        if len(field_defs) > 1:
-            raise OpgeeException(f"Field '{field_name}' appears multiple times in model XML")
-
-        field_def = field_defs[0]
+    field_def = field_defs[0]
 
     # Create a model with just the extracted Field and surrounding elements
     model = ET.Element('Model')
     analysis = ET.SubElement(model, 'Analysis', name=analysis_name)
+    analysis_attrs = root.xpath(f'/Model/Analysis[@name="{analysis_name}"]/A')
+    for attr in analysis_attrs:
+        analysis.append(deepcopy(attr))
+
     ET.SubElement(analysis, 'FieldRef', name=field_name)
+    
     model.append(deepcopy(field_def))
 
     xml_string = ET.tostring(model, pretty_print=True, encoding="unicode")
