@@ -12,7 +12,7 @@ import argparse
 import os
 import sys
 from contextlib import contextmanager
-from typing import TypeVar
+from typing import List, TypeVar
 
 from .config import unixPath
 from .error import OpgeeException
