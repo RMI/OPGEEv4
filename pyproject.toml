@@ -1,6 +1,6 @@
 [project]
 name = "opgee"
-version = "4.0.0"
+version = "4.0.1a1"
 description = "Python 3 package implementing life cycle analysis of oil fields"
 authors = [
     {name = "Michael Barlow", email = "mbarlow@rmi.org"},
