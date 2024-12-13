@@ -1,6 +1,6 @@
 [project]
 name = "opgee"
-version = "4.0a0"
+version = "4.0.1a1"
 description = "Python 3 package implementing life cycle analysis of oil fields"
 authors = [
     {name = "Michael Barlow", email = "mbarlow@rmi.org"},
@@ -33,13 +33,16 @@ dependencies = [
     "thermo>=0.3.0",
     "thermosteam>=0.45.0",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.11,<=3.12"
 readme = "README.md"
 license = {text = "MIT License"}
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 [build-system]
