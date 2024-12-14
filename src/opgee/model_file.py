@@ -351,13 +351,13 @@ class ModelFile(XMLFile):
             parent.remove(elt)
 
         # TBD: currently each worker overwrites the same file. Maybe just skip this next line? Skip if running MCS?
-        if not xml_string:
+        # if not xml_string:
             # function argument overrides config file variable
-            save_to_path = getParam('OPGEE.XmlSavePathname') if save_to_path is None else save_to_path
+            # save_to_path = getParam('OPGEE.XmlSavePathname') if save_to_path is None else save_to_path
 
             # Save the merged file if indicated
-            if save_to_path:
-                save_xml(save_to_path, base_root, backup=True)
+            # if save_to_path:
+                # save_xml(save_to_path, base_root, model=self.model, backup=True)
 
         # There must be exactly one <AttrDefs> as child of <Model>
         found = base_root.findall('AttrDefs')
