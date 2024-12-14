@@ -378,7 +378,8 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
         
         # temporary fix to add auditing to the individual fields
         save_to_path = getParam('OPGEE.XmlSavePathname')
-        if save_to_path:
+        should_save = getParam('OPGEE.SaveXml', raiseError=False) == "True"
+        if should_save and save_to_path:
             root = deepcopy(mf.root)
             field = mf.model.get_field(field_name)
             patts = ["//ProcessChoice", "//AttrDefs", f'//Field[@name!="{field_name}"]']

@@ -6,11 +6,29 @@
 # See the https://opensource.org/licenses/MIT for license details.
 #
 from abc import abstractmethod
+from dask.distributed import get_worker
 import glob
 import os
+
+from distributed import Variable
 from .config import getParam
 from .core import OpgeeObject
 from .error import AbstractMethodError, McsUserError
+from .log import getLogger
+
+_logger = getLogger(__name__)
+
+def _in_worker() -> bool:
+    """Check if the caller is running within a dask worker.
+
+    :return: True if inside a worker
+    :rtype: bool
+    """
+    try:
+        get_worker()
+        return True
+    except ValueError:
+        return False
 
 class PostProcessor(OpgeeObject):
     """
@@ -57,6 +75,7 @@ class PostProcessor(OpgeeObject):
 
     # List subclass instances in order defined on the command-line
     instances = []
+    DASK_VARNAME = "postprocessors"
 
     def __init__(self):
         pass
@@ -129,6 +148,9 @@ class PostProcessor(OpgeeObject):
         for name, subcls in inspect.getmembers(module):
             # Subclasses import PostProcessor, but we want only proper subclasses, not PostProcessor
             if subcls != PostProcessor and inspect.isclass(subcls) and issubclass(subcls, PostProcessor):
+                # do not instantiate an instance more than once
+                if any((isinstance(inst, subcls) for inst in cls.instances)):
+                    continue
                 instance = subcls()
                 cls.instances.append(instance)
                 return instance
@@ -166,7 +188,17 @@ class PostProcessor(OpgeeObject):
 
     @classmethod
     def run_post_processors(cls, analysis, field, result):
-        for instance in cls.instances:
+        # if this is run from inside a dask worker, the clas instances won't 
+        load_var = Variable("loaded")
+        try:
+            loaded = load_var.get("200ms")
+        except TimeoutError:
+            loaded = False
+        if _in_worker() and not loaded:
+            cls.load_all_plugins()
+            load_var.set(True)
+        for instance in cls.instances: # type: ignore
+            _logger.info(f"Running {instance.__class__} on ")
             instance.run(analysis, field, result)
 
     @classmethod
