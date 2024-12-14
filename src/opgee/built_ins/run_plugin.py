@@ -34,7 +34,7 @@ class RunCommand(SubcommandABC):
 
         partition = getParam("SLURM.Partition")
         min_per_task = getParam("SLURM.MinutesPerTask")
-        packet_size = getParamAsInt("OPGEE.MaxTrialsPerPacket")
+        packet_size = getParamAsInt("OPGEE.MaxTrialsPerPacket") # 10 default
 
         # User can specify fields by name, or the number of fields to run MCS for, but not both.
         group = parser.add_mutually_exclusive_group()
@@ -310,9 +310,9 @@ class RunCommand(SubcommandABC):
             )
 
         # TBD: unclear if this is necessary
-        setParam(
-            "OPGEE.XmlSavePathname", ""
-        )  # avoid writing /tmp/final.xml since no need
+        # setParam(
+        #     "OPGEE.XmlSavePathname", ""
+        # )  # avoid writing /tmp/final.xml since no need
 
         # TBD: decide if we need to support multiple analysis names (only 1st is used currently)
         analysis_name = (
