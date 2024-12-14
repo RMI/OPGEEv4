@@ -9,6 +9,7 @@
 import asyncio
 import os
 import re
+from copy import deepcopy
 from glob import glob
 from typing import Any, Dict, List, Sequence
 
@@ -18,9 +19,11 @@ import pint
 from dask.distributed import Client, LocalCluster, as_completed
 from dask_jobqueue import SLURMCluster
 
+from opgee.xml_utils import save_xml
+
 from .config import getParam, getParamAsBoolean, getParamAsInt, pathjoin
 from .constants import CLUSTER_NONE, DETAILED_RESULT, ERROR_RESULT, SIMPLE_RESULT
-from .core import OpgeeObject, Timer
+from .core import OpgeeObject, Timer, elt_name
 from .error import AbstractMethodError, McsSystemError
 from .field import Field, FieldResult
 from .log import getLogger, setLogFile
@@ -102,7 +105,7 @@ class FieldPacket(AbsPacket):
     def __init__(self,
                  model_xml_file: str,
                  analysis_name: str,             # TBD: might not be needed here
-                 field_names: Sequence[str]):
+                 field_names: Sequence[str]): # by default this is a list of 10 field names
         """
         Create a ``FieldPacket`` of OPGEE runs to perform on a worker process.
         FieldPackets are defined by a list of field names. The worker process will
@@ -367,10 +370,40 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
 
         if mf.model is None:
             return
+
         analysis = mf.model.get_analysis(analysis_name)
         field: Field = analysis.get_field(field_name)
         field.run(analysis)
         result = field.get_result(analysis, result_type)
+        
+        # temporary fix to add auditing to the individual fields
+        save_to_path = getParam('OPGEE.XmlSavePathname')
+        if save_to_path:
+            root = deepcopy(mf.root)
+            field = mf.model.get_field(field_name)
+            patts = ["//ProcessChoice", "//AttrDefs", f'//Field[@name!="{field_name}"]']
+            elem_gen = (el for els in (root.xpath(pat) for pat in patts) for el in els)
+            for del_elem in elem_gen:
+                del_elem.getparent().remove(del_elem)
+            for xproc in root.findall(".//Process"):
+                proc = field.find_process(xproc.attrib.get('class'), raiseError=False)
+                if proc is None or not proc.is_enabled():
+                    xproc.getparent().remove(xproc)
+            for xstream in root.findall(".//Stream"):
+                src = xstream.attrib.get("src")
+                dst = xstream.attrib.get("dst")
+                xml_name = elt_name(xstream) or f"{src} => {dst}"
+                stream = field.find_stream(xml_name, raiseError=False)
+                if stream is None or not stream.is_enabled():
+                    xstream.getparent().remove(xstream)
+            xfield = root.xpath(f"//Field[@name='{field_name}']")[0]
+            attrs = sorted(xfield.xpath("//Field/A"), key=lambda x: x.attrib.get("name"), reverse=True)
+            for attr in attrs:
+                xfield.remove(attr)
+                xfield.insert(0, attr)
+            
+            final_path = save_to_path.format("_".join([s.lower() for s in field.name.split(" ")]))
+            save_xml(final_path, root, overwrite=True)
 
     except Exception as e:
         result = FieldResult(analysis_name, field_name, ERROR_RESULT, error=str(e))
@@ -383,6 +416,7 @@ def run_serial(model_xml_file, analysis_name, field_names, result_type=DETAILED_
 
     results = []
 
+    # even though we pass 10 field names by default, each is passed singularly to `_run_field`
     for field_name, xml_string in extract_model(model_xml_file, analysis_name,
                                                 field_names):
         result = _run_field(analysis_name, field_name, xml_string, result_type)
