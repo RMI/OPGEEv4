@@ -3,8 +3,14 @@ import os
 import pytest
 from opgee.config import setParam, pathjoin
 from opgee.error import CommandlineError
+from opgee.post_processor import PostProcessor
 from opgee.tool import opg
 from .utils_for_tests import path_to_test_file, tempdir
+
+@pytest.fixture(autouse=True)
+def around_tests():
+    PostProcessor.decache()
+    yield
 
 def test_missing_output_dir(opgee_main):
     name = 'test'
@@ -108,6 +114,7 @@ def test_packetization(opgee_main):
                 f'--num-fields={fields}',
                 f'--packet-size={packet_size}',
                 f'--batch-start={batch_start}',
+                '-G'
                 ]
         print("opg ", ' '.join(args))
 

@@ -15,6 +15,12 @@ def test_model2(configure_logging_for_tests):
     model = load_test_model('test_model2.xml', class_path=path_to_test_file('user_processes.py'))
     return model
 
+@pytest.fixture(autouse=True)
+def decach_around_tests():
+    PostProcessor.decache()
+    yield
+    PostProcessor.decache()
+
 def test_simple_post_processor(test_model2):
     analysis = test_model2.get_analysis('Analysis1')
     field = test_model2.get_field('Field1')

@@ -143,11 +143,13 @@ class PostProcessor(OpgeeObject):
             raise McsUserError(f"Path to plugin '{path}' does not exist.")
 
         module = loadModuleFromPath(path)
+        found = False
 
         # Find the class, create an instance, and store it in cls.instances
-        for name, subcls in inspect.getmembers(module):
+        for _, subcls in inspect.getmembers(module):
             # Subclasses import PostProcessor, but we want only proper subclasses, not PostProcessor
             if subcls != PostProcessor and inspect.isclass(subcls) and issubclass(subcls, PostProcessor):
+                found = True
                 # do not instantiate an instance more than once
                 if any((isinstance(inst, subcls) for inst in cls.instances)):
                     continue
@@ -155,7 +157,8 @@ class PostProcessor(OpgeeObject):
                 cls.instances.append(instance)
                 return instance
 
-        raise McsUserError(f"No subclass of PostProcessor found in module '{path}'")
+        if not found:
+            raise McsUserError(f"No subclass of PostProcessor found in module '{path}'")
 
     @staticmethod
     def _getPluginDirs():
@@ -189,14 +192,15 @@ class PostProcessor(OpgeeObject):
     @classmethod
     def run_post_processors(cls, analysis, field, result):
         # if this is run from inside a dask worker, the clas instances won't 
-        load_var = Variable("loaded")
-        try:
-            loaded = load_var.get("200ms")
-        except TimeoutError:
-            loaded = False
-        if _in_worker() and not loaded:
-            cls.load_all_plugins()
-            load_var.set(True)
+        if _in_worker():
+            load_var = Variable("loaded")
+            try:
+                loaded = load_var.get("200ms")
+            except TimeoutError:
+                loaded = False
+            if not loaded:
+                cls.load_all_plugins()
+                load_var.set(True)
         for instance in cls.instances: # type: ignore
             _logger.info(f"Running {instance.__class__} on ")
             instance.run(analysis, field, result)
