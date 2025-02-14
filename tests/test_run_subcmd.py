@@ -114,7 +114,6 @@ def test_packetization(opgee_main):
                 f'--num-fields={fields}',
                 f'--packet-size={packet_size}',
                 f'--batch-start={batch_start}',
-                '-G'
                 ]
         print("opg ", ' '.join(args))
 

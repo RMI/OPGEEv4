@@ -4,6 +4,7 @@
 .. Copyright (c) 2021 Richard Plevin and Stanford University
    See the https://opensource.org/licenses/MIT for license details.
 """
+from opgee.constants import SIMPLE_RESULT
 from ..log import getLogger, setLogFile
 from ..subcommand import SubcommandABC
 
@@ -245,7 +246,7 @@ class RunCommand(SubcommandABC):
         num_tasks = args.num_tasks
         output_dir = args.output_dir
         packet_size = args.packet_size
-        result_type = args.result_type
+        result_type = args.result_type or SIMPLE_RESULT
         sim_dir = args.simulation_dir
         skip_fields = args.skip_fields
         start_with = args.start_with
