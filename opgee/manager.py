@@ -7,17 +7,17 @@
 # Junior University. See LICENSE.txt for license details.
 #
 import asyncio
-import os
-import re
 from copy import deepcopy
-from glob import glob
-from typing import Any, Dict, List, Sequence
-
 import dask
+from dask_jobqueue.slurm import SLURMCluster
+from dask.distributed import Client, SubprocessCluster, as_completed, TimeoutError
+from glob import glob
+import os
 import pandas as pd
 import pint
-from dask.distributed import Client, LocalCluster, as_completed
-from dask_jobqueue import SLURMCluster
+import re
+from typing import Any, Dict, List, Sequence
+
 
 from opgee.xml_utils import save_xml
 
@@ -210,7 +210,7 @@ class Manager(OpgeeObject):
         cls = self.__class__.__name__
         return f"<{cls} cluster:{self.cluster_type}>"
 
-    def start_cluster(self, num_engines=None, minutes_per_task=None):
+    def start_cluster(self, num_workers=None, minutes_per_task=None):
         cluster_type = self.cluster_type
 
         _logger.info(f"Creating {cluster_type} cluster")
@@ -255,17 +255,16 @@ class Manager(OpgeeObject):
             cluster = SLURMCluster(**arg_dict)
             _logger.debug(cluster.job_script())
 
-            _logger.debug(f"calling cluster.scale(cores={num_engines})")
-            cluster.scale(cores=num_engines)  # scale up to the desired total number of cores
+            _logger.debug(f"calling cluster.scale(cores={num_workers})")
+            cluster.scale(cores=num_workers)  # scale up to the desired total number of cores
 
         elif cluster_type == 'local':
             # Set processes=False and swap n_workers and threads_per_worker to use threads in one
             # process, which is helpful for debugging. Note that some packages are not thread-safe.
             # Running with n_workers=1, threads_per_worker=2 resulted in weird runtime errors in Chemical.
-            # self.cluster = cluster = LocalCluster(n_workers=1, threads_per_worker=num_engines, processes=False)
+            # self.cluster = cluster = SubprocessCluster(n_workers=1, threads_per_worker=num_engines, processes=False)
 
-            self.cluster = cluster = LocalCluster(n_workers=num_engines, threads_per_worker=1, processes=True,
-                                                  local_directory=local_dir)
+            self.cluster = cluster = SubprocessCluster(n_workers=num_workers, threads_per_worker=1, worker_kwargs=dict(local_directory=local_dir))
 
         else:
             raise McsSystemError(f"Unknown cluster type '{cluster_type}'. Valid options are 'slurm' and 'local'.")
@@ -279,7 +278,7 @@ class Manager(OpgeeObject):
                 # print('.', sep='', end='')
                 client.wait_for_workers(1, 15) # wait for 1 worker with 15 sec timeout
                 break
-            except (dask.distributed.TimeoutError, asyncio.exceptions.TimeoutError) as e:
+            except (TimeoutError, asyncio.exceptions.TimeoutError) as e:
                 pass
                 #print(e) # prints "Only 0/1 workers arrived after 15"
 
@@ -303,7 +302,7 @@ class Manager(OpgeeObject):
 
     def run_packets(self,
                     packets: Sequence[AbsPacket],
-                    result_type: str = None,
+                    result_type: str = SIMPLE_RESULT,
                     num_engines: int = 0,
                     minutes_per_task: int = 10):
         """
@@ -318,8 +317,6 @@ class Manager(OpgeeObject):
         """
         timer = Timer('Manager.run_packets')
 
-        result_type = result_type or SIMPLE_RESULT
-
         # This is useful mainly for testing. Any real MCS will use a proper cluster.
         if self.cluster_type == CLUSTER_NONE:
             for pkt in packets:
@@ -330,7 +327,7 @@ class Manager(OpgeeObject):
 
         else:
             # N.B. start_cluster saves client in self.client and returns it as well
-            client = self.start_cluster(num_engines=num_engines, minutes_per_task=minutes_per_task)
+            client = self.start_cluster(num_workers=num_engines, minutes_per_task=minutes_per_task)
 
             # Start the worker processes on all available CPUs.
             futures = client.map(lambda pkt: pkt.run(result_type),packets)

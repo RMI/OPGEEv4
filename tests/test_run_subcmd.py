@@ -8,7 +8,7 @@ from opgee.tool import opg
 from .utils_for_tests import path_to_test_file, tempdir
 
 @pytest.fixture(autouse=True)
-def around_tests():
+def decache_post_plugins():
     PostProcessor.decache()
     yield
 

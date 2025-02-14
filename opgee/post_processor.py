@@ -75,7 +75,8 @@ class PostProcessor(OpgeeObject):
 
     # List subclass instances in order defined on the command-line
     instances = []
-    DASK_VARNAME = "postprocessors"
+    
+    _plugins_loaded: bool = False
 
     def __init__(self):
         pass
@@ -143,22 +144,19 @@ class PostProcessor(OpgeeObject):
             raise McsUserError(f"Path to plugin '{path}' does not exist.")
 
         module = loadModuleFromPath(path)
-        found = False
 
         # Find the class, create an instance, and store it in cls.instances
         for _, subcls in inspect.getmembers(module):
             # Subclasses import PostProcessor, but we want only proper subclasses, not PostProcessor
             if subcls != PostProcessor and inspect.isclass(subcls) and issubclass(subcls, PostProcessor):
-                found = True
-                # do not instantiate an instance more than once
+                # ensure that only one instance of a given class is registered
                 if any((isinstance(inst, subcls) for inst in cls.instances)):
                     continue
                 instance = subcls()
                 cls.instances.append(instance)
                 return instance
 
-        if not found:
-            raise McsUserError(f"No subclass of PostProcessor found in module '{path}'")
+        raise McsUserError(f"No subclass of PostProcessor found in module '{path}'")
 
     @staticmethod
     def _getPluginDirs():
@@ -181,32 +179,24 @@ class PostProcessor(OpgeeObject):
 
         :return: nothing
         """
-        if not (dirs := cls._getPluginDirs()):
+        if not (dirs := cls._getPluginDirs()) or cls._plugins_loaded:
             return
 
         for dir in dirs:
             files = sorted(glob.glob(os.path.join(dir, '*.py')))
             for file in files:
                 cls.load_plugin(file)
+        cls._plugins_loaded = True
 
     @classmethod
     def run_post_processors(cls, analysis, field, result):
-        # if this is run from inside a dask worker, the clas instances won't 
-        if _in_worker():
-            load_var = Variable("loaded")
-            try:
-                loaded = load_var.get("200ms")
-            except TimeoutError:
-                loaded = False
-            if not loaded:
-                cls.load_all_plugins()
-                load_var.set(True)
-        for instance in cls.instances: # type: ignore
-            _logger.info(f"Running {instance.__class__} on ")
+        cls.load_all_plugins()
+        for instance in cls.instances:
             instance.run(analysis, field, result)
 
     @classmethod
     def save_post_processor_results(cls, output_dir):
+        cls.load_all_plugins()
         for instance in cls.instances:
             instance.save(output_dir)
             instance.clear()
