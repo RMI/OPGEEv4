@@ -385,6 +385,10 @@ class Field(Container):
         # have defaults that depend on Analysis attributes, e.g., "Analysis.gwp_horizon".
         # TODO: decide whether to give up that feature and drop analysis keyword
         SmartDefault.apply_defaults(self)
+
+        # recache attributes to pick up changes made by smart defaults
+        self.cache_attributes()
+
         self.resolve_process_choices()  # allows smart defaults to set process choices
 
         # we use networkx to reason about the directed graph of Processes (nodes)
@@ -1349,21 +1353,6 @@ class Field(Container):
         """
         return self.process_dict.values()
 
-    # TBD: not used currently
-    # def process_choice_node(self, name, raiseError=True):
-    #     """
-    #     Find a `ProcessChoice` instance by name.
-    #
-    #     :param name: (str) the name of the choice element
-    #     :param raiseError: (bool) whether to raise an error if `name` is not found
-    #     :return: (opgee.ProcessChoice) the instance found, or None
-    #     """
-    #     choice_node = self.process_choice_dict.get(name)
-    #     if choice_node is None and raiseError:
-    #         raise OpgeeException(f"Process choice '{name}' not found in field '{self.name}'")
-    #
-    #     return choice_node
-
     def find_stream(self, name, raiseError=True):
         """
         Find the Stream with `name` in this Field. If not found: if
@@ -1449,6 +1438,10 @@ class Field(Container):
             streams=streams,
             process_choice_dict=process_choice_dict,
         )
+        
+        # need to recache process attributes to pick up smart defaults
+        for proc in field.processes():
+            proc.cache_attributes()
         return field
 
     def collect_processes(self):

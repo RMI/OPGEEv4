@@ -7,19 +7,22 @@
 # Junior University. See LICENSE.txt for license details.
 #
 import asyncio
-from copy import deepcopy
-import dask
-from dask_jobqueue.slurm import SLURMCluster
-from dask.distributed import Client, SubprocessCluster, as_completed, TimeoutError
-from glob import glob
 import os
+import re
+from copy import deepcopy
+from glob import glob
+from pathlib import Path
+from typing import Any, Dict, List, Sequence
+from xml.etree import Element
+import lxml.etree as ET
+
+import dask
 import pandas as pd
 import pint
-import re
-from typing import Any, Dict, List, Sequence
+from dask.distributed import Client, SubprocessCluster, TimeoutError, as_completed
+from dask_jobqueue.slurm import SLURMCluster
 
-
-from opgee.xml_utils import save_xml
+from opgee.xml_utils import field_to_xml, save_xml
 
 from .config import getParam, getParamAsBoolean, getParamAsInt, pathjoin
 from .constants import CLUSTER_NONE, DETAILED_RESULT, ERROR_RESULT, SIMPLE_RESULT
@@ -377,31 +380,10 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
         save_to_path = getParam('OPGEE.XmlSavePathname')
         should_save = getParam('OPGEE.SaveXml', raiseError=False) == "True"
         if should_save and save_to_path:
-            root = deepcopy(mf.root)
-            field = mf.model.get_field(field_name)
-            patts = ["//ProcessChoice", "//AttrDefs", f'//Field[@name!="{field_name}"]']
-            elem_gen = (el for els in (root.xpath(pat) for pat in patts) for el in els)
-            for del_elem in elem_gen:
-                del_elem.getparent().remove(del_elem)
-            for xproc in root.findall(".//Process"):
-                proc = field.find_process(xproc.attrib.get('class'), raiseError=False)
-                if proc is None or not proc.is_enabled():
-                    xproc.getparent().remove(xproc)
-            for xstream in root.findall(".//Stream"):
-                src = xstream.attrib.get("src")
-                dst = xstream.attrib.get("dst")
-                xml_name = elt_name(xstream) or f"{src} => {dst}"
-                stream = field.find_stream(xml_name, raiseError=False)
-                if stream is None or not stream.is_enabled():
-                    xstream.getparent().remove(xstream)
-            xfield = root.xpath(f"//Field[@name='{field_name}']")[0]
-            attrs = sorted(xfield.xpath("//Field/A"), key=lambda x: x.attrib.get("name"), reverse=True)
-            for attr in attrs:
-                xfield.remove(attr)
-                xfield.insert(0, attr)
-            
+            field_xml = field_to_xml(field, mf.root)
             final_path = save_to_path.format("_".join([s.lower() for s in field.name.split(" ")]))
-            save_xml(final_path, root, overwrite=True)
+            os.makedirs(os.path.dirname(final_path), exist_ok=True)
+            save_xml(final_path, field_xml, overwrite=True)
 
     except Exception as e:
         result = FieldResult(analysis_name, field_name, ERROR_RESULT, error=str(e))
