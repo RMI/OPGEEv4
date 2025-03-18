@@ -151,6 +151,7 @@ class AcidGasRemoval(Process):
         CO2_feed_mass_rate = gas_input_stream.gas_flow_rate("CO2")
         CH4_feed_mass_rate = gas_input_stream.gas_flow_rate("C1")
         H2S_feed_mass_rate = gas_input_stream.gas_flow_rate("H2S")
+        # TODO: reconsider how we calculate gases to send to demethanizer
         CO2_to_demethanizer = min(0.05 * CO2_feed_mass_rate, 0.001 * CH4_feed_mass_rate)
         H2S_to_demethanizer = ureg.Quantity(0.0, "tonne/day")
 
@@ -203,6 +204,7 @@ class AcidGasRemoval(Process):
 
         # emissions
         self.set_combustion_emissions()
+        # TODO: consider more intelligent splitting into emissions categories
         self.emissions.set_from_stream(EM_FUGITIVES, gas_fugitives)
 
 
