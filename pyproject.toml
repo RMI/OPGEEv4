@@ -56,11 +56,11 @@ Downloads = "https://github.com/arbrandt/OPGEEv4.git"
 [project.scripts]
 opg = "opgee.tool:main"
 
+[tool.setuptools.packages.find]
+include = ["opgee*"]
+
 [tool.uv]
 package = true
-
-[tool.pdm.scripts]
-test = {cmd = "pytest --basetemp=tests/tmp"}
 
 [dependency-groups]
 dev = [

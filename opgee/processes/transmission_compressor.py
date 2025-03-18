@@ -8,12 +8,12 @@
 #
 import math
 
-from .compressor import Compressor
-from .shared import get_energy_carrier
 from ..core import TemperaturePressure
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
+from .compressor import Compressor
+from .shared import get_energy_carrier
 
 _logger = getLogger(__name__)
 
@@ -26,7 +26,7 @@ class TransmissionCompressor(Process):
 
         # TODO: avoid process names in contents.
         self._required_inputs = [
-            "gas",
+            "exported gas",
         ]
 
         self._required_outputs = [
@@ -63,7 +63,7 @@ class TransmissionCompressor(Process):
     def run(self, analysis):
         self.print_running_msg()
 
-        input = self.find_input_stream("gas")
+        input = self.find_input_stream("exported gas")
 
         if input.is_uninitialized():
             return

@@ -32,7 +32,7 @@ class HeavyOilUpgrading(Process):
 
         self._required_outputs = [
             "oil for storage",
-            "gas",
+            "gas process",
             "gas for flaring",
             "petrocoke",
         ]
