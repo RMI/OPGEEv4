@@ -900,7 +900,7 @@
 		<Process class="TransmissionCompressor"/>
 		<Process class="Boundary" boundary="Production"/>
 		<Stream src="Before" dst="TransmissionCompressor">
-			<Contains>gas</Contains>
+			<Contains>exported gas</Contains>
 			<Component name="CO2" phase="gas">119.35794</Component>
 			<Component name="H2" phase="gas">18.04195</Component>
 			<Component name="H2S" phase="gas">18.48612</Component>
@@ -1258,7 +1258,7 @@
 		</Stream>
 
 		<Stream src="HeavyOilUpgrading" dst="ProductionBoundary" name="process gas">
-			<Contains>gas</Contains>
+			<Contains>gas process</Contains>
 		</Stream>
 
 		<Stream src="HeavyOilUpgrading" dst="ProductionBoundary" name="petrocoke">

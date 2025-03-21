@@ -13,7 +13,6 @@ from copy import deepcopy
 from glob import glob
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
-from xml.etree import Element
 import lxml.etree as ET
 
 import dask
