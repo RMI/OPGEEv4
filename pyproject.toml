@@ -21,7 +21,7 @@ dependencies = [
     "numpy>=1.26.4",
     "pandas>=2.2.3",
     "pint>=0.24.3",
-    "pint-pandas>=0.6.2",
+    "pint-pandas==0.6.2",
     "pydot>=3.0.2",
     "python-dateutil>=2.9.0.post0",
     "pyxsteam>=0.4.9",
