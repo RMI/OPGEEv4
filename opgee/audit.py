@@ -1,12 +1,18 @@
-from typing import Optional
+from typing import Optional, List, Dict
 import lxml.etree as ET
 from pathlib import Path
+import logging
 
 from opgee.field import Field
 from opgee.model_file import ModelFile
 from opgee.attributes import AttrDefs
 from opgee.core import A
+from opgee.smart_defaults import SmartDefault
 from opgee.xml_utils import field_to_xml
+from opgee.config import getParam
+from opgee.log import getLogger
+
+_logger = getLogger(__name__)
 
 
 def create_audit_xml(field: Field, model_file: ModelFile, output_path: Optional[str] = None) -> str:
@@ -14,13 +20,10 @@ def create_audit_xml(field: Field, model_file: ModelFile, output_path: Optional[
     Create an XML audit file that captures the current state of a field model,
     annotating attribute sources (default, smart default).
 
-    Args:
-        field: The Field object to audit.
-        model_file: The ModelFile object containing the original field definition.
-        output_path: Optional path to save the XML file.
-
-    Returns:
-        The XML string representation of the audit.
+    :param field: The Field object to audit.
+    :param model_file: The ModelFile object containing the original field definition.
+    :param output_path: Optional path to save the XML file.
+    :return: The XML string representation of the audit.
     """
     # Get Attribute Definitions instance
     attr_defs = AttrDefs.get_instance()
@@ -143,3 +146,134 @@ def create_audit_xml(field: Field, model_file: ModelFile, output_path: Optional[
             f.write(xml_str)
 
     return xml_str
+
+
+def generate_field_audit_report(field: Field, original_field_element: ET._Element) -> List[Dict]:
+    """
+    Generate a report detailing the source of each field-level attribute's final value.
+    
+    :param field: The final Field object (after run attempt)
+    :param original_field_element: The lxml.etree._Element representing the original <Field> definition from input XML
+    :return: List of dictionaries, each containing information about an attribute:
+             {
+                 'attribute': attribute name,
+                 'value': attribute value,
+                 'unit': attribute unit (if applicable),
+                 'source': source of the value ('input', 'default', 'smart_default', or 'unknown')
+             }
+    """
+    # Get the AttrDefs instance
+    attr_defs = AttrDefs.get_instance()
+    if not attr_defs:
+        _logger.warning("Attribute definitions (AttrDefs) not loaded. Source information will be incomplete.")
+        return []
+    
+    # Get the ClassAttrs for the "Field" class
+    class_attrs = attr_defs.class_attrs("Field", raiseError=False)
+    if not class_attrs:
+        _logger.warning("ClassAttrs for 'Field' not found. Source information will be incomplete.")
+        return []
+    
+    # Extract original attributes defined via <A> tags directly under original_field_element
+    original_attrs = {a.get('name'): a.text for a in original_field_element.xpath('./A') if a.get('name')}
+    
+    # Initialize empty list for report rows
+    report_rows = []
+    
+    # Iterate through all AttrDef objects defined within the "Field" ClassAttrs
+    for attr_def in class_attrs.attr_defs:
+        attr_name = attr_def.name
+        
+        # Get the corresponding A object from the final field state
+        param_obj = field.attr_dict.get(attr_name)
+        
+        # Skip if param_obj is None or not an instance of A
+        if param_obj is None or not isinstance(param_obj, A):
+            continue
+        
+        # Determine the source label
+        if attr_name in original_attrs:
+            source = "input"
+        else:
+            # Not in original input, check if it matches the static default
+            static_default = attr_def.default
+            if static_default is not None:
+                try:
+                    if param_obj.value == static_default:
+                        source = "default"
+                    else:
+                        # Doesn't match static default, check SmartDefault
+                        if attr_name in SmartDefault.registry:
+                            source = "smart_default"
+                        else:
+                            source = "unknown"
+                except Exception:
+                    # Comparison issues (e.g., units), check SmartDefault
+                    if attr_name in SmartDefault.registry:
+                        source = "smart_default"
+                    else:
+                        source = "unknown"
+            else:
+                # No static default, check SmartDefault
+                if attr_name in SmartDefault.registry:
+                    source = "smart_default"
+                else:
+                    source = "unknown"
+        
+        # Create a dictionary for the row
+        row = {
+            'attribute': attr_name,
+            'value': param_obj.value,  # Consider converting pint Quantities to magnitude for CSV
+            'unit': str(param_obj.unit) if param_obj.unit else '',
+            'source': source
+        }
+        
+        # Append row to report_rows
+        report_rows.append(row)
+    
+    return report_rows
+
+
+def audit_field(field: Optional[Field], mf: Optional[ModelFile]) -> Optional[List[Dict]]:
+    """
+    Controller function for field auditing based on configuration settings.
+    
+    :param field: The Field object (potentially None)
+    :param mf: The ModelFile object (potentially None)
+    :return: A list of audit data dictionaries or None if auditing is disabled or fails
+    """
+    # Read configuration
+    config_level = getParam('OPGEE.AuditLevel', raiseError=False)
+    
+    # If config_level is None, return None
+    if config_level is None:
+        return None
+    
+    # If field or mf is None, skip audit
+    if field is None or mf is None:
+        _logger.debug("Audit skipped: Field or ModelFile object is None.")
+        return None
+    
+    # Check if field-level auditing is enabled
+    if config_level in ["FieldLevel", "Full"]:
+        # Get original root
+        original_xml_root = mf.getroot()
+        if original_xml_root is None:
+            _logger.error(f"Audit failed for field '{field.name}': Could not get XML root from ModelFile.")
+            return None
+        
+        # Find original field element
+        original_field_elem_list = original_xml_root.xpath(f".//Field[@name='{field.name}']")
+        if not original_field_elem_list:
+            _logger.error(f"Audit failed for field '{field.name}': Original field element not found in XML.")
+            return None
+        
+        original_field_elem = original_field_elem_list[0]
+        
+        # Call the report generator
+        report_data = generate_field_audit_report(field, original_field_elem)
+        return report_data
+    
+    # If config_level is Graph or other value, return None for now
+    # Future implementation could add graph generation here
+    return None
