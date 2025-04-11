@@ -251,6 +251,9 @@ def field_to_xml(field, model_root: ET.Element):
         del_elem.getparent().remove(del_elem)
     for xproc in root.findall(".//Process"):
         proc = field.find_process(xproc.attrib.get('class'), raiseError=False)
+        # Add the instance name to the XML element for easier identification
+        if proc:
+            xproc.set("name", proc.name)
         if proc is None or not proc.is_enabled():
             xproc.getparent().remove(xproc)
             continue
