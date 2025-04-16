@@ -1,0 +1,15 @@
+<!-- tests/files/audit_model.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<Model>
+  <Field name="AuditTestField_Input">
+    <!-- API has static default -->
+    <A name="API">25.5</A>
+    <!-- GOR has static and smart defaults -->
+    <A name="GOR">1500</A>
+    <!-- depth is omitted (has static default) -->
+    <!-- WOR is omitted (has smart default) -->
+  </Field>
+  <Analysis name="AuditTestAnalysis">
+     <FieldRef name="AuditTestField_Input"/>
+  </Analysis>
+</Model>
