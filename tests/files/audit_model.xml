@@ -1,7 +1,6 @@
-<!-- tests/files/audit_model.xml -->
 <?xml version="1.0" encoding="UTF-8"?>
 <Model>
-  <Field name="AuditTestField_Input">
+  <Field name="AuditTestField_Input" modifies="template">
     <!-- API has static default -->
     <A name="API">25.5</A>
     <!-- GOR has static and smart defaults -->

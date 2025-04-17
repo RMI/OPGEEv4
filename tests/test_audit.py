@@ -1,85 +1,59 @@
+from typing import TYPE_CHECKING, Any
 import pytest
-import lxml.etree as ET
-from unittest.mock import patch, MagicMock # Keep MagicMock for SmartDefault patch
 
-# Keep existing imports for Field, generate_field_audit_report, A, SmartDefault
-from opgee.field import Field
-from opgee.audit import generate_field_audit_report
-from opgee.core import A
-from opgee.smart_defaults import SmartDefault
-
-# Import model loading utilities
+from opgee.audit import AuditRow, _generate_field_audit_report
 from opgee.model_file import ModelFile
-from .utils_for_tests import path_to_test_file
+from opgee.field import Field
+from opgee.units import ureg
+from tests.utils_for_tests import path_to_test_file
 
 
-def test_generate_field_audit_report(): # Use existing fixture
-    """
-    Test that generate_field_audit_report correctly identifies attribute sources
-    using a real model loaded from XML.
-    """
-    # AttrDefs will be loaded automatically when ModelFile is instantiated.
-    model_file_path = path_to_test_file('test_model.xml')
-    mf = ModelFile(model_file_path, use_default_model=False) # use_default_model=False prevents merging default model XML
+@pytest.fixture(scope="module")
+def audit_model_file(configure_logging_for_tests):
+    model_path = path_to_test_file("audit_model.xml")
 
-    # Get the Field object from the fixture-provided model
-    model = mf.model # Model object from fixture
-    field = model.get_field('test')
+    mf = ModelFile(model_path, use_default_model=True)
 
-    # Get the original XML element for the specific field
-    original_xml_root = mf.root
+    yield mf
+
+
+def find_audit_row(report_data: list[AuditRow], attr_name: str) -> AuditRow:
+    for row in report_data:
+        if row["attribute"] == attr_name:
+            return row
+    pytest.fail(f"Attribute '{attr_name} not found in audit report:  {report_data}")
+
+
+def test_audit_source_input(audit_model_file: ModelFile):
+    """Verify explicitly set attributes have source='input'."""
+
+    model = audit_model_file.model
+    field = model.get_field("AuditTestField_Input")
+
+    original_xml_root = audit_model_file.root
     original_field_elem_list = original_xml_root.xpath(f".//Field[@name='{field.name}']")
-    assert original_field_elem_list, f"Field '{field.name}' not found in {model_file_path}"
+    assert len(original_field_elem_list) == 1
     original_field_elem = original_field_elem_list[0]
 
-    # --- Add a mock attribute to test the 'smart_default' path ---
-    # Create a dummy attribute that wasn't in the input XML or static defaults
-    #smart_attr_name = 'hypothetical_smart_attr'
-    #field.attr_dict[smart_attr_name] = A(smart_attr_name, value=123.45, unit='kg')
-    # Mock the SmartDefault registry just for this attribute
-    #mock_smart_registry = {smart_attr_name: MagicMock()}
-    # --- End of mock attribute setup ---
+    report_data = _generate_field_audit_report(field, original_field_elem)
 
-    # Patch the SmartDefault registry for the test duration
-    #with patch('opgee.audit.SmartDefault.registry', mock_smart_registry):
-        # Call the function under test
-        #result = generate_field_audit_report(field, original_field_elem)
+    api_row = find_audit_row(report_data, "API")
+    assert api_row["source"] == "input"
+    # Consider approx for float comparison, handle units
+    assert api_row["value"] == ureg.Quantity(25.5, "degAPI")
+    assert str(api_row["unit"]) == "degAPI"  # Check unit string
 
-    result = generate_field_audit_report(field, original_field_elem_list)
-    # Verify the results
-    assert isinstance(result, list)
-    assert len(result) > 0 # Ensure some results are returned
+    gor_row = find_audit_row(report_data, "GOR")
+    assert gor_row["source"] == "input"
+    assert gor_row["value"] == ureg.Quantity(1500, "scf/bbl_oil")
+    assert str(gor_row["unit"]) == "scf/bbl_oil"
 
-    # Create a dictionary for easy lookup
-    sources = {row['attribute']: row['source'] for row in result}
-    values = {row['attribute']: row['value'] for row in result}
+    # Check 'depth' which should use its static default
+    depth_row = find_audit_row(report_data, "depth")
+    assert depth_row["source"] == "smart_default"
+    assert depth_row["value"] == ureg.Quantity(7122.0, "ft")  # Default from attributes.xml
 
-    # --- Assertions ---
-    # Attributes defined in test_model.xml -> 'input'
-    assert sources.get('API') == 'input'
-    assert sources.get('age') == 'input'
-    assert sources.get('GOR') == 'input'
-    assert sources.get('depth') == 'input'
-    assert sources.get('country') == 'input'
-    assert sources.get('offshore') == 'input'
-    # Check a value to be sure it's reading correctly
-    assert values.get('API') == 32.8
-
-    # Attributes *not* in test_model.xml but with static defaults in attributes.xml -> 'default'
-    # Check if the default value was actually assigned during Field init
-    assert 'downhole_pump' in field.attr_dict
-    assert field.attr_dict['downhole_pump'].value == 1 # Default is 1
-    assert sources.get('downhole_pump') == 'default'
-
-    assert 'water_reinjection' in field.attr_dict
-    assert field.attr_dict['water_reinjection'].value == 1 # Default is 1
-    assert sources.get('water_reinjection') == 'default'
-
-    # Check the mocked smart default attribute
-    assert sources.get(smart_attr_name) == 'smart_default'
-    assert values.get(smart_attr_name) == 123.45
-
-    # Example of an attribute with a default value of 0 that wasn't specified
-    assert 'gas_lifting' in field.attr_dict
-    assert field.attr_dict['gas_lifting'].value == 0 # Default is 0
-    assert sources.get('gas_lifting') == 'default'
+    # WOR should use smart default
+    water_reinj_row =find_audit_row(report_data, "water_reinjection")
+    assert water_reinj_row["source"] == "static_default"
+    assert water_reinj_row["value"] == 1
