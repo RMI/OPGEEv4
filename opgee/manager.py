@@ -21,6 +21,7 @@ import pint
 from dask.distributed import Client, SubprocessCluster, TimeoutError, as_completed
 from dask_jobqueue.slurm import SLURMCluster
 
+from opgee.audit import audit_field, audit_required
 from opgee.xml_utils import field_to_xml, save_xml
 
 from .config import getParam, getParamAsBoolean, getParamAsInt, pathjoin
@@ -360,6 +361,7 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
     """
     from .model_file import ModelFile
 
+    audit_level = getParam("OPGEE.AuditLevel", raiseError=False)
     try:
         mf = ModelFile.from_xml_string(xml_string, add_stream_components=False,
                                        use_class_path=False,
@@ -374,18 +376,12 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
         field: Field = analysis.get_field(field_name)
         field.run(analysis)
         result = field.get_result(analysis, result_type)
-        
-        # temporary fix to add auditing to the individual fields
-        save_to_path = getParam('OPGEE.XmlSavePathname')
-        should_save = getParam('OPGEE.SaveXml', raiseError=False) == "True"
-        if should_save and save_to_path:
-            field_xml = field_to_xml(field, mf.root)
-            final_path = save_to_path.format("_".join([s.lower() for s in field.name.split(" ")]))
-            os.makedirs(os.path.dirname(final_path), exist_ok=True)
-            save_xml(final_path, field_xml, overwrite=True)
 
     except Exception as e:
         result = FieldResult(analysis_name, field_name, ERROR_RESULT, error=str(e))
+
+    if audit_required(audit_level) and mf and field:
+        audit_field(field, mf, audit_level)
 
     return result
 

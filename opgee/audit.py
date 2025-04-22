@@ -1,6 +1,8 @@
 """Provides functionality for auditing the source of field attribute values."""
 
-from typing import Literal, TypedDict
+from enum import Enum, Flag, auto
+from pathlib import Path
+from typing import Literal, TypeGuard, TypedDict
 
 from lxml import etree
 from pint import Quantity
@@ -9,6 +11,7 @@ from opgee.attributes import AttrDefs
 from opgee.config import getParam
 from opgee.core import A
 from opgee.field import Field
+from opgee.graph import write_process_diagram
 from opgee.log import getLogger
 from opgee.model_file import ModelFile
 from opgee.smart_defaults import SmartDefault
@@ -18,13 +21,60 @@ _logger = getLogger(__name__)
 
 class AuditRow(TypedDict):
     """Represents a single row in the field attribute audit report."""
+
     source: Literal["input", "static_default", "smart_default", "unknown"]
     attribute: str
     value: str | int | float | bool | Quantity
     unit: str | None
 
 
-def _generate_field_audit_report(field: Field, original_field_element: etree._Element) -> list[AuditRow]:
+class AuditFlag(Flag):
+    NONE = 0
+    FIELD = auto()
+    PROCESSES = auto()
+    ALL = FIELD | PROCESSES
+
+
+AuditLevelStr = Literal["all", "field", "processes", "none"]
+
+AUDIT_LEVELS: tuple[AuditLevelStr, ...] = ("field", "processes", "all", "none")
+
+
+def audit_required(audit_level: str | None):
+    if audit_level is None:
+        return False
+
+    _audit_level = audit_level.strip().lower()
+    if not _is_audit_level_str(audit_level):
+        _logger.warning(f"Invalid AuditLevel {audit_level}. Ignoring...")
+        return False
+
+    if _audit_level == "none":
+        return False
+    else:
+        return True
+
+
+def _is_audit_level_str(level: str) -> TypeGuard[AuditLevelStr]:
+    return level in AUDIT_LEVELS
+
+
+def _translate_audit_level(
+    level: AuditLevelStr | None,
+) -> AuditFlag:
+    if level == "all":
+        return AuditFlag.ALL
+    elif level == "field":
+        return AuditFlag.FIELD
+    elif level == "processes":
+        return AuditFlag.PROCESSES
+    else:
+        return AuditFlag.NONE
+
+
+def _generate_field_audit_report(
+    field: Field, original_field_element: etree._Element
+) -> list[AuditRow]:
     """
     Generate a report detailing the source of each field-level attribute's final value.
 
@@ -35,18 +85,24 @@ def _generate_field_audit_report(field: Field, original_field_element: etree._El
     # Get the AttrDefs instance
     attr_defs = AttrDefs.get_instance()
     if not attr_defs:
-        _logger.warning("Attribute definitions (AttrDefs) not loaded. Source information will be incomplete.")
+        _logger.warning(
+            "Attribute definitions (AttrDefs) not loaded. Source information will be incomplete."
+        )
         return []
 
     # Get the ClassAttrs for the "Field" class
     class_attrs = attr_defs.class_attrs("Field", raiseError=False)
     if not class_attrs:
-        _logger.warning("ClassAttrs for 'Field' not found. Source information will be incomplete.")
+        _logger.warning(
+            "ClassAttrs for 'Field' not found. Source information will be incomplete."
+        )
         return []
 
     # Extract original attributes defined via <A> tags directly under original_field_element
     original_attrs: dict[str, str] = {
-        a.get("name"): a.text for a in original_field_element.xpath("./A") if a.get("name")
+        a.get("name"): a.text
+        for a in original_field_element.xpath("./A")
+        if a.get("name")
     }
 
     # Initialize empty list for report rows
@@ -75,11 +131,15 @@ def _generate_field_audit_report(field: Field, original_field_element: etree._El
         else:
             source = "unknown"
 
+        attr_value = param_obj.value
+        if isinstance(attr_value, Quantity):
+            attr_value = attr_value.m
+
         report_rows.append(
             AuditRow(
                 source=source,
                 attribute=attr_name,
-                value=param_obj.value,
+                value=repr(attr_value),
                 unit=str(param_obj.unit) if param_obj.unit else "",
             )
         )
@@ -87,45 +147,40 @@ def _generate_field_audit_report(field: Field, original_field_element: etree._El
     return report_rows
 
 
-def audit_field(field: Field | None, mf: ModelFile | None) -> list[dict] | None:
+def audit_field(
+    field: Field, mf: ModelFile, audit_level: str | None = None
+) -> list[AuditRow] | None:
     """
     Control field auditing based on configuration settings.
 
-    :param field: The Field object (potentially None)
-    :param mf: The ModelFile object (potentially None)
+    :param field: The Field object
+    :param mf: The ModelFile object
+    :param audit_level: The audit level string
     :return: A list of audit data dictionaries or None if auditing is disabled or fails.
     """
-    # Read configuration
-    config_level = getParam("OPGEE.AuditLevel", raiseError=False)
+    if not (audit_level is None or _is_audit_level_str(audit_level)):
+        raise ValueError(
+            f'Invalid AuditLevel. Must be one of "all", "none", "field", or "processes" ({audit_level} provided)'
+        )
+    audit_flag = _translate_audit_level(audit_level)
 
-    # If config_level is None, return None
-    if config_level is None:
+    if audit_flag == AuditFlag.NONE:
         return None
-
-    # If field or mf is None, skip audit
-    if field is None or mf is None:
-        _logger.debug("Audit skipped: Field or ModelFile object is None.")
-        return None
-
-    # Check if field-level auditing is enabled
-    if config_level in {"FieldLevel", "Full"}:
-        # Get original root
-        original_xml_root = mf.getroot()
-        if original_xml_root is None:
-            _logger.error(f"Audit failed for field '{field.name}': Could not get XML root from ModelFile.")
+    report_data: list[AuditRow] = []
+    if audit_flag & AuditFlag.FIELD:
+        root = mf.root
+        elem_list = root.xpath(f".//Field[@name='{field.name}']")
+        if not elem_list:
+            _logger.error(
+                f"Audit failed for field '{field.name}': Original field element not found in XML."
+            )
             return None
+        field_elem: etree._Element = elem_list[0]
+        report_data = _generate_field_audit_report(field, field_elem)
 
-        # Find original field element
-        original_field_elem_list = original_xml_root.xpath(f".//Field[@name='{field.name}']")
-        if not original_field_elem_list:
-            _logger.error(f"Audit failed for field '{field.name}': Original field element not found in XML.")
-            return None
+    if audit_flag & AuditFlag.PROCESSES:
+        out_dir = getParam("OPGEE.output_dir") or "results"
+        final_path = Path(out_dir) / f"{field.name}_process_graph.png"
+        write_process_diagram(field, final_path)
 
-        original_field_elem = original_field_elem_list[0]
-
-        # Call the report generator
-        return _generate_field_audit_report(field, original_field_elem)
-
-    # If config_level is Graph or other value, return None for now
-    # Future implementation could add graph generation here
-    return None
+    return report_data

@@ -279,6 +279,7 @@ class RunCommand(SubcommandABC):
         if not output_dir:
             raise CommandlineError("Non-MCS runs must specify -o/--output-dir")
 
+        setParam("OPGEE.output_dir", output_dir )
         mkdirs(output_dir)
 
         if not (field_names or analysis_names):
