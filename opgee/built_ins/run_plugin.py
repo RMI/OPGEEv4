@@ -4,9 +4,9 @@
 .. Copyright (c) 2021 Richard Plevin and Stanford University
    See the https://opensource.org/licenses/MIT for license details.
 """
-from opgee.constants import SIMPLE_RESULT
-from ..log import getLogger, setLogFile
+from ..constants import SIMPLE_RESULT
 from ..subcommand import SubcommandABC
+from ..log import getLogger, setLogFile
 
 _logger = getLogger(__name__)
 
@@ -28,7 +28,6 @@ class RunCommand(SubcommandABC):
             CLUSTER_TYPES,
             DEFAULT_RESULT_TYPE,
             DETAILED_RESULT,
-            SIMPLE_RESULT,
             USER_RESULT_TYPES,
         )
         from ..utils import ParseCommaList, positive_int
@@ -226,11 +225,11 @@ class RunCommand(SubcommandABC):
     def run(self, args, tool):
         from ..config import setParam
         from ..error import CommandlineError
-        from ..manager import FieldPacket, Manager, TrialPacket, save_results
+        from ..model_file import model_analysis_names, fields_for_analysis
+        from ..manager import Manager, save_results,TrialPacket, FieldPacket
+        from ..utils import parseTrialString, mkdirs
         from ..mcs.simulation import Simulation, model_file_path
-        from ..model_file import fields_for_analysis, model_analysis_names
         from ..post_processor import PostProcessor
-        from ..utils import mkdirs, parseTrialString
 
         analysis_names = args.analyses or []
         batch_size = args.batch_size
@@ -293,9 +292,9 @@ class RunCommand(SubcommandABC):
             )
 
         # TBD: unclear if this is necessary
-        # setParam(
-        #     "OPGEE.XmlSavePathname", ""
-        # )  # avoid writing /tmp/final.xml since no need
+        setParam(
+            "OPGEE.XmlSavePathname", ""
+        )  # avoid writing /tmp/final.xml since no need
 
         # TBD: decide if we need to support multiple analysis names (only 1st is used currently)
         analysis_name = (

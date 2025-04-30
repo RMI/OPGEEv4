@@ -19,7 +19,7 @@ from .core import XmlInstantiable, elt_name, TemperaturePressure
 from .error import OpgeeException, ModelValidationError
 from .log import getLogger
 from .table_manager import TableManager
-from .utils import coercible, getBooleanXML
+from .utils import getBooleanXML, coercible
 
 _logger = getLogger(__name__)
 

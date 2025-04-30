@@ -7,33 +7,32 @@
 # Junior University. See LICENSE.txt for license details.
 #
 import asyncio
-import os
-import re
-from copy import deepcopy
+import dask
+from dask_jobqueue.slurm import SLURMCluster
+from dask.distributed import Client, SubprocessCluster, TimeoutError, as_completed
 from glob import glob
+import os
+from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Sequence
 import lxml.etree as ET
 
-import dask
 import pandas as pd
 import pint
-from dask.distributed import Client, SubprocessCluster, TimeoutError, as_completed
-from dask_jobqueue.slurm import SLURMCluster
+import re
+from typing import Sequence
 
 from opgee.audit import audit_field, audit_required
-from opgee.xml_utils import field_to_xml, save_xml
 
-from .config import getParam, getParamAsBoolean, getParamAsInt, pathjoin
-from .constants import CLUSTER_NONE, DETAILED_RESULT, ERROR_RESULT, SIMPLE_RESULT
-from .core import OpgeeObject, Timer, elt_name
-from .error import AbstractMethodError, McsSystemError
+from .core import OpgeeObject, Timer
+from .config import getParam, getParamAsInt, getParamAsBoolean, pathjoin
+from .constants import CLUSTER_NONE, SIMPLE_RESULT, DETAILED_RESULT, ERROR_RESULT
+from .error import  McsSystemError, AbstractMethodError
 from .field import Field, FieldResult
 from .log import getLogger, setLogFile
-from .mcs.simulation import FAILURES_CSV, RESULTS_CSV, Simulation
 from .model_file import extract_model
 from .post_processor import PostProcessor
-from .utils import flatten, mkdirs, pushd
+from .utils import flatten, pushd, mkdirs
+from .mcs.simulation import Simulation, RESULTS_CSV, FAILURES_CSV
 
 # To debug dask, uncomment the following 2 lines
 # import logging
@@ -375,7 +374,7 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
             return
 
         analysis = mf.model.get_analysis(analysis_name)
-        field: Field = analysis.get_field(field_name)
+        field = analysis.get_field(field_name)
         field.run(analysis)
         result = field.get_result(analysis, result_type)
 
@@ -407,7 +406,7 @@ def run_serial(model_xml_file, analysis_name, field_names, result_type=DETAILED_
     _logger.info(timer.stop())
     return results
 
-def save_results(results: List[List[FieldResult]], output_dir, batch_num=None):
+def save_results(results, output_dir, batch_num=None):
     """
     Save "detailed" results, comprising top-level carbon intensity (CI) from
     ``results``, and per-process energy use, emissions details, and total output
@@ -435,10 +434,10 @@ def save_results(results: List[List[FieldResult]], output_dir, batch_num=None):
     stream_dfs = []
     audit_dfs = []
 
-    def create_dict(analysis: str, field: str, trial,
+    def create_dict(analysis, field, trial,
                     name=None, value=None, unit_col=True):
         # create the common portion of result dicts
-        d: Dict[str, Any] = {"analysis": analysis,
+        d = {"analysis": analysis,
              "field": field}
 
         if trial is not None:
