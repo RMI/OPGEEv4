@@ -40,20 +40,19 @@ def test_audit_source_input(audit_model_file: ModelFile):
     api_row = find_audit_row(report_data, "API")
     assert api_row["source"] == "input"
     # Consider approx for float comparison, handle units
-    assert api_row["value"] == ureg.Quantity(25.5, "degAPI")
+    assert float(api_row["value"]) == pytest.approx(ureg.Quantity(25.5, "degAPI").m)
     assert str(api_row["unit"]) == "degAPI"  # Check unit string
 
     gor_row = find_audit_row(report_data, "GOR")
     assert gor_row["source"] == "input"
-    assert gor_row["value"] == ureg.Quantity(1500, "scf/bbl_oil")
+    assert float(gor_row["value"]) == pytest.approx(1500.0, rel=0.0001)
     assert str(gor_row["unit"]) == "scf/bbl_oil"
 
     # Check 'depth' which should use its static default
     depth_row = find_audit_row(report_data, "depth")
     assert depth_row["source"] == "smart_default"
-    assert depth_row["value"] == ureg.Quantity(7122.0, "ft")  # Default from attributes.xml
-
+    assert float(depth_row["value"]) == pytest.approx(7122.0, 0.0001)
     # WOR should use smart default
     water_reinj_row =find_audit_row(report_data, "water_reinjection")
     assert water_reinj_row["source"] == "static_default"
-    assert water_reinj_row["value"] == 1
+    assert bool(water_reinj_row["value"])

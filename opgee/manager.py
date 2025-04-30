@@ -362,6 +362,8 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
     from .model_file import ModelFile
 
     audit_level = getParam("OPGEE.AuditLevel", raiseError=False)
+    mf = None
+    field = None
     try:
         mf = ModelFile.from_xml_string(xml_string, add_stream_components=False,
                                        use_class_path=False,
@@ -381,7 +383,9 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
         result = FieldResult(analysis_name, field_name, ERROR_RESULT, error=str(e))
 
     if audit_required(audit_level) and mf and field:
-        audit_field(field, mf, audit_level)
+        audit_data = audit_field(field, mf, audit_level)
+        if audit_data is not None:
+            result.audit_data = audit_data
 
     return result
 
@@ -429,6 +433,7 @@ def save_results(results: List[List[FieldResult]], output_dir, batch_num=None):
     energy_output_rows = []
     error_rows = []
     stream_dfs = []
+    audit_dfs = []
 
     def create_dict(analysis: str, field: str, trial,
                     name=None, value=None, unit_col=True):
@@ -470,6 +475,8 @@ def save_results(results: List[List[FieldResult]], output_dir, batch_num=None):
             emission_cols.append(result.emissions)
             stream_dfs.append(result.streams)
             gas_dfs.append(result.gases)
+            if result.audit_data is not None:
+                audit_dfs.append(result.audit_data)
 
             # Add a row for total energy output
             d = create_dict(analysis_name, field_name, trial,
@@ -495,6 +502,10 @@ def save_results(results: List[List[FieldResult]], output_dir, batch_num=None):
     if error_rows:
         df = pd.DataFrame(data=error_rows)
         _to_csv(df, 'errors')
+
+    if audit_dfs:
+        df = pd.concat(audit_dfs, axis="rows")
+        _to_csv(df, "field_audit")
 
     def _save_dfs(dfs, file_prefix):
         # Column name is field name, but we change this to 'value'

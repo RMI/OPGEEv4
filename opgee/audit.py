@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal, TypeGuard, TypedDict
 
 from lxml import etree
+import pandas as pd
 from pint import Quantity
 
 from opgee.attributes import AttrDefs
@@ -22,9 +23,10 @@ _logger = getLogger(__name__)
 class AuditRow(TypedDict):
     """Represents a single row in the field attribute audit report."""
 
-    source: Literal["input", "static_default", "smart_default", "unknown"]
+    field: str
     attribute: str
-    value: str | int | float | bool | Quantity
+    source: Literal["input", "static_default", "smart_default", "unknown"]
+    value: str
     unit: str | None
 
 
@@ -82,7 +84,6 @@ def _generate_field_audit_report(
     :param original_field_element: The lxml.etree._Element representing the original <Field> definition from input XML
     :return: A list of dictionaries detailing attribute sources.
     """
-    # Get the AttrDefs instance
     attr_defs = AttrDefs.get_instance()
     if not attr_defs:
         _logger.warning(
@@ -90,7 +91,6 @@ def _generate_field_audit_report(
         )
         return []
 
-    # Get the ClassAttrs for the "Field" class
     class_attrs = attr_defs.class_attrs("Field", raiseError=False)
     if not class_attrs:
         _logger.warning(
@@ -98,30 +98,24 @@ def _generate_field_audit_report(
         )
         return []
 
-    # Extract original attributes defined via <A> tags directly under original_field_element
     original_attrs: dict[str, str] = {
         a.get("name"): a.text
         for a in original_field_element.xpath("./A")
         if a.get("name")
     }
 
-    # Initialize empty list for report rows
     report_rows: list[AuditRow] = []
 
-    # Iterate through all AttrDef objects defined within the "Field" ClassAttrs
     for attr_def in class_attrs.attr_dict.values():
         attr_name = attr_def.name
-
-        # Get the corresponding A object from the final field state
         param_obj = field.attr_dict.get(attr_name)
 
-        # Skip if param_obj is None or not an instance of A
         if param_obj is None or not isinstance(param_obj, A):
             continue
 
         source: Literal["input", "static_default", "smart_default", "unknown"]
         static_default = attr_def.default
-        # Determine the source label
+
         if attr_name in original_attrs:
             source = "input"
         elif attr_name in SmartDefault.registry:
@@ -137,8 +131,9 @@ def _generate_field_audit_report(
 
         report_rows.append(
             AuditRow(
-                source=source,
+                field=field.name,
                 attribute=attr_name,
+                source=source,
                 value=repr(attr_value),
                 unit=str(param_obj.unit) if param_obj.unit else "",
             )
@@ -149,7 +144,7 @@ def _generate_field_audit_report(
 
 def audit_field(
     field: Field, mf: ModelFile, audit_level: str | None = None
-) -> list[AuditRow] | None:
+) -> pd.DataFrame | None:
     """
     Control field auditing based on configuration settings.
 
@@ -183,4 +178,4 @@ def audit_field(
         final_path = Path(out_dir) / f"{field.name}_process_graph.png"
         write_process_diagram(field, final_path)
 
-    return report_data
+    return pd.DataFrame(report_data) if report_data else None
