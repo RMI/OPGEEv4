@@ -33,7 +33,7 @@ dependencies = [
   "thermo>=0.3.0",
   "thermosteam>=0.45.0",
 ]
-requires-python = ">=3.11,<=3.13"
+requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "MIT License" }
 classifiers = [
