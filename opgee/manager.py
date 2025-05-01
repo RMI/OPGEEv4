@@ -9,7 +9,7 @@
 import asyncio
 import dask
 from dask_jobqueue import SLURMCluster
-from dask.distributed import Client SubprocessCluster, as_completed, TimeoutError
+from dask.distributed import Client, SubprocessCluster, as_completed, TimeoutError
 from glob import glob
 import os
 import pandas as pd
