@@ -180,4 +180,3 @@ class PostProcessor(OpgeeObject):
         for instance in cls.instances:
             instance.save(output_dir)
             instance.clear()
-
