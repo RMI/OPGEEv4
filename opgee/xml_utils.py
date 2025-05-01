@@ -10,7 +10,6 @@ from io import StringIO
 
 from lxml import etree as ET
 
-from .core import elt_name
 from .error import OpgeeException
 from .log import getLogger
 
@@ -233,47 +232,3 @@ def merge_siblings(elt1, elt2):
         return # fails silently
 
     merge_elements(elt1, elt2[:])
-
-def field_to_xml(field, model_root: ET.Element):
-    """Generate the xml representation from a field.
-
-
-    :param field: the field object
-    :param model_root: the root of the model xml element
-
-    :return: the xml Element representing the field
-    """
-    root = deepcopy(model_root)
-    field_name = field.name
-    patts = ["//ProcessChoice", "//AttrDefs", f'//Field[@name!="{field_name}"]']
-    elem_gen = (el for els in (root.xpath(pat) for pat in patts) for el in els)
-    for del_elem in elem_gen:
-        del_elem.getparent().remove(del_elem)
-    for xproc in root.findall(".//Process"):
-        proc = field.find_process(xproc.attrib.get('class'), raiseError=False)
-        if proc is None or not proc.is_enabled():
-            xproc.getparent().remove(xproc)
-            continue
-        for attr, value in proc.attr_dict.items():
-            xattr = xproc.find(f'.//A[@name="{attr}"]')
-            if xattr is None:
-                xattr = ET.SubElement(xproc, "A", attrib={"name": attr})
-            xattr.text = str(value)
-    for xstream in root.findall(".//Stream"):
-        src = xstream.attrib.get("src")
-        dst = xstream.attrib.get("dst")
-        xml_name = elt_name(xstream) or f"{src} => {dst}"
-        stream = field.find_stream(xml_name, raiseError=False)
-        if stream is None or not stream.is_enabled():
-            xstream.getparent().remove(xstream)
-    xfield = root.xpath(f"//Field[@name='{field_name}']")[0]
-    for attr, value in field.attr_dict.items():
-        xattr = xfield.find(f'.//A[@name="{attr}"]')
-        if xattr is None:
-            xattr = ET.SubElement(xfield, "A", attrib={"name": attr})
-        xattr.text = str(value)
-    attrs = sorted(xfield.xpath("//Field/A"), key=lambda x: x.attrib.get("name"), reverse=True)
-    for attr in attrs:
-        xfield.remove(attr)
-        xfield.insert(0, attr)
-    return root

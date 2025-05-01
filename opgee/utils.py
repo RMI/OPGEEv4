@@ -11,7 +11,6 @@ import argparse
 import os
 import sys
 from contextlib import contextmanager
-from typing import List, TypeVar
 
 from .config import unixPath
 from .error import OpgeeException
@@ -250,8 +249,7 @@ def parseTrialString(string):
         res = res.union(set(r))
     return list(res)
 
-T = TypeVar('T')
-def flatten(listOfLists: List[List[T]]) -> List[T]:
+def flatten(listOfLists):
     """
     Flatten one level of nesting given a list of lists. That is, convert
     [[1, 2, 3], [4, 5, 6]] to [1, 2, 3, 4, 5, 6].
