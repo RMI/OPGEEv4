@@ -58,17 +58,18 @@ def audit_required(audit_level: str | None):
 
 
 def _is_audit_level_str(level: str) -> TypeGuard[AuditLevelStr]:
-    return level in AUDIT_LEVELS
+    return level.strip().lower() in AUDIT_LEVELS
 
 
 def _translate_audit_level(
     level: AuditLevelStr | None,
 ) -> AuditFlag:
-    if level == "all":
+    _level = str(level).strip().lower()
+    if _level == "all":
         return AuditFlag.ALL
-    elif level == "field":
+    elif _level == "field":
         return AuditFlag.FIELD
-    elif level == "processes":
+    elif _level == "processes":
         return AuditFlag.PROCESSES
     else:
         return AuditFlag.NONE

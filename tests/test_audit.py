@@ -1,7 +1,14 @@
+import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 import pytest
 
-from opgee.audit import AuditRow, _generate_field_audit_report
+from pandas import DataFrame
+
+from opgee import analysis
+from opgee.audit import AuditRow, _generate_field_audit_report, audit_field
+from opgee.config import getParam, setParam, getConfig
+from opgee.constants import DETAILED_RESULT
 from opgee.model_file import ModelFile
 from opgee.field import Field
 from opgee.units import ureg
@@ -28,10 +35,12 @@ def test_audit_source_input(audit_model_file: ModelFile):
     """Verify explicitly set attributes have source='input'."""
 
     model = audit_model_file.model
-    field = model.get_field("AuditTestField_Input")
+    field = model.get_field("audit-field")
 
     original_xml_root = audit_model_file.root
-    original_field_elem_list = original_xml_root.xpath(f".//Field[@name='{field.name}']")
+    original_field_elem_list = original_xml_root.xpath(
+        f".//Field[@name='{field.name}']"
+    )
     assert len(original_field_elem_list) == 1
     original_field_elem = original_field_elem_list[0]
 
@@ -40,7 +49,7 @@ def test_audit_source_input(audit_model_file: ModelFile):
     api_row = find_audit_row(report_data, "API")
     assert api_row["source"] == "input"
     # Consider approx for float comparison, handle units
-    assert float(api_row["value"]) == pytest.approx(ureg.Quantity(25.5, "degAPI").m)
+    assert float(api_row["value"]) == pytest.approx(25.5, rel=0.0001)
     assert str(api_row["unit"]) == "degAPI"  # Check unit string
 
     gor_row = find_audit_row(report_data, "GOR")
@@ -53,6 +62,62 @@ def test_audit_source_input(audit_model_file: ModelFile):
     assert depth_row["source"] == "smart_default"
     assert float(depth_row["value"]) == pytest.approx(7122.0, 0.0001)
     # WOR should use smart default
-    water_reinj_row =find_audit_row(report_data, "water_reinjection")
+    water_reinj_row = find_audit_row(report_data, "water_reinjection")
     assert water_reinj_row["source"] == "static_default"
     assert bool(water_reinj_row["value"])
+
+
+# it should only write the pngs if AuditLevel == "processes"
+def test_audit_field(audit_model_file: ModelFile, tmp_path):
+    _ = getConfig()
+    results_dir = Path(os.path.join(tmp_path, "audit_results"))
+    results_dir.mkdir(exist_ok=True, parents=True)
+    setParam("OPGEE.output_dir", str(results_dir))
+    model = audit_model_file.model
+    analysis = model.get_analysis("audit-analysis")
+    field = model.get_field("audit-field")
+    field.run(analysis)
+    audit_data = audit_field(field, audit_model_file, "Processes")
+    assert audit_data is None
+    png_path = results_dir / f"{field.name}_process_graph.png"
+    assert png_path.exists()
+    png_path.unlink()
+
+    audit_data = audit_field(field, audit_model_file, "Field")
+    assert not png_path.exists()
+    assert audit_data is not None
+
+    audit_data = audit_field(field, audit_model_file, "All")
+    assert audit_data is not None
+    assert png_path.exists()
+    png_path.unlink()
+
+    audit_data = audit_field(field, audit_model_file)
+    assert audit_data is None
+    assert not png_path.exists()
+
+
+def test_audit_save_results(tmp_path: Path, audit_model_file: ModelFile, opgee_main):
+    _ = getConfig(createDefault=True)
+
+    results_dir = Path(os.path.join(tmp_path, "audit_results"))
+    results_dir.mkdir(exist_ok=True, parents=True)
+
+    setParam("OPGEE.output_dir", str(results_dir))
+    setParam("OPGEE.AuditLevel", "Field")
+
+    audit_xml_path = path_to_test_file("audit_model.xml")
+    cmd = [
+        "run",
+        "-m", audit_xml_path,
+        "-a", "audit-analysis",
+        "-r", "detailed",
+        "-o", results_dir
+    ]
+
+
+# it should only write the csv if AuditLevel == "field"
+
+# it should not perform any auditing if AuditLevel == "none" or is missing
+# it should write pngs and csvs if AuditLevel == "all"
+# it should audit if Field.run fails

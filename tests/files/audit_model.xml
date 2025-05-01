@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Model>
-  <Field name="AuditTestField_Input" modifies="template">
+  <Field name="audit-field" modifies="template">
+
     <!-- API has static default -->
     <A name="API">25.5</A>
+
     <!-- GOR has static and smart defaults -->
     <A name="GOR">1500</A>
+
     <!-- depth is omitted (has static default) -->
     <!-- WOR is omitted (has smart default) -->
   </Field>
-  <Analysis name="AuditTestAnalysis">
-     <FieldRef name="AuditTestField_Input"/>
+  <Analysis name="audit-analysis">
+     <FieldRef name="audit-field"/>
   </Analysis>
 </Model>
