@@ -57,7 +57,7 @@ class GraphCommand(SubcommandABC):
     def run(self, args, tool):
         from ..error import CommandlineError
         from ..graph import write_model_diagram, write_class_diagram, write_process_diagram
-        From ..model_file import ModelFile
+        from ..model_file import ModelFile
 
         use_default_model = not args.no_default_model
         mf = ModelFile(args.xml_file, use_default_model=use_default_model)
