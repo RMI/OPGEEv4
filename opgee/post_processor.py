@@ -7,7 +7,6 @@
 #
 import glob
 import os
-
 from .config import getParam
 from .core import OpgeeObject
 from .error import AbstractMethodError, McsUserError
@@ -181,3 +180,4 @@ class PostProcessor(OpgeeObject):
         for instance in cls.instances:
             instance.save(output_dir)
             instance.clear()
+
