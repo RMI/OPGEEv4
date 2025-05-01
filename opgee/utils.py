@@ -249,6 +249,7 @@ def parseTrialString(string):
         res = res.union(set(r))
     return list(res)
 
+
 def flatten(listOfLists):
     """
     Flatten one level of nesting given a list of lists. That is, convert

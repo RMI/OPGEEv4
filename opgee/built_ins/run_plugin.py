@@ -228,7 +228,7 @@ class RunCommand(SubcommandABC):
         from ..error import CommandlineError
         from ..model_file import model_analysis_names, fields_for_analysis
         from ..manager import Manager, save_results, TrialPacket, FieldPacket
-        from ..utils import parseTrialString, mkdirs 
+        from ..utils import parseTrialString, mkdirs
         from ..mcs.simulation import Simulation, model_file_path
         from ..post_processor import PostProcessor
 
