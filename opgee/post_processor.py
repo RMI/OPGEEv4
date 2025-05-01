@@ -5,30 +5,12 @@
 # Copyright (c) 2024 the author and RMI
 # See the https://opensource.org/licenses/MIT for license details.
 #
-from abc import abstractmethod
-from dask.distributed import get_worker
 import glob
 import os
 
-from distributed import Variable
 from .config import getParam
 from .core import OpgeeObject
 from .error import AbstractMethodError, McsUserError
-from .log import getLogger
-
-_logger = getLogger(__name__)
-
-def _in_worker() -> bool:
-    """Check if the caller is running within a dask worker.
-
-    :return: True if inside a worker
-    :rtype: bool
-    """
-    try:
-        get_worker()
-        return True
-    except ValueError:
-        return False
 
 class PostProcessor(OpgeeObject):
     """
@@ -81,7 +63,6 @@ class PostProcessor(OpgeeObject):
     def __init__(self):
         pass
 
-    @abstractmethod
     def run(self, analysis, field, results):
         # to avoid an import cycle, args have no type specs
 
