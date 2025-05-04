@@ -18,6 +18,7 @@ import re
 from typing import Sequence
 
 
+from .audit import audit_required, audit_field
 from .core import OpgeeObject, Timer
 from .config import getParam, getParamAsInt, getParamAsBoolean, pathjoin
 from .constants import CLUSTER_NONE, SIMPLE_RESULT, DETAILED_RESULT, ERROR_RESULT

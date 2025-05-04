@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from pandas import DataFrame
+import pandas as pd
 
 from opgee import analysis
 from opgee.audit import AuditRow, _generate_field_audit_report, audit_field
@@ -97,23 +98,43 @@ def test_audit_field(audit_model_file: ModelFile, tmp_path):
     assert not png_path.exists()
 
 
-def test_audit_save_results(tmp_path: Path, audit_model_file: ModelFile, opgee_main):
+def audit_setup_and_run(tmp_path: Path, opgee, audit_level: str = "none"):
     _ = getConfig(createDefault=True)
-
     results_dir = Path(os.path.join(tmp_path, "audit_results"))
     results_dir.mkdir(exist_ok=True, parents=True)
 
     setParam("OPGEE.output_dir", str(results_dir))
-    setParam("OPGEE.AuditLevel", "Field")
+    setParam("OPGEE.AuditLevel", audit_level)
 
     audit_xml_path = path_to_test_file("audit_model.xml")
+    mf = ModelFile.from_xml_string(open(audit_xml_path).read())
+    field = mf.model.get_field("audit-field")
     cmd = [
         "run",
-        "-m", audit_xml_path,
+        "-m", str(audit_xml_path),
         "-a", "audit-analysis",
         "-r", "detailed",
-        "-o", results_dir
+        "-o", str(results_dir)
     ]
+
+    opgee.run(argList=cmd)
+    return results_dir / "field_audit.csv", results_dir / f"{field.name}_process_graph.png"
+
+def test_audit_save_results(tmp_path: Path, audit_model_file: ModelFile, opgee_main):
+    audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "Field")
+    assert not proc_graph_path.exists()
+    assert audit_path.exists()
+    audit_df = pd.read_csv(audit_path)
+    inputs = audit_df[audit_df['source'] == 'input']
+    vals = inputs['value'].values
+    assert len(vals == 2)
+    assert vals[0] == '25.5'
+    assert vals[1] == '1500.0'
+
+def test_audit_save_procs(tmp_path: Path, opgee_main):
+    audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "Processes")
+    assert proc_graph_path.exists()
+    assert not audit_path.exists()
 
 
 # it should only write the csv if AuditLevel == "field"
