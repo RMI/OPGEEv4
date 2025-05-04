@@ -8,17 +8,15 @@
 #
 import asyncio
 import dask
-from dask_jobqueue.slurm import SLURMCluster
-from dask.distributed import Client, SubprocessCluster, as_completed
+from dask_jobqueue import SLURMCluster
+from dask.distributed import Client, SubprocessCluster, as_completed, TimeoutError
 from glob import glob
 import os
-
 import pandas as pd
 import pint
 import re
 from typing import Sequence
 
-from opgee.audit import audit_field, audit_required
 
 from .core import OpgeeObject, Timer
 from .config import getParam, getParamAsInt, getParamAsBoolean, pathjoin
@@ -300,7 +298,7 @@ class Manager(OpgeeObject):
         self.client = self.cluster = None
 
     def run_packets(self,
-                    packets: Sequence[AbsPacket],
+                    packets: list[AbsPacket],
                     result_type: str = SIMPLE_RESULT,
                     num_engines: int = 0,
                     minutes_per_task: int = 10):
@@ -366,9 +364,6 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
                                        use_default_model=use_default_model,
                                        analysis_names=[analysis_name],
                                        field_names=[field_name])
-
-        if mf.model is None:
-            return
 
         analysis = mf.model.get_analysis(analysis_name)
         field = analysis.get_field(field_name)

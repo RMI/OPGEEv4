@@ -4,8 +4,8 @@
 .. Copyright (c) 2021 Richard Plevin and Stanford University
    See the https://opensource.org/licenses/MIT for license details.
 """
-from ..constants import SIMPLE_RESULT
 from ..subcommand import SubcommandABC
+from opgee.constants import SIMPLE_RESULT
 from ..log import getLogger, setLogFile
 
 _logger = getLogger(__name__)
@@ -226,7 +226,7 @@ class RunCommand(SubcommandABC):
         from ..config import setParam
         from ..error import CommandlineError
         from ..model_file import model_analysis_names, fields_for_analysis
-        from ..manager import Manager, save_results,TrialPacket, FieldPacket
+        from ..manager import Manager, save_results, TrialPacket, FieldPacket
         from ..utils import parseTrialString, mkdirs
         from ..mcs.simulation import Simulation, model_file_path
         from ..post_processor import PostProcessor
