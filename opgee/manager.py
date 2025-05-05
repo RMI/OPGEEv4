@@ -454,6 +454,7 @@ def save_results(results, output_dir, batch_num=None):
             d = create_dict(analysis_name, field_name, trial)
             d['error'] = result.error
             error_rows.append(d)
+            audit_dfs.append(result.audit_data)
             continue
 
         if result.result_type != SIMPLE_RESULT:
@@ -467,8 +468,7 @@ def save_results(results, output_dir, batch_num=None):
             emission_cols.append(result.emissions)
             stream_dfs.append(result.streams)
             gas_dfs.append(result.gases)
-            if result.audit_data is not None:
-                audit_dfs.append(result.audit_data)
+            audit_dfs.append(result.audit_data)
 
             # Add a row for total energy output
             d = create_dict(analysis_name, field_name, trial,
@@ -495,7 +495,8 @@ def save_results(results, output_dir, batch_num=None):
         df = pd.DataFrame(data=error_rows)
         _to_csv(df, 'errors')
 
-    if audit_dfs:
+    audit_dfs = [df for df in audit_dfs if df is not None]
+    if len(audit_dfs) > 0:
         df = pd.concat(audit_dfs, axis="rows")
         _to_csv(df, "field_audit")
 

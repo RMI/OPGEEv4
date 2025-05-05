@@ -1,15 +1,16 @@
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from unittest.mock import patch
 import pytest
 
 from pandas import DataFrame
 import pandas as pd
 
-from opgee import analysis
 from opgee.audit import AuditRow, _generate_field_audit_report, audit_field
 from opgee.config import getParam, setParam, getConfig
 from opgee.constants import DETAILED_RESULT
+from opgee.error import OpgeeException
 from opgee.model_file import ModelFile
 from opgee.field import Field
 from opgee.units import ureg
@@ -98,13 +99,14 @@ def test_audit_field(audit_model_file: ModelFile, tmp_path):
     assert not png_path.exists()
 
 
-def audit_setup_and_run(tmp_path: Path, opgee, audit_level: str = "none"):
-    _ = getConfig(createDefault=True)
+def audit_setup_and_run(tmp_path: Path, opgee, audit_level: str | None = None):
+    _ = getConfig(createDefault=True,reload=True)
     results_dir = Path(os.path.join(tmp_path, "audit_results"))
     results_dir.mkdir(exist_ok=True, parents=True)
 
     setParam("OPGEE.output_dir", str(results_dir))
-    setParam("OPGEE.AuditLevel", audit_level)
+    if audit_level:
+        setParam("OPGEE.AuditLevel", str(audit_level))
 
     audit_xml_path = path_to_test_file("audit_model.xml")
     mf = ModelFile.from_xml_string(open(audit_xml_path).read())
@@ -136,9 +138,20 @@ def test_audit_save_procs(tmp_path: Path, opgee_main):
     assert proc_graph_path.exists()
     assert not audit_path.exists()
 
+def test_audit_save_all(tmp_path: Path, opgee_main):
+    audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "All")
+    assert proc_graph_path.exists() and audit_path.exists()
 
-# it should only write the csv if AuditLevel == "field"
+def test_audit_save_none(tmp_path: Path, opgee_main):
+    audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main)
+    assert not (audit_path.exists() or proc_graph_path.exists())
 
-# it should not perform any auditing if AuditLevel == "none" or is missing
-# it should write pngs and csvs if AuditLevel == "all"
 # it should audit if Field.run fails
+def test_audit_on_run_failure(tmp_path: Path, opgee_main):
+    def mocked_field_run_processes(self, analysis):
+        raise OpgeeException("Test exception")
+
+    with patch("opgee.field.Field.run_processes", mocked_field_run_processes):
+        audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "Field")
+        assert audit_path.exists()
+
