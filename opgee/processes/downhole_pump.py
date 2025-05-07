@@ -240,5 +240,5 @@ class DownholePump(Process):
 
         input = self.find_input_stream("oil")
         input.copy_flow_rates_from(output)
-        input.multiply_flow_rates(loss_rate)
         input.add_flow_rates_from(completion_workover_fugitive_stream)
+        input.multiply_flow_rates(loss_rate)

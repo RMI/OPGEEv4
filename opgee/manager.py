@@ -9,13 +9,14 @@
 import asyncio
 import dask
 from dask_jobqueue import SLURMCluster
-from dask.distributed import Client, SubprocessCluster, as_completed
+from dask.distributed import Client, SubprocessCluster, as_completed, TimeoutError
 from glob import glob
 import os
 import pandas as pd
 import pint
 import re
 from typing import Sequence
+
 
 from .core import OpgeeObject, Timer
 from .config import getParam, getParamAsInt, getParamAsBoolean, pathjoin
@@ -101,7 +102,7 @@ class FieldPacket(AbsPacket):
     def __init__(self,
                  model_xml_file: str,
                  analysis_name: str,             # TBD: might not be needed here
-                 field_names: Sequence[str]):
+                 field_names: Sequence[str]): # by default this is a list of 10 field names
         """
         Create a ``FieldPacket`` of OPGEE runs to perform on a worker process.
         FieldPackets are defined by a list of field names. The worker process will
@@ -274,7 +275,7 @@ class Manager(OpgeeObject):
                 # print('.', sep='', end='')
                 client.wait_for_workers(1, 15) # wait for 1 worker with 15 sec timeout
                 break
-            except (dask.distributed.TimeoutError, asyncio.exceptions.TimeoutError) as e:
+            except (TimeoutError, asyncio.exceptions.TimeoutError) as e:
                 pass
                 #print(e) # prints "Only 0/1 workers arrived after 15"
 
@@ -298,7 +299,7 @@ class Manager(OpgeeObject):
 
     def run_packets(self,
                     packets: list[AbsPacket],
-                    result_type: str = None,
+                    result_type: str = SIMPLE_RESULT,
                     num_engines: int = 0,
                     minutes_per_task: int = 10):
         """
@@ -312,8 +313,6 @@ class Manager(OpgeeObject):
         :return: (list of FieldResult) results for individual runs.
         """
         timer = Timer('Manager.run_packets')
-
-        result_type = result_type or SIMPLE_RESULT
 
         # This is useful mainly for testing. Any real MCS will use a proper cluster.
         if self.cluster_type == CLUSTER_NONE:
@@ -379,6 +378,7 @@ def run_serial(model_xml_file, analysis_name, field_names, result_type=DETAILED_
 
     results = []
 
+    # even though we pass 10 field names by default, each is passed singularly to `_run_field`
     for field_name, xml_string in extract_model(model_xml_file, analysis_name,
                                                 field_names):
         result = _run_field(analysis_name, field_name, xml_string, result_type)
@@ -417,11 +417,11 @@ def save_results(results, output_dir, batch_num=None):
     error_rows = []
     stream_dfs = []
 
-    def create_dict(analysis, field, trial,
+    def create_dict(analysis: str, field: str, trial,
                     name=None, value=None, unit_col=True):
         # create the common portion of result dicts
-        d = {"analysis": analysis_name,
-             "field": field_name}
+        d = {"analysis": analysis,
+             "field": field}
 
         if trial is not None:
             d["trial"] = trial

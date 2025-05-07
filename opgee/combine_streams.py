@@ -28,10 +28,12 @@ def combine_streams(streams):
     :return: (Stream) if len(streams) > 1, returns a new Stream. If
        len(streams) == 1, the input stream (streams[0]) is returned.
     """
-    if len(streams) == 1:  # corner case
-        return streams[0]
-
     non_empty_streams = [stream for stream in streams if not stream.is_uninitialized()]
+
+    # corner case to avoid returning a new empty stream
+    if len(non_empty_streams) == 1:
+        return non_empty_streams[0]
+
     non_empty_streams_pressure = [stream.tp.P for stream in non_empty_streams]
 
     non_empty_API_streams = \

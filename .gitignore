@@ -136,3 +136,5 @@ launch.json
 opgee/.vscode
 DEPRECATED_launch_plugin.py
 DEPRECATED_runsim_plugin.py
+tests/tmp/
+.vscode/

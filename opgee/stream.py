@@ -323,7 +323,7 @@ class Stream(AttributeMixin, XmlInstantiable):
 
     def flow_rate(self, name, phase):
         """
-        Set the value of the stream component `name` for `phase` to `rate`.
+        Get the value of the stream component `name` for `phase`.
 
         :param name: (str) the name of a stream component
         :param phase: (str) the name of a phase of matter ('gas', 'liquid' or 'solid')

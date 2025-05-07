@@ -5,6 +5,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 from ..subcommand import SubcommandABC
+from opgee.constants import SIMPLE_RESULT
 from ..log import getLogger, setLogFile
 
 _logger = getLogger(__name__)
@@ -26,15 +27,15 @@ class RunCommand(SubcommandABC):
             CLUSTER_NONE,
             CLUSTER_TYPES,
             DEFAULT_RESULT_TYPE,
-            SIMPLE_RESULT,
             DETAILED_RESULT,
+            SIMPLE_RESULT,
             USER_RESULT_TYPES,
         )
         from ..utils import ParseCommaList, positive_int
 
         partition = getParam("SLURM.Partition")
         min_per_task = getParam("SLURM.MinutesPerTask")
-        packet_size = getParamAsInt("OPGEE.MaxTrialsPerPacket")
+        packet_size = getParamAsInt("OPGEE.MaxTrialsPerPacket") # 10 default
 
         # User can specify fields by name, or the number of fields to run MCS for, but not both.
         group = parser.add_mutually_exclusive_group()
@@ -245,7 +246,7 @@ class RunCommand(SubcommandABC):
         num_tasks = args.num_tasks
         output_dir = args.output_dir
         packet_size = args.packet_size
-        result_type = args.result_type
+        result_type = args.result_type or SIMPLE_RESULT
         sim_dir = args.simulation_dir
         skip_fields = args.skip_fields
         start_with = args.start_with
