@@ -393,7 +393,7 @@
 		</Stream>
 
 		<Stream src="HeavyOilUpgrading" dst="ProductionBoundary">
-			<Contains>gas process</Contains>
+			<Contains>gas</Contains>
 		</Stream>
 
 		<Stream src="CrudeOilStorage" dst="CrudeOilTransport">
@@ -574,7 +574,7 @@
 		</Stream>
 
 		<Stream src="ProductionBoundary" dst="TransmissionCompressor">
-			<Contains>exported gas</Contains>
+			<Contains>gas</Contains>
 		</Stream>
 
 		<Stream src="GasPartition" dst="ProductionBoundary">
