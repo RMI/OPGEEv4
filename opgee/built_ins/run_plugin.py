@@ -28,7 +28,6 @@ class RunCommand(SubcommandABC):
             CLUSTER_TYPES,
             DEFAULT_RESULT_TYPE,
             DETAILED_RESULT,
-            SIMPLE_RESULT,
             USER_RESULT_TYPES,
         )
         from ..utils import ParseCommaList, positive_int
@@ -279,6 +278,7 @@ class RunCommand(SubcommandABC):
         if not output_dir:
             raise CommandlineError("Non-MCS runs must specify -o/--output-dir")
 
+        setParam("OPGEE.output_dir", output_dir )
         mkdirs(output_dir)
 
         if not (field_names or analysis_names):

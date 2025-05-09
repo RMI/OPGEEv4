@@ -54,6 +54,7 @@ class FieldResult:
             ci_results=None,
             energy_output=None,
             trial_num=None,
+            audit_data=None,
             error=None,
     ):
         self.analysis_name = analysis_name
@@ -66,6 +67,7 @@ class FieldResult:
         self.gases = gas_data
         self.streams = streams_data
         self.trial_num = trial_num
+        self.audit_data = audit_data
         self.error = error
 
     def __str__(self):

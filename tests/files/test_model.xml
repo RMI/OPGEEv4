@@ -70,6 +70,13 @@
 		</Stream>
 	</Field>
 
+  <Field name="test-audit">
+    <Group>Audit group</Group>
+
+		<A name="API">32.8</A>
+		<A name="country">USA</A>
+  </Field>
+
 	<Field name="other-field">
 		<Group>Second test</Group>
 		<A name="country">USA</A>
