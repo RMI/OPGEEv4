@@ -1,5 +1,6 @@
 """Provides functionality for auditing the source of field attribute values."""
 
+from dataclasses import dataclass
 from enum import Enum, Flag, auto
 from pathlib import Path
 from typing import Literal, TypeGuard, TypedDict
@@ -7,12 +8,13 @@ from typing import Literal, TypeGuard, TypedDict
 from lxml import etree
 import pandas as pd
 from pint import Quantity
+from pydot import Dot
 
 from opgee.attributes import AttrDefs
 from opgee.config import getParam
 from opgee.core import A
 from opgee.field import Field
-from opgee.graph import write_process_diagram
+from opgee.graph import create_process_diagram, write_process_diagram
 from opgee.log import getLogger
 from opgee.model_file import ModelFile
 from opgee.smart_defaults import SmartDefault
@@ -28,6 +30,10 @@ class AuditRow(TypedDict):
     source: Literal["input", "static_default", "smart_default", "unknown"]
     value: str
     unit: str | None
+
+class AuditData(TypedDict):
+    field: list[AuditRow] | None
+    proc_graph: Dot | None
 
 
 class AuditFlag(Flag):
@@ -145,14 +151,14 @@ def _generate_field_audit_report(
 
 def audit_field(
     field: Field, mf: ModelFile, audit_level: str | None = None
-) -> pd.DataFrame | None:
+) -> AuditData | None:
     """
     Control field auditing based on configuration settings.
 
     :param field: The Field object
     :param mf: The ModelFile object
     :param audit_level: The audit level string
-    :return: A list of audit data dictionaries or None if auditing is disabled or fails.
+    :return: AuditData dict with the field rows and/or process graph instance
     """
     if not (audit_level is None or _is_audit_level_str(audit_level)):
         raise ValueError(
@@ -162,7 +168,8 @@ def audit_field(
 
     if audit_flag == AuditFlag.NONE:
         return None
-    report_data: list[AuditRow] = []
+
+    audit_data: AuditData = { "field": None, "proc_graph": None }
     if audit_flag & AuditFlag.FIELD:
         root = mf.root
         elem_list = root.xpath(f".//Field[@name='{field.name}']")
@@ -172,11 +179,10 @@ def audit_field(
             )
             return None
         field_elem: etree._Element = elem_list[0]
-        report_data = _generate_field_audit_report(field, field_elem)
+        audit_data["field"] = _generate_field_audit_report(field, field_elem)
 
     if audit_flag & AuditFlag.PROCESSES:
-        out_dir = getParam("OPGEE.output_dir") or "results"
-        final_path = Path(out_dir) / f"{field.name}_process_graph.png"
-        write_process_diagram(field, final_path)
+        audit_data["proc_graph"] = create_process_diagram(field)
 
-    return pd.DataFrame(report_data) if report_data else None
+    return audit_data
+

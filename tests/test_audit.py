@@ -80,23 +80,19 @@ def test_audit_field(audit_model_file: ModelFile, tmp_path):
     field = model.get_field("audit-field")
     field.run(analysis)
     audit_data = audit_field(field, audit_model_file, "Processes")
-    assert audit_data is None
-    png_path = results_dir / f"{field.name}_process_graph.png"
-    assert png_path.exists()
-    png_path.unlink()
+    assert audit_data["field"] is None
+    assert audit_data["proc_graph"] is not None
 
     audit_data = audit_field(field, audit_model_file, "Field")
-    assert not png_path.exists()
-    assert audit_data is not None
+    assert audit_data["proc_graph"] is None
+    assert audit_data["field"] is not None
 
     audit_data = audit_field(field, audit_model_file, "All")
-    assert audit_data is not None
-    assert png_path.exists()
-    png_path.unlink()
+    assert audit_data["field"] is not None
+    assert audit_data["proc_graph"] is not None
 
     audit_data = audit_field(field, audit_model_file)
     assert audit_data is None
-    assert not png_path.exists()
 
 
 def audit_setup_and_run(tmp_path: Path, opgee, audit_level: str | None = None):
@@ -120,7 +116,7 @@ def audit_setup_and_run(tmp_path: Path, opgee, audit_level: str | None = None):
     ]
 
     opgee.run(argList=cmd)
-    return results_dir / "field_audit.csv", results_dir / f"{field.name}_process_graph.png"
+    return results_dir / "field_audit.csv", results_dir / "process_graphs" / f"{field.name}_process_graph.png"
 
 def test_audit_save_results(tmp_path: Path, audit_model_file: ModelFile, opgee_main):
     audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "Field")
