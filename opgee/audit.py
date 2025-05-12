@@ -1,20 +1,16 @@
 """Provides functionality for auditing the source of field attribute values."""
 
-from dataclasses import dataclass
-from enum import Enum, Flag, auto
-from pathlib import Path
+from enum import Flag, auto
 from typing import Literal, TypeGuard, TypedDict
 
 from lxml import etree
-import pandas as pd
 from pint import Quantity
 from pydot import Dot
 
 from opgee.attributes import AttrDefs
-from opgee.config import getParam
 from opgee.core import A
 from opgee.field import Field
-from opgee.graph import create_process_diagram, write_process_diagram
+from opgee.graph import create_process_diagram
 from opgee.log import getLogger
 from opgee.model_file import ModelFile
 from opgee.smart_defaults import SmartDefault
