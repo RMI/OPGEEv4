@@ -9,7 +9,7 @@
 import pandas as pd
 import pint
 
-from .core import OpgeeObject
+from .common import OpgeeObject
 from .error import OpgeeException
 from .energy import (EN_CRUDE_OIL, EN_DIESEL, EN_ELECTRICITY, EN_NATURAL_GAS,
                      EN_NGL, EN_PETCOKE, EN_RESID, EN_UPG_PROC_GAS)

@@ -9,7 +9,7 @@
 import pandas as pd
 
 from ..units import ureg
-from ..core import OpgeeObject
+from ..common import OpgeeObject
 from ..stream import PHASE_GAS
 
 

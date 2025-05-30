@@ -15,7 +15,7 @@ from pyXSteam.XSteam import XSteam
 from thermosteam import Chemical, IdealMixture
 
 from .units import ureg
-from .core import OpgeeObject, STP, TemperaturePressure
+from .common import OpgeeObject, STP, TemperaturePressure
 from .error import ModelValidationError
 from .stream import PHASE_GAS, PHASE_LIQUID, PHASE_SOLID, Stream
 

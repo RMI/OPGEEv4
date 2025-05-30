@@ -8,7 +8,7 @@ import re
 
 from .config import getParamAsList
 from .container import Container
-from .core import elt_name, OpgeeObject
+from .common import elt_name, OpgeeObject
 from .emissions import Emissions
 from .error import OpgeeException
 from .field import Field

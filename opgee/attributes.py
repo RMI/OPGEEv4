@@ -11,7 +11,7 @@ from collections import defaultdict
 import pandas as pd
 
 from .units import ureg, validate_unit, magnitude
-from .core import OpgeeObject, XmlInstantiable, A, instantiate_subelts, elt_name
+from .common import OpgeeObject, XmlInstantiable, A, instantiate_subelts, elt_name
 from .error import AttributeError, ModelValidationError
 from .log import getLogger
 from .utils import coercible

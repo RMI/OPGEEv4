@@ -13,7 +13,7 @@ import traceback
 
 from ..config import pathjoin
 from ..constants import SIMPLE_RESULT, ERROR_RESULT
-from ..core import OpgeeObject, split_attr_name
+from ..common import OpgeeObject, split_attr_name
 from ..error import OpgeeException, McsSystemError, McsUserError, CommandlineError
 from ..field import FieldResult
 from ..log import getLogger

@@ -1,5 +1,5 @@
 from ..config import getParam
-from ..core import OpgeeObject
+from ..common import OpgeeObject
 from ..error import McsSystemError
 from ..log import getLogger
 from ..pkg_utils import resourceStream

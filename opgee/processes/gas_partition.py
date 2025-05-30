@@ -8,8 +8,8 @@
 #
 from ..units import ureg
 from ..combine_streams import combine_streams
-from ..core import STP
-from ..core import TemperaturePressure
+from ..common import STP
+from ..common import TemperaturePressure
 from ..error import OpgeeException
 from ..energy import EN_NATURAL_GAS
 from ..import_export import N2, CO2_Flooding, NATURAL_GAS

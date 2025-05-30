@@ -7,7 +7,7 @@
 # See LICENSE.txt for license details.
 #
 from ..units import ureg
-from ..core import TemperaturePressure
+from ..common import TemperaturePressure
 from ..emissions import EM_FUGITIVES
 from ..energy import EN_NATURAL_GAS, EN_ELECTRICITY, EN_DIESEL
 from ..log import getLogger

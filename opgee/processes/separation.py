@@ -7,7 +7,7 @@
 # See LICENSE.txt for license details.
 #
 from ..combine_streams import combine_streams
-from ..core import TemperaturePressure
+from ..common import TemperaturePressure
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process

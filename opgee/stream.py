@@ -15,7 +15,7 @@ import pint_pandas
 
 from .units import ureg, magnitude
 from .attributes import AttributeMixin
-from .core import XmlInstantiable, elt_name, TemperaturePressure
+from .common import XmlInstantiable, elt_name, TemperaturePressure
 from .error import OpgeeException, ModelValidationError
 from .log import getLogger
 from .table_manager import TableManager

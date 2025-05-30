@@ -7,7 +7,7 @@
 # See LICENSE.txt for license details.
 #
 from ..units import ureg
-from ..core import TemperaturePressure
+from ..common import TemperaturePressure
 from ..error import OpgeeException
 from ..log import getLogger
 from ..process import Process

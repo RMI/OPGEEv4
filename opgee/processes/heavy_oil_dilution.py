@@ -6,7 +6,7 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..core import TemperaturePressure
+from ..common import TemperaturePressure
 from ..import_export import DILUENT
 from ..process import Process
 from .shared import get_energy_carrier

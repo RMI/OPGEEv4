@@ -8,7 +8,7 @@
 #
 import networkx as nx
 
-from .core import OpgeeObject, split_attr_name
+from .common import OpgeeObject, split_attr_name
 from .error import OpgeeException
 from .log import getLogger
 

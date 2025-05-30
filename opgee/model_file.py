@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .attributes import AttrDefs
 from .config import getParam, pathjoin, unixPath
-from .core import Timer
+from .common import Timer
 from .error import OpgeeException, XmlFormatError
 from .log import getLogger
 from .model import Model
@@ -158,7 +158,7 @@ def _get_xml_str(model_xml, analysis_name, field_name, with_model_elt=False):
         analysis.append(deepcopy(attr))
 
     ET.SubElement(analysis, 'FieldRef', name=field_name)
-    
+
     model.append(deepcopy(field_def))
 
     xml_string = ET.tostring(model, pretty_print=True, encoding="unicode")

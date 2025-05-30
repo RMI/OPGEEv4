@@ -10,7 +10,7 @@ import pandas as pd
 import pint
 
 from .units import magnitude, ureg
-from .core import OpgeeObject
+from .common import OpgeeObject
 from .error import OpgeeException
 from .stream import Stream
 

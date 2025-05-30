@@ -8,7 +8,7 @@
 import glob
 import os
 from .config import getParam
-from .core import OpgeeObject
+from .common import OpgeeObject
 from .error import AbstractMethodError, McsUserError
 
 class PostProcessor(OpgeeObject):
@@ -56,7 +56,7 @@ class PostProcessor(OpgeeObject):
 
     # List subclass instances in order defined on the command-line
     instances = []
-    
+
     _plugins_loaded: bool = False
 
     def __init__(self):

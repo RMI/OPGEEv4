@@ -16,7 +16,7 @@ from itertools import islice, product
 # import logging
 # logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-from ..core import OpgeeObject, Timer
+from ..common import OpgeeObject, Timer
 from ..config import getParam, getParamAsInt, getParamAsBoolean
 from ..error import RemoteError, McsSystemError, TrialErrorWrapper
 from ..log  import getLogger, setLogFile
@@ -289,4 +289,3 @@ class Manager(OpgeeObject):
 
         self.stop_cluster()
         _logger.info(timer.stop())
-

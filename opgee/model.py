@@ -11,7 +11,7 @@ import pint
 from .units import ureg
 from .analysis import Analysis
 from .container import Container
-from .core import elt_name, instantiate_subelts
+from .common import elt_name, instantiate_subelts
 from .error import OpgeeException, CommandlineError
 from .field import Field
 from .log import getLogger

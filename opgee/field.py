@@ -14,7 +14,7 @@ from .units import ureg
 from .config import getParamAsList
 from .constants import DETAILED_RESULT
 from .container import Container
-from .core import elt_name, instantiate_subelts, dict_from_list, STP
+from .common import elt_name, instantiate_subelts, dict_from_list, STP
 from .energy import Energy
 from .error import (
     OpgeeException,
@@ -491,7 +491,7 @@ class Field(Container):
             logging purposes.
         :return: None
         """
-        from .core import Timer
+        from .common import Timer
 
         if self.is_enabled():
             timer = Timer("field.run")
@@ -1440,7 +1440,7 @@ class Field(Container):
             streams=streams,
             process_choice_dict=process_choice_dict,
         )
-        
+
         # need to recache process attributes to pick up smart defaults
         for proc in field.processes():
             proc.cache_attributes()
@@ -1822,4 +1822,3 @@ class Field(Container):
         return num_prod_wells * 0.25
 
     # TODO: decide how to handle "associated gas defaults", which is just global vs CA-LCFS values currently
-

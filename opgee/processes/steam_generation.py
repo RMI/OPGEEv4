@@ -7,7 +7,7 @@
 # See LICENSE.txt for license details.
 #
 from ..units import ureg
-from ..core import TemperaturePressure
+from ..common import TemperaturePressure
 from ..energy import EN_NATURAL_GAS, EN_ELECTRICITY
 from ..error import BalanceError
 from ..import_export import WATER

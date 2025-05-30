@@ -3,7 +3,7 @@ from lxml import etree as ET
 from opgee.units import ureg
 from opgee.analysis import Analysis
 from opgee.attributes import ClassAttrs, AttributeMixin, AttrDefs
-from opgee.core import instantiate_subelts
+from opgee.common import instantiate_subelts
 from opgee.error import OpgeeException, AttributeError
 from opgee.model import Model
 
@@ -31,7 +31,7 @@ def attr_classes():
     <AttrDef name="GWP_version" options="GWP_version" type="str"/>
     <AttrDef name="functional_unit" options="functional_unit" type="str"/>
   </ClassAttrs>
-  
+
   <ClassAttrs name="Model">
     <!-- Maximum number of iterations for process loops -->
     <AttrDef name="maximum_iterations" type="int">10</AttrDef>
@@ -62,7 +62,7 @@ def attr_dict_2(attr_classes):
     xml = ET.XML("""
 <Analysis>
   <A name="GWP_horizon">20</A>
-  <A name="GWP_version">AR4</A>    
+  <A name="GWP_version">AR4</A>
 </Analysis>
 """)
     attr_dict = Analysis.instantiate_attrs(xml)

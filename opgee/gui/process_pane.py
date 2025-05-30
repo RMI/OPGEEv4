@@ -3,7 +3,7 @@ import dash_cytoscape as cyto
 from dash.dependencies import Input, Output, State
 from textwrap import dedent as d
 
-from ..core import name_of
+from ..common import name_of
 from ..log import getLogger
 from .widgets import get_analysis_and_field, gui_switches, OpgeePane
 

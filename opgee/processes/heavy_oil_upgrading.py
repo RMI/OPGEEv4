@@ -9,7 +9,7 @@
 import pandas as pd
 
 from ..units import ureg
-from ..core import STP
+from ..common import STP
 from ..emissions import EM_FLARING
 from ..energy import EN_NATURAL_GAS, EN_ELECTRICITY, EN_UPG_PROC_GAS, EN_PETCOKE
 from ..import_export import ELECTRICITY, H2

@@ -124,7 +124,7 @@ def test_combustion_stream(stream_model):
     assert CO2_stream.gas_flow_rate("CO2") == ureg.Quantity(pytest.approx(8.950127703143934), "t/d")
 
 def test_stream_utils(stream_model):
-    from opgee.core import TemperaturePressure
+    from opgee.common import TemperaturePressure
     from opgee.stream import Stream
     tp = None
     s = Stream('stream1', tp)
@@ -136,4 +136,3 @@ def test_stream_utils(stream_model):
     # check that T & P are unchanged
     s.tp.T.m == 100.0
     s.tp.P.m == 200.0
-    

@@ -10,7 +10,7 @@ import os
 
 import pandas as pd
 
-from .core import OpgeeObject
+from .common import OpgeeObject
 from .error import OpgeeException
 from .log import getLogger
 from .pkg_utils import resourceStream

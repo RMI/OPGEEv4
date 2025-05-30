@@ -6,7 +6,7 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..core import TemperaturePressure
+from ..common import TemperaturePressure
 from ..log import getLogger
 from ..process import Process
 from ..stream import Stream
@@ -53,7 +53,3 @@ class StorageSeparator(Process):
         gas_to_compressor.copy_gas_rates_from(input, tp=self.outlet_tp)
 
         #TODO: Future versions of OPGEE may treat this process in more detail.
-
-
-
-

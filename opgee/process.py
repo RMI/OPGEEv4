@@ -16,7 +16,7 @@ from .attributes import AttrDefs, AttributeMixin
 from .combine_streams import combine_streams
 from .config import getParamAsBoolean
 from .container import Container
-from .core import OpgeeObject, XmlInstantiable, elt_name, instantiate_subelts
+from .common import OpgeeObject, XmlInstantiable, elt_name, instantiate_subelts
 from .emissions import Emissions, EM_COMBUSTION
 from .energy import EN_ELECTRICITY, Energy
 from .error import OpgeeException, AbstractMethodError, OpgeeIterationConverged, ModelValidationError
@@ -1016,16 +1016,16 @@ class Boundary(Process):
         # There's a bug in the handling of the streams at boundaries. Basically, if we select the Distribution Boundary, there's no stream
         # containing PC or oil connected (those are only inputs to the ProductionBoundry). Thus the exports are off
         # and can lead to divide by 0 errors.
-        # 
+        #
         # How would we allow for accurate analysis at the various boundaries?
         # Option 1: remove "Boundary" processes from the graph. The idea of a boundary would instead be a partition of the underlying
-        # graph. This might present better accuracy and a simpler interface/xml structure. 
-        # 
+        # graph. This might present better accuracy and a simpler interface/xml structure.
+        #
         # Option 2: ensure that all output from intermediate boundaries is carried to the selected boundary. I don't know how we would
         # achieve this without double counting a lot of stream contents. Perhaps we could add a "remaining" output stream to all boundaries.
         # If an input stream doesn't have a commensurate output, we'd add its flow rates to the "remaining" stream. All boundaries would be
         # connected to each other by the "remaining" stream, ensuring that material flows are represented at any/all boundaries.
-        
+
         # Process boundary if only if the chosen boundary has not been processed
         if self.field.get_process_data("is_chosen_boundary_processed") is None:
             # If we're an intermediate boundary, copy all inputs to outputs based on contents

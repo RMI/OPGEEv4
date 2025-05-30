@@ -8,7 +8,7 @@
 #
 from collections import OrderedDict
 
-from .core import XmlInstantiable, elt_name, instantiate_subelts
+from .common import XmlInstantiable, elt_name, instantiate_subelts
 from .error import OpgeeException
 from .log import getLogger
 from .utils import getBooleanXML

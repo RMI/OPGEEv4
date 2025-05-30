@@ -9,7 +9,7 @@
 import numpy as np
 
 from ..units import ureg
-from ..core import TemperaturePressure
+from ..common import TemperaturePressure
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process

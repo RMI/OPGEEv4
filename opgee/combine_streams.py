@@ -9,8 +9,8 @@
 import pandas as pd
 
 from .units import ureg
-from .core import STP
-from .core import TemperaturePressure
+from .common import STP
+from .common import TemperaturePressure
 from .log import getLogger
 from .stream import Stream
 from .thermodynamics import Oil, Gas, Water
