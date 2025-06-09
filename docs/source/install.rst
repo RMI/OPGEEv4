@@ -50,3 +50,36 @@ which links the installed package back to the source code repo.
 
    See the `conda <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_
    documentation for further details on managing environments.
+
+
+Install opgee with `pip`
+------------------------
+
+1. Clone the repository:
+
+  .. code-block:: bash
+
+    git clone https://github.com/RMI/OPGEEv4.git
+
+2. Change directories and create a new virtual environment:
+
+  .. code-block:: bash
+
+    cd OPGEEv4 && python -m venv .venv
+
+3. Activate the new environment
+
+  .. code-block:: bash
+
+    source .venv/bin/activate
+
+4. Install the repo:
+   
+  .. code-block:: bash
+
+    pip install -e .
+
+5. (OPTIONAL) Install `Graphviz`
+
+   In order to render the graph pngs ``opg graph ...``, you will need `Graphviz` installed. `pip` here is insufficient (see `here <https://graphviz.readthedocs.io/en/stable/#installation>`_). Follow the instructions to `install Graphviz <https://www.graphviz.org/download/>`_ on your platform.
+
