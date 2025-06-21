@@ -8,6 +8,8 @@
 #
 import pydot
 
+from opgee.field import Field
+
 from .core import OpgeeObject
 from .log import getLogger
 from .process import Process
@@ -91,22 +93,26 @@ def write_model_diagram(model, pathname, levels=0):
     display_in_notebook(graph)
 
 def write_process_diagram(field, pathname):
-    graph = pydot.Dot('model', graph_type='digraph', bgcolor='white')
+    graph = create_process_diagram(field)
+    _logger.info(f"Writing {pathname}")
+    graph.write_png(pathname)
+    display_in_notebook(graph)
+
+def create_process_diagram(field: Field):
+    graph = pydot.Dot("model", graph_type="digraph", bgcolor="white")
 
     for name, proc in field.process_dict.items():
         proc.check_enabled()
         if not proc.enabled:
             continue
-        graph.add_node(pydot.Node(name, shape='box'))
+        graph.add_node(pydot.Node(name, shape="box"))
 
     for name, stream in field.stream_dict.items():
-        contents = ', '.join(stream.contents)
-        procs = stream.src_name, stream.dst_name
+        contents = ", ".join(stream.contents)
+        procs: tuple[str, str] = stream.src_name, stream.dst_name
         if not all((field.process_dict[prc].enabled for prc in procs)):
             continue
-        graph.add_edge(pydot.Edge(stream.src_name, stream.dst_name,
-                                  color='black', label=contents))
+        src, dst = procs
+        graph.add_edge(pydot.Edge(src, dst, color="black", label=contents))
 
-    _logger.info(f"Writing {pathname}")
-    graph.write_png(pathname)
-    display_in_notebook(graph)
+    return graph

@@ -468,7 +468,6 @@ def save_results(results, output_dir, batch_num=None):
             emission_cols.append(result.emissions)
             stream_dfs.append(result.streams)
             gas_dfs.append(result.gases)
-            audit_dfs.append(result.audit_data)
 
             # Add a row for total energy output
             d = create_dict(analysis_name, field_name, trial,
@@ -479,6 +478,14 @@ def save_results(results, output_dir, batch_num=None):
             d = create_dict(analysis_name, field_name, trial, name='CI', value=ci)
             d['node'] = name
             ci_rows.append(d)
+        
+        # always audit if configured
+        if result.audit_data is not None:
+            audit_dfs.append(result.audit_data["field"])
+            if (proc_graph := result.audit_data["proc_graph"]) is not None:
+                procs_path = pathjoin(output_dir, "process_graphs")
+                mkdirs(procs_path)
+                proc_graph.write_png(pathjoin(procs_path, f"{field_name}_process_graph.png"))
 
     # Append batch number to filename if not None
     batch = '' if batch_num is None else f"_{batch_num}"
@@ -495,7 +502,7 @@ def save_results(results, output_dir, batch_num=None):
         df = pd.DataFrame(data=error_rows)
         _to_csv(df, 'errors')
 
-    audit_dfs = [df for df in audit_dfs if df is not None]
+    audit_dfs = [pd.DataFrame(df) for df in audit_dfs if df is not None]
     if len(audit_dfs) > 0:
         df = pd.concat(audit_dfs, axis="rows")
         _to_csv(df, "field_audit")
