@@ -745,7 +745,7 @@ class Field(Container):
         energy_data, ghg_data, gas_data = self.energy_and_emissions(analysis) \
             if result_type == DETAILED_RESULT else (None, None, None)
 
-        nodes = self.processes() if DETAILED_RESULT else self.children()
+        nodes = [p for p in self.process_dict.values()] + [agg for agg in self.agg_dict.values()]
         ci_tuples = self.partial_ci_values(analysis, nodes)
 
         ci_results = (
