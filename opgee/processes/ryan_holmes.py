@@ -73,29 +73,32 @@ class RyanHolmes(Process):
 
         # Ryan-Holmes Process
         volume_flow_rate_STP = self.gas.volume_flow_rate_STP(input)
-        feed_stream_rate = ureg.Quantity(45., "mmscf/day")
-        turbine_consume_rate = ureg.Quantity(25800., "scf/hr")
+        feed_stream_rate = ureg.Quantity(45.0, "mmscf/day")
+        turbine_consume_rate = ureg.Quantity(25800.0, "scf/hr")
         tot_turbine_consumption_rate = volume_flow_rate_STP / feed_stream_rate * turbine_consume_rate
         turbine_energy_consumption = self.gas.component_HHV_molar["C1"] * self.mol_to_scf * tot_turbine_consumption_rate
 
-        compressor_consume_rate = ureg.Quantity(110519., "scf/hr")
+        compressor_consume_rate = ureg.Quantity(110519.0, "scf/hr")
         tot_compressor_consumption_rate = volume_flow_rate_STP / feed_stream_rate * compressor_consume_rate
-        compressor_energy_consumption = self.gas.component_HHV_molar[
-                                            "C1"] * self.mol_to_scf * tot_compressor_consumption_rate
+        compressor_energy_consumption = (
+            self.gas.component_HHV_molar["C1"] * self.mol_to_scf * tot_compressor_consumption_rate
+        )
 
-        hotoil_heater_consume_rate = ureg.Quantity(14589., "scf/hr")
+        hotoil_heater_consume_rate = ureg.Quantity(14589.0, "scf/hr")
         tot_heater_consumption_rate = volume_flow_rate_STP / feed_stream_rate * hotoil_heater_consume_rate
         heater_energy_consumption = self.gas.component_HHV_molar["C1"] * self.mol_to_scf * tot_heater_consumption_rate
 
-        diesel_consume_rate = ureg.Quantity(57., "gal/day")
-        tot_diesel_consumption_rate = (volume_flow_rate_STP / feed_stream_rate *
-                                       diesel_consume_rate * self.daily_use_engine)
+        diesel_consume_rate = ureg.Quantity(57.0, "gal/day")
+        tot_diesel_consumption_rate = (
+            volume_flow_rate_STP / feed_stream_rate * diesel_consume_rate * self.daily_use_engine
+        )
         diesel_energy_consumption = self.diesel_LHV * tot_diesel_consumption_rate
 
         # energy-use
         energy_use = self.energy
-        energy_use.set_rate(EN_NATURAL_GAS,
-                            turbine_energy_consumption + compressor_energy_consumption + heater_energy_consumption)
+        energy_use.set_rate(
+            EN_NATURAL_GAS, turbine_energy_consumption + compressor_energy_consumption + heater_energy_consumption
+        )
         energy_use.set_rate(EN_DIESEL, diesel_energy_consumption)
 
         # import/export

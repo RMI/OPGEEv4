@@ -26,6 +26,7 @@ del _ureg
 # to avoid redundantly reporting bad units
 _undefined_units = {}
 
+
 def validate_unit(unit):
     """
     Return the ``pint.Unit`` associated with the string ``unit``, or ``None``

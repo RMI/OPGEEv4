@@ -92,14 +92,14 @@ class Boundary_proc_4(Process):
 def test_intermediate_boundary():
     model_file = ModelFile.from_xml_string(xml_string, use_default_model=False)
     model = model_file.model
-    analysis = model.get_analysis('test')
+    analysis = model.get_analysis("test")
     analysis.run(compute_ci=False)
-    field = model.get_field('test')
+    field = model.get_field("test")
     boundary_proc = field.boundary_process(analysis)
     combined_stream = combine_streams(boundary_proc.inputs)
-    gas_rate = combined_stream.gas_flow_rate('C1')
-    oil_rate = combined_stream.liquid_flow_rate('oil')
-    assert gas_rate == ureg.Quantity(987.0, 't/d') and oil_rate == ureg.Quantity(100.0, 't/d')
+    gas_rate = combined_stream.gas_flow_rate("C1")
+    oil_rate = combined_stream.liquid_flow_rate("oil")
+    assert gas_rate == ureg.Quantity(987.0, "t/d") and oil_rate == ureg.Quantity(100.0, "t/d")
 
     energy_flow_rate = field.boundary_energy_flow_rate(analysis)
     assert energy_flow_rate == ureg.Quantity(pytest.approx(50503.544263), "mmbtu/day")

@@ -32,10 +32,7 @@ class SteamGeneration(Process):
         #  In the meantime, it requires special processing below:
         field = self.field
         if field.steam_flooding == 1 and field.SOR != 0:
-            self._required_inputs = [
-                "produced water",
-                "makeup water"
-            ]
+            self._required_inputs = ["produced water", "makeup water"]
 
             self._required_outputs = [
                 "water",
@@ -79,17 +76,20 @@ class SteamGeneration(Process):
         self.steam_quality_after_blowdown = self.attr("steam_quality_after_blowdown")
         self.fraction_blowdown_recycled = self.attr("fraction_blowdown_recycled")
 
-        self.waste_water_reinjection_tp = TemperaturePressure(self.attr("waste_water_reinjection_temp"),
-                                                              self.attr("waste_water_reinjection_press"))
+        self.waste_water_reinjection_tp = TemperaturePressure(
+            self.attr("waste_water_reinjection_temp"), self.attr("waste_water_reinjection_press")
+        )
 
         self.pressure_loss_choke_wellhead = self.attr("pressure_loss_choke_wellhead")
         self.friction_loss_steam_distr = field.friction_loss_steam_distr
         self.water_density = self.water.density()
         self.res_press = field.res_press
         self.steam_injection_delta_press = self.attr("steam_injection_delta_press")
-        self.steam_generator_press_outlet = ((self.res_press + self.steam_injection_delta_press) *
-                                             self.friction_loss_steam_distr *
-                                             self.pressure_loss_choke_wellhead)
+        self.steam_generator_press_outlet = (
+            (self.res_press + self.steam_injection_delta_press)
+            * self.friction_loss_steam_distr
+            * self.pressure_loss_choke_wellhead
+        )
         self.prod_water_inlet_press = self.attr("prod_water_inlet_press")
         self.makeup_water_inlet_press = self.attr("makeup_water_inlet_press")
         self.eta_displacement_pump = self.attr("eta_displacement_pump")
@@ -132,51 +132,60 @@ class SteamGeneration(Process):
         steam_injection_volume_rate = water_mass_rate_for_injection / self.water_density
 
         steam_quality_diff_between_blowndown_and_outlet = self.steam_quality_after_blowdown - self.steam_quality_outlet
-        steam_quality_diff_between_blowndown_and_outlet = \
-            ureg.Quantity(max(steam_quality_diff_between_blowndown_and_outlet.to("frac").m, 0.0), "frac")
+        steam_quality_diff_between_blowndown_and_outlet = ureg.Quantity(
+            max(steam_quality_diff_between_blowndown_and_outlet.to("frac").m, 0.0), "frac"
+        )
 
         if steam_quality_diff_between_blowndown_and_outlet.m < 0:
             _logger.warning("steam quality after blowdown is smaller than steam quality at outlet")
 
-        blowdown_water_mass_rate = \
+        blowdown_water_mass_rate = (
             water_mass_rate_for_injection * steam_quality_diff_between_blowndown_and_outlet / self.steam_quality_outlet
+        )
         waste_water_from_blowdown = blowdown_water_mass_rate * (1 - self.fraction_blowdown_recycled)
         import_product.set_export(self.name, WATER, waste_water_from_blowdown)
 
         recycled_blowdown_water = blowdown_water_mass_rate * self.fraction_blowdown_recycled
 
         recycled_water_stream = self.find_output_stream("water")
-        recycled_water_stream.set_liquid_flow_rate("H2O",
-                                                   recycled_blowdown_water.to("tonne/day"),
-                                                   tp=self.waste_water_reinjection_tp)
+        recycled_water_stream.set_liquid_flow_rate(
+            "H2O", recycled_blowdown_water.to("tonne/day"), tp=self.waste_water_reinjection_tp
+        )
 
-        fuel_consumption_OTSG = fuel_consumption_HRSG = fuel_consumption_solar = \
-            electricity_HRSG = ureg.Quantity(0, "MJ/day")
+        fuel_consumption_OTSG = fuel_consumption_HRSG = fuel_consumption_solar = electricity_HRSG = ureg.Quantity(
+            0, "MJ/day"
+        )
 
         fraction_OTSG = self.fraction_OTSG
         if fraction_OTSG.m != 0:
-            fuel_consumption_OTSG, mass_in_OTSG, mass_out_OTSG, energy_in_OTSG, energy_out_OTSG = \
-                self.steam_generator.once_through_SG(prod_water_mass_rate * fraction_OTSG,
-                                                     makeup_water_mass_rate * fraction_OTSG,
-                                                     water_mass_rate_for_injection * fraction_OTSG,
-                                                     blowdown_water_mass_rate * fraction_OTSG)
+            fuel_consumption_OTSG, mass_in_OTSG, mass_out_OTSG, energy_in_OTSG, energy_out_OTSG = (
+                self.steam_generator.once_through_SG(
+                    prod_water_mass_rate * fraction_OTSG,
+                    makeup_water_mass_rate * fraction_OTSG,
+                    water_mass_rate_for_injection * fraction_OTSG,
+                    blowdown_water_mass_rate * fraction_OTSG,
+                )
+            )
             self.check_balance(mass_in_OTSG, mass_out_OTSG, "OTSG_mass")
             self.check_balance(energy_in_OTSG, energy_out_OTSG, "OTSG_energy")
 
         fraction_steam_cogen = self.fraction_steam_cogen
         if self.fraction_steam_cogen != 0:
-            fuel_consumption_HRSG, electricity_HRSG, mass_in_HRSG, mass_out_HRSG, energy_in_HRSG, energy_out_HRSG = \
-                self.steam_generator.heat_recovery_SG(prod_water_mass_rate * fraction_steam_cogen,
-                                                      makeup_water_mass_rate * fraction_steam_cogen,
-                                                      water_mass_rate_for_injection * fraction_steam_cogen,
-                                                      blowdown_water_mass_rate * fraction_steam_cogen)
+            fuel_consumption_HRSG, electricity_HRSG, mass_in_HRSG, mass_out_HRSG, energy_in_HRSG, energy_out_HRSG = (
+                self.steam_generator.heat_recovery_SG(
+                    prod_water_mass_rate * fraction_steam_cogen,
+                    makeup_water_mass_rate * fraction_steam_cogen,
+                    water_mass_rate_for_injection * fraction_steam_cogen,
+                    blowdown_water_mass_rate * fraction_steam_cogen,
+                )
+            )
             self.check_balance(mass_in_HRSG, mass_out_HRSG, "HRSG_mass")
             self.check_balance(energy_in_HRSG, energy_out_HRSG, "HRSG_energy")
 
         if self.fraction_steam_solar != 0:
-            fuel_consumption_solar = \
-                self.steam_generator.solar_SG(prod_water_mass_rate * self.fraction_steam_solar,
-                                              makeup_water_mass_rate * self.fraction_steam_solar)
+            fuel_consumption_solar = self.steam_generator.solar_SG(
+                prod_water_mass_rate * self.fraction_steam_solar, makeup_water_mass_rate * self.fraction_steam_solar
+            )
 
         # energy use
         energy_use = self.energy
@@ -185,12 +194,11 @@ class SteamGeneration(Process):
 
         water_pump_hp = self.get_feedwater_horsepower(prod_water_mass_rate, makeup_water_mass_rate)
         water_pump_power = get_energy_consumption("Electric_motor", water_pump_hp)
-        OTSG_air_blower = get_energy_consumption("Electric_motor",
-                                                 fuel_consumption_OTSG * self.eta_air_blower_OTSG)
-        HRSG_air_blower = get_energy_consumption("Electric_motor",
-                                                 fuel_consumption_HRSG * self.eta_air_blower_HRSG)
-        solar_thermal_pumping = get_energy_consumption("Electric_motor",
-                                                       fuel_consumption_solar * self.eta_air_blower_solar)
+        OTSG_air_blower = get_energy_consumption("Electric_motor", fuel_consumption_OTSG * self.eta_air_blower_OTSG)
+        HRSG_air_blower = get_energy_consumption("Electric_motor", fuel_consumption_HRSG * self.eta_air_blower_HRSG)
+        solar_thermal_pumping = get_energy_consumption(
+            "Electric_motor", fuel_consumption_solar * self.eta_air_blower_solar
+        )
         total_power_required = water_pump_power + OTSG_air_blower + HRSG_air_blower + solar_thermal_pumping
         energy_use.set_rate(EN_ELECTRICITY, total_power_required)
 
@@ -206,8 +214,9 @@ class SteamGeneration(Process):
         prod_water_volume_rate = prod_water_mass_rate / self.water_density
         makeup_water_mass_rate = makeup_water_mass_rate / self.water_density
 
-        result = makeup_water_mass_rate * (self.steam_generator_press_outlet - self.makeup_water_inlet_press) + \
-                 prod_water_volume_rate * (self.steam_generator_press_outlet - self.prod_water_inlet_press)
+        result = makeup_water_mass_rate * (
+            self.steam_generator_press_outlet - self.makeup_water_inlet_press
+        ) + prod_water_volume_rate * (self.steam_generator_press_outlet - self.prod_water_inlet_press)
         result /= self.eta_displacement_pump
 
         return result

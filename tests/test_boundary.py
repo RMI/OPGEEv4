@@ -13,10 +13,10 @@ class BoundaryBefore(Process):
 
 @pytest.fixture(scope="module")
 def test_boundary(configure_logging_for_tests):
-    return load_test_model('test_boundary.xml')
+    return load_test_model("test_boundary.xml")
 
 
 def test_gas_trans_boundary(test_boundary):
-    analysis = test_boundary.get_analysis('test_boundary')
-    field = analysis.get_field('test_gas_transmission_boundary')
+    analysis = test_boundary.get_analysis("test_boundary")
+    field = analysis.get_field("test_gas_transmission_boundary")
     field.run(analysis)

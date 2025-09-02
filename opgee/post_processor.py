@@ -11,6 +11,7 @@ from .config import getParam
 from .core import OpgeeObject
 from .error import AbstractMethodError, McsUserError
 
+
 class PostProcessor(OpgeeObject):
     """
     Abstract base class for post-processing plugins.
@@ -56,7 +57,7 @@ class PostProcessor(OpgeeObject):
 
     # List subclass instances in order defined on the command-line
     instances = []
-    
+
     _plugins_loaded: bool = False
 
     def __init__(self):
@@ -76,7 +77,7 @@ class PostProcessor(OpgeeObject):
           the Field.
         :return: nothing
         """
-        raise AbstractMethodError(self.__class__, 'PostProcessor.run')
+        raise AbstractMethodError(self.__class__, "PostProcessor.run")
 
     def save(self, output_dir):
         """
@@ -140,7 +141,7 @@ class PostProcessor(OpgeeObject):
 
     @staticmethod
     def _getPluginDirs():
-        pluginPath = getParam('OPGEE.PostProcPluginPath')
+        pluginPath = getParam("OPGEE.PostProcPluginPath")
         if not pluginPath:
             return []
 
@@ -163,7 +164,7 @@ class PostProcessor(OpgeeObject):
             return
 
         for dir in dirs:
-            files = sorted(glob.glob(os.path.join(dir, '*.py')))
+            files = sorted(glob.glob(os.path.join(dir, "*.py")))
             for file in files:
                 cls.load_plugin(file)
         cls._plugins_loaded = True

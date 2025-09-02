@@ -19,20 +19,21 @@ _logger = getLogger(__name__)
 
 class CrudeOilDewatering(Process):
     """
-        A subclass of the Process class that represents a crude oil dewatering process
-        in an oil and gas production system.
+    A subclass of the Process class that represents a crude oil dewatering process
+    in an oil and gas production system.
 
-        Attributes:
-            field (Field): The field associated with the dewatering process.
-            heater_treater (bool): Whether a heater treater is used in the process.
-            temperature_heater_treater (Quantity): Temperature of the heater treater.
-            heat_loss (Quantity): Heat loss in the process.
-            prime_mover_type (str): Type of prime mover used for energy consumption.
-            eta_gas (Quantity): Efficiency of natural gas engine.
-            eta_electricity (Quantity): Efficiency of electricity.
-            oil_path (str): The oil path in the process.
-            oil_path_dict (dict): Dictionary mapping oil paths to their descriptions.
+    Attributes:
+        field (Field): The field associated with the dewatering process.
+        heater_treater (bool): Whether a heater treater is used in the process.
+        temperature_heater_treater (Quantity): Temperature of the heater treater.
+        heat_loss (Quantity): Heat loss in the process.
+        prime_mover_type (str): Type of prime mover used for energy consumption.
+        eta_gas (Quantity): Efficiency of natural gas engine.
+        eta_electricity (Quantity): Efficiency of electricity.
+        oil_path (str): The oil path in the process.
+        oil_path_dict (dict): Dictionary mapping oil paths to their descriptions.
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -40,20 +41,19 @@ class CrudeOilDewatering(Process):
 
         # TODO: avoid process names in contents. Can all the subsequent processes just
         #  look for "oil"? Then we'd have a single output stream.
-        self.oil_path_dict = {"Stabilization": "oil for stabilization",
-                              "Storage": "oil for storage",
-                              "Upgrading": "oil for upgrading",
-                              "Dilution": "oil for dilution",
-                              "Dilution and Upgrading": "oil for dilution"}
+        self.oil_path_dict = {
+            "Stabilization": "oil for stabilization",
+            "Storage": "oil for storage",
+            "Upgrading": "oil for upgrading",
+            "Dilution": "oil for dilution",
+            "Dilution and Upgrading": "oil for dilution",
+        }
 
         self._required_inputs = [
             "oil",
         ]
 
-        self._required_outputs = [
-            "water",
-            self.oil_path_dict[self.field.oil_path]
-        ]
+        self._required_outputs = ["water", self.oil_path_dict[self.field.oil_path]]
 
         self.eta_electricity = None
         self.eta_gas = None
@@ -88,8 +88,10 @@ class CrudeOilDewatering(Process):
         try:
             output = self.oil_path_dict[self.oil_path]
         except:
-            raise OpgeeException(f"{self.name} oil path is not recognized:{self.oil_path}."
-                                 f"Must be one of {list(self.oil_path_dict.keys())}")
+            raise OpgeeException(
+                f"{self.name} oil path is not recognized:{self.oil_path}."
+                f"Must be one of {list(self.oil_path_dict.keys())}"
+            )
         output_oil = self.find_output_stream(output)
 
         output_tp = TemperaturePressure(temp, input_P)
@@ -108,13 +110,15 @@ class CrudeOilDewatering(Process):
             water_heat_capacity = self.field.water.specific_heat(average_oil_temp)
             delta_temp = abs(input_T - temp)
             eff = (1 + self.heat_loss.to("frac")).to("frac")
-            heat_duty = ((oil_rate * oil_heat_capacity + water_rate * water_heat_capacity) *
-                         delta_temp * eff).to("mmBtu/day")
+            heat_duty = ((oil_rate * oil_heat_capacity + water_rate * water_heat_capacity) * delta_temp * eff).to(
+                "mmBtu/day"
+            )
 
         # energy_use
         energy_use = self.energy
-        energy_consumption = \
+        energy_consumption = (
             heat_duty / self.eta_gas if self.prime_mover_type == "NG_engine" else heat_duty / self.eta_electricity
+        )
         energy_carrier = get_energy_carrier(self.prime_mover_type)
         energy_use.set_rate(energy_carrier, energy_consumption)
 

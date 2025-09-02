@@ -56,13 +56,9 @@ class PreMembraneCompressor(Process):
         self.set_iteration_value(gas_to_CO2_membrane.total_flow_rate())
 
         overall_compression_ratio = self.discharge_press / input.tp.P
-        energy_consumption, output_temp, output_press = \
-            Compressor.get_compressor_energy_consumption(
-                self.field,
-                self.prime_mover_type,
-                self.eta_compressor,
-                overall_compression_ratio,
-                input)
+        energy_consumption, output_temp, output_press = Compressor.get_compressor_energy_consumption(
+            self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         # energy-use
         energy_use = self.energy

@@ -15,41 +15,49 @@ _logger = getLogger(__name__)
 
 
 class SettingsPane(OpgeePane):
-
     def get_layout(self, field, **kwargs):
         proc_names = sorted([proc.name for proc in field.processes()])
         proc_sections = [attr_inputs(proc_name) for proc_name in proc_names]
 
         sections = [
-                       attr_inputs('Model'),
-                       attr_inputs('Analysis'),
-                       attr_inputs('Field'),
-                   ] + proc_sections
+            attr_inputs("Model"),
+            attr_inputs("Analysis"),
+            attr_inputs("Field"),
+        ] + proc_sections
 
-        attributes_xml = getParam('OPGEE.UserAttributesFile') or ''
+        attributes_xml = getParam("OPGEE.UserAttributesFile") or ""
 
         # noinspection PyCallingNonCallable
-        layout = html.Div([
-            html.H3('Settings'),
-            html.Div([
-                dcc.Input(id='settings-filename', type='text', debounce=True, pattern=r'^.*\.xml$',
-                          value=attributes_xml, style={'width': '400px'}),
-                html.Button('Save', id='save-settings-button', n_clicks=0),
-                dcc.Markdown(id='save-button-status')
+        layout = html.Div(
+            [
+                html.H3("Settings"),
+                html.Div(
+                    [
+                        dcc.Input(
+                            id="settings-filename",
+                            type="text",
+                            debounce=True,
+                            pattern=r"^.*\.xml$",
+                            value=attributes_xml,
+                            style={"width": "400px"},
+                        ),
+                        html.Button("Save", id="save-settings-button", n_clicks=0),
+                        dcc.Markdown(id="save-button-status"),
+                    ],
+                    style={"height": "100px"},
+                ),
+                html.Div(
+                    sections,
+                    className="row",
+                ),
             ],
-                style={'height': '100px'}),
-            html.Div(sections,
-                     className="row",
-                     ),
-        ], style={'textAlign': "center"},
-            className="row"
+            style={"textAlign": "center"},
+            className="row",
         )
         return layout
 
-
     def add_callbacks(self):
         pass
-
 
     #
     # TBD: Really only works on a current field.
@@ -66,7 +74,7 @@ class SettingsPane(OpgeePane):
         """
         app = self.app
 
-        class_names = ['Model', 'Analysis', 'Field'] + [proc.name for proc in field.processes()]
+        class_names = ["Model", "Analysis", "Field"] + [proc.name for proc in field.processes()]
 
         attr_defs = AttrDefs.get_instance()
         class_dict = attr_defs.classes
@@ -84,19 +92,21 @@ class SettingsPane(OpgeePane):
 
         # First element is the filename field, we pop() this before processing all the generated inputs
         # state_list = [State('settings-filename', 'value')] + [State(id, 'value') for id in ids]
-        state_list = [State(id, 'value') for id in ids]
+        state_list = [State(id, "value") for id in ids]
 
         def func(n_clicks, xml_path, *values):
             if n_clicks == 0 or not values or not xml_path:
-                return 'Save attributes to an xml file'
+                return "Save attributes to an xml file"
             else:
                 self.save_attributes(xml_path, ids, values, analysis, field)
                 return f"Attributes saved to '{xml_path}'"
 
-        app.callback(Output('save-button-status', 'children'),
-                     Input('save-settings-button', 'n_clicks'),
-                     Input('settings-filename', 'value'),
-                     *state_list)(func)
+        app.callback(
+            Output("save-button-status", "children"),
+            Input("save-settings-button", "n_clicks"),
+            Input("settings-filename", "value"),
+            *state_list,
+        )(func)
 
     @staticmethod
     def save_attributes(xml_path, ids, values, analysis, field):
@@ -121,7 +131,7 @@ class SettingsPane(OpgeePane):
         class_value_dict = defaultdict(list)
 
         for id, value in zip(ids, values):
-            class_name, attr_name = id.split(':')
+            class_name, attr_name = id.split(":")
 
             # Don't write out values that are equal to defaults
             class_attrs = class_dict.get(class_name)
@@ -132,24 +142,24 @@ class SettingsPane(OpgeePane):
 
             class_value_dict[class_name].append((attr_name, value))
 
-        root = ET.Element('Model')
+        root = ET.Element("Model")
 
         for class_name, value_pairs in class_value_dict.items():
-            if class_name == 'Model':
+            if class_name == "Model":
                 class_elt = root  # Model attributes are top level
 
-            elif class_name == 'Process':
+            elif class_name == "Process":
                 class_elt = ET.SubElement(root, class_name)
 
-            elif class_name in ('Field', 'Analysis'):
-                name = field.name if class_name == 'Field' else analysis.name
-                class_elt = ET.SubElement(root, class_name, attrib={'name': name})
+            elif class_name in ("Field", "Analysis"):
+                name = field.name if class_name == "Field" else analysis.name
+                class_elt = ET.SubElement(root, class_name, attrib={"name": name})
 
             else:  # Process subclass
-                class_elt = ET.SubElement(root, 'Process', attrib={'name': class_name})
+                class_elt = ET.SubElement(root, "Process", attrib={"name": class_name})
 
             for attr_name, value in value_pairs:
-                elt = ET.SubElement(class_elt, 'A', attrib={'name': attr_name})
+                elt = ET.SubElement(class_elt, "A", attrib={"name": attr_name})
                 elt.text = str(value)
 
         # ET.dump(root)
@@ -158,7 +168,7 @@ class SettingsPane(OpgeePane):
         path = Path(xml_path)
         mkdirs(path.parent)
 
-        _logger.info('Writing %s', xml_path)
+        _logger.info("Writing %s", xml_path)
 
         tree = ET.ElementTree(root)
-        tree.write(xml_path, xml_declaration=True, pretty_print=True, encoding='utf-8')
+        tree.write(xml_path, xml_declaration=True, pretty_print=True, encoding="utf-8")

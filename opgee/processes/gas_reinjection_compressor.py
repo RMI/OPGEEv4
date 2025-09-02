@@ -21,13 +21,9 @@ class GasReinjectionCompressor(Process):
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
-        self._required_inputs = [
-            "gas"
-        ]
+        self._required_inputs = ["gas"]
 
-        self._required_outputs = [
-            "gas"
-        ]
+        self._required_outputs = ["gas"]
 
         self.air_separation_energy_intensity = None
         self.eta_compressor = None
@@ -70,14 +66,11 @@ class GasReinjectionCompressor(Process):
         gas_to_well.copy_flow_rates_from(input)
         gas_to_well.subtract_rates_from(gas_fugitives)
 
-        discharge_press = self.res_press + ureg.Quantity(500., "psi")
+        discharge_press = self.res_press + ureg.Quantity(500.0, "psi")
         overall_compression_ratio = discharge_press / input.tp.P
         energy_consumption, output_temp, _ = Compressor.get_compressor_energy_consumption(
-            self.field,
-            self.prime_mover_type,
-            self.eta_compressor,
-            overall_compression_ratio,
-            input)
+            self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         gas_to_well.tp.set(T=output_temp, P=discharge_press)
 
@@ -92,7 +85,6 @@ class GasReinjectionCompressor(Process):
             N2_volume_rate = field.get_process_data("N2_reinjection_volume_rate")
             energy_consump_air_separation = N2_volume_rate * self.air_separation_energy_intensity
             energy_use.set_rate(EN_ELECTRICITY, energy_consump_air_separation)
-
 
         # import/export
         self.set_import_from_energy(energy_use)

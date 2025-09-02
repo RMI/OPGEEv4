@@ -9,13 +9,13 @@ class LoopProc1(Process):
         # find appropriate streams by checking connected processes' capabilities
         oil_flow_rate = ureg.Quantity(100.0, Stream.units())
 
-        out_stream = self.find_output_stream('oil')
-        out_stream.set_liquid_flow_rate('oil', oil_flow_rate)
+        out_stream = self.find_output_stream("oil")
+        out_stream.set_liquid_flow_rate("oil", oil_flow_rate)
 
 
 class LoopProc2(Process):
     def run(self, analysis):
-        crude_oil = self.find_input_stream('oil')
+        crude_oil = self.find_input_stream("oil")
         recycled_water = self.find_input_stream("water")
 
         if crude_oil.is_uninitialized() and recycled_water.is_uninitialized():
@@ -66,16 +66,17 @@ class LoopProc4(Process):
 
 
 def test_process_single_loop():
-    process_loop_model = load_test_model('test_process_loop_model.xml')
-    analysis = process_loop_model.get_analysis('test')
-    field = analysis.get_field('test_single_loop')
+    process_loop_model = load_test_model("test_process_loop_model.xml")
+    analysis = process_loop_model.get_analysis("test")
+    field = analysis.get_field("test_single_loop")
     field.run(analysis, compute_ci=False)
 
 
 def test_process_double_loops():
-    process_loop_model = load_test_model('test_process_loop_model.xml')
-    analysis = process_loop_model.get_analysis('test')
-    field = analysis.get_field('test_double_loops')
+    process_loop_model = load_test_model("test_process_loop_model.xml")
+    analysis = process_loop_model.get_analysis("test")
+    field = analysis.get_field("test_double_loops")
     field.run(analysis, compute_ci=False)
+
 
 # TBD: add tests that no elements of cycle are tagged run-after=True in XML

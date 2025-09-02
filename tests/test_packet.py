@@ -1,14 +1,16 @@
 import pytest
 from opgee.manager import FieldPacket, TrialPacket, _batched
 
+
 def test_batched():
     with pytest.raises(ValueError, match="_batched: length must be > 0"):
         list(_batched([1, 2, 3], 0))
 
+
 def test_trial_packet():
     trial_nums = [1, 2, 4, 5, 10]
-    field_name = 'field-1'
-    sim_dir = '/foo/bar/baz'
+    field_name = "field-1"
+    sim_dir = "/foo/bar/baz"
     pkt = TrialPacket(sim_dir, field_name, trial_nums)
 
     assert pkt.sim_dir == sim_dir
@@ -16,10 +18,11 @@ def test_trial_packet():
     assert pkt.field_name == field_name
     assert list(n for n in pkt) == trial_nums
 
+
 def test_field_packet():
-    model_xml_file = '/foo/bar/baz.xml'
-    field_names = ['a', 'b', 'c', 'd']
-    analysis_name = 'a3'
+    model_xml_file = "/foo/bar/baz.xml"
+    field_names = ["a", "b", "c", "d"]
+    analysis_name = "a3"
     pkt = FieldPacket(model_xml_file, analysis_name, field_names)
 
     assert pkt.model_xml_file == model_xml_file

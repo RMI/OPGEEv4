@@ -21,30 +21,31 @@ _logger = getLogger(__name__)
 class BitumenMining(Process):
     # TODO: documentation below describes input streams that do not appear in the code.
     """
-        This process takes input streams and produces output streams as part of an
-        oil sands mining operation.
+    This process takes input streams and produces output streams as part of an
+    oil sands mining operation.
 
-        Inputs:
-            - Streams from bitumen path dictionary
+    Inputs:
+        - Streams from bitumen path dictionary
 
-        Outputs:
-            - Bitumen stream for upgrading or dilution
-            - Gas stream for partition
+    Outputs:
+        - Bitumen stream for upgrading or dilution
+        - Gas stream for partition
 
-        Attributes:
-            - oil_sands_mine: Name of the oil sands mine
-            - API_bitumen: API gravity of the bitumen
-            - bitumen_SG: Specific gravity of the bitumen
-            - mined_bitumen_tp: Temperature and pressure of the mined bitumen
-            - oil_prod_rate: Oil production rate
-            - upgrader_type: Type of upgrader used
-            - gas_comp: Gas composition
-            - FOR: Flaring oil ratio
-            - VOR: Venting oil ratio
-            - bitumen_path_dict: Dictionary of possible paths for the bitumen stream
-            - water_density: Density of water
-            - CH4_loss_rate: Methane loss rate
+    Attributes:
+        - oil_sands_mine: Name of the oil sands mine
+        - API_bitumen: API gravity of the bitumen
+        - bitumen_SG: Specific gravity of the bitumen
+        - mined_bitumen_tp: Temperature and pressure of the mined bitumen
+        - oil_prod_rate: Oil production rate
+        - upgrader_type: Type of upgrader used
+        - gas_comp: Gas composition
+        - FOR: Flaring oil ratio
+        - VOR: Venting oil ratio
+        - bitumen_path_dict: Dictionary of possible paths for the bitumen stream
+        - water_density: Density of water
+        - CH4_loss_rate: Methane loss rate
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -53,16 +54,18 @@ class BitumenMining(Process):
         self._required_outputs = [
             # TODO: If the process names were avoided, we might have just one output stream
             #  with, say, "heavy oil". Should describe the contents, not the destination.
-            ("oil for upgrading",     # TODO: avoid process names in contents.
-             "oil for dilution"),     # TODO: avoid process names in contents.
-
+            (
+                "oil for upgrading",  # TODO: avoid process names in contents.
+                "oil for dilution",
+            ),  # TODO: avoid process names in contents.
             "gas for partition",
         ]
 
-
-        self.bitumen_path_dict = {"Integrated with upgrader": "oil for upgrading",
-                                  "Integrated with diluent": "oil for dilution",
-                                  "Integrated with both": "oil for dilution"}
+        self.bitumen_path_dict = {
+            "Integrated with upgrader": "oil for upgrading",
+            "Integrated with diluent": "oil for dilution",
+            "Integrated with both": "oil for dilution",
+        }
         self.water_density = self.water.density()
 
         self.CH4_loss_rate = None
@@ -87,8 +90,7 @@ class BitumenMining(Process):
 
         self.mined_bitumen_t = field.mined_bitumen_t
         self.mined_bitumen_p = field.mined_bitumen_p
-        self.mined_bitumen_tp = TemperaturePressure(self.mined_bitumen_t,
-                                                    self.mined_bitumen_p)
+        self.mined_bitumen_tp = TemperaturePressure(self.mined_bitumen_t, self.mined_bitumen_p)
         self.downhole_pump = field.downhole_pump
         self.oil_volume_rate = field.oil_volume_rate
         self.upgrader_type = field.upgrader_type
@@ -105,13 +107,14 @@ class BitumenMining(Process):
         try:
             output = self.bitumen_path_dict[self.oil_sands_mine]
         except:
-            raise OpgeeException(f"{self.name} bitumen is not recognized:{self.oil_sands_mine}."
-                                 f"Must be one of {list(self.bitumen_path_dict.keys())}")
+            raise OpgeeException(
+                f"{self.name} bitumen is not recognized:{self.oil_sands_mine}."
+                f"Must be one of {list(self.bitumen_path_dict.keys())}"
+            )
         output_bitumen = self.find_output_stream(output)
 
         output_tp = self.mined_bitumen_tp
-        output_bitumen.\
-            set_liquid_flow_rate("oil", bitumen_mass_rate, tp=output_tp)
+        output_bitumen.set_liquid_flow_rate("oil", bitumen_mass_rate, tp=output_tp)
         output_bitumen.set_API(field.attr("API"))
         self.set_iteration_value(output_bitumen.total_flow_rate())
 
@@ -132,14 +135,19 @@ class BitumenMining(Process):
 
         # energy-use
         energy_use = self.energy
-        NG_consumption = \
-            self.oil_volume_rate * ureg.Quantity(mining_intensity_table["Natural gas use"],
-                                                 unit_col["Natural gas use"]) * self.model.const("NG-heating-value")
-        diesel_consumption = \
-            self.oil_volume_rate * ureg.Quantity(mining_intensity_table["Diesel fuel use"],
-                                                 unit_col["Diesel fuel use"]) * self.model.const("diesel-LHV")
-        electricity_consumption = \
-            self.oil_volume_rate * ureg.Quantity(mining_intensity_table["Electricity use"], unit_col["Electricity use"])
+        NG_consumption = (
+            self.oil_volume_rate
+            * ureg.Quantity(mining_intensity_table["Natural gas use"], unit_col["Natural gas use"])
+            * self.model.const("NG-heating-value")
+        )
+        diesel_consumption = (
+            self.oil_volume_rate
+            * ureg.Quantity(mining_intensity_table["Diesel fuel use"], unit_col["Diesel fuel use"])
+            * self.model.const("diesel-LHV")
+        )
+        electricity_consumption = self.oil_volume_rate * ureg.Quantity(
+            mining_intensity_table["Electricity use"], unit_col["Electricity use"]
+        )
         energy_use.set_rate(EN_NATURAL_GAS, NG_consumption.to("mmBtu/day"))
         energy_use.set_rate(EN_DIESEL, diesel_consumption.to("mmBtu/day"))
         energy_use.set_rate(EN_ELECTRICITY, electricity_consumption.to("mmBtu/day"))

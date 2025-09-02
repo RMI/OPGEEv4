@@ -26,14 +26,15 @@ _logger = getLogger(__name__)
 
 class WaterInjection(Process):
     """
-        TBD
+    TBD
 
-        input streams:
-            -
+    input streams:
+        -
 
-        output streams:
-            -
+    output streams:
+        -
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -101,12 +102,18 @@ class WaterInjection(Process):
         water_gravitation_head = self.water_density * self.gravitation_acc * self.depth
         water_flow_velocity = single_well_water_volume / self.xsection_area
 
-        friction_loss = (self.friction_factor * self.depth * water_flow_velocity ** 2) / \
-                        (2 * self.prod_tubing_diam * self.gravitation_const) * self.water_density
+        friction_loss = (
+            (self.friction_factor * self.depth * water_flow_velocity**2)
+            / (2 * self.prod_tubing_diam * self.gravitation_const)
+            * self.water_density
+        )
         diff_press = wellbore_flowing_press - water_gravitation_head
 
-        pumping_press = diff_press + friction_loss - self.press_pump \
-            if diff_press + friction_loss >= 0 else ureg.Quantity(0.0, "psia")
+        pumping_press = (
+            diff_press + friction_loss - self.press_pump
+            if diff_press + friction_loss >= 0
+            else ureg.Quantity(0.0, "psia")
+        )
         pumping_hp_single_well = pumping_press * single_well_water_volume / self.eta_pump
 
         # energy-use

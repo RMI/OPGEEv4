@@ -9,30 +9,36 @@ from ..subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
-class UpdateCommand(SubcommandABC):
 
+class UpdateCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : 'Update model XML files with Fields inside Analyses to use FieldRef instead.'}
-        super().__init__('update', subparsers, kwargs)
+        kwargs = {"help": "Update model XML files with Fields inside Analyses to use FieldRef instead."}
+        super().__init__("update", subparsers, kwargs)
 
     def addArgs(self, parser):
-        parser.add_argument('model_file',
-                            help='''The model XML file to operate on.''')
+        parser.add_argument("model_file", help="""The model XML file to operate on.""")
 
-        parser.add_argument('-o', '--output',
-                            help='''The path of the updated model XML file. If not specified, 
+        parser.add_argument(
+            "-o",
+            "--output",
+            help="""The path of the updated model XML file. If not specified, 
                             the output name will be the input name with "-updated" added before 
-                            the ".xml" extension.''')
+                            the ".xml" extension.""",
+        )
 
-        parser.add_argument('--overwrite', action='store_true',
-                            help='Force overwrite of an existing model XML. Cannot be the same'
-                                 'file as the input.')
+        parser.add_argument(
+            "--overwrite",
+            action="store_true",
+            help="Force overwrite of an existing model XML. Cannot be the samefile as the input.",
+        )
 
-        parser.add_argument('--ignore-duplicates', action='store_true',
-                            help='Ignore duplicate field names in the input file, saving only the final one.')
+        parser.add_argument(
+            "--ignore-duplicates",
+            action="store_true",
+            help="Ignore duplicate field names in the input file, saving only the final one.",
+        )
 
-        return parser   # used for auto-doc generation
-
+        return parser  # used for auto-doc generation
 
     def run(self, args, tool):
         from collections import OrderedDict
@@ -65,19 +71,21 @@ class UpdateCommand(SubcommandABC):
 
         field_dict = OrderedDict()
         # analyses = root.findall('Analysis')
-        for analysis in root.iter('Analysis'):
-            for field in analysis.iter('Field'):
-                name = field.attrib['name']
+        for analysis in root.iter("Analysis"):
+            for field in analysis.iter("Field"):
+                name = field.attrib["name"]
 
                 if field_dict.get(name) and not args.ignore_duplicates:
-                    raise XmlFormatError(f"Field '{name}' appears multiple times in file '{input}'. "
-                                         "Use --ignore-duplicates to save only the final <Field> element.")
+                    raise XmlFormatError(
+                        f"Field '{name}' appears multiple times in file '{input}'. "
+                        "Use --ignore-duplicates to save only the final <Field> element."
+                    )
 
                 field_dict[name] = field
 
                 # replace <Field> element with <FieldRef>
                 analysis.remove(field)
-                ET.SubElement(analysis, 'FieldRef', attrib={'name': name})
+                ET.SubElement(analysis, "FieldRef", attrib={"name": name})
 
         # Move all <Field> elements to the <Model> root
         for field in field_dict.values():
@@ -85,4 +93,4 @@ class UpdateCommand(SubcommandABC):
 
         print(f"Writing '{output}'")
         tree = xmlfile.getTree()
-        tree.write(output, xml_declaration=True, pretty_print=True, encoding='utf-8')
+        tree.write(output, xml_declaration=True, pretty_print=True, encoding="utf-8")

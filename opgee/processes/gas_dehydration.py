@@ -23,35 +23,38 @@ _logger = getLogger(__name__)
 
 class GasDehydration(Process):
     """
-        This class represents the gas dehydration process in an oil and gas field.
-        It calculates the energy consumption and emissions related to the gas dehydration process.
+    This class represents the gas dehydration process in an oil and gas field.
+    It calculates the energy consumption and emissions related to the gas dehydration process.
 
-        Attributes:
-            gas_dehydration_tbl (DataFrame): A table containing gas dehydration correlations.
-            mol_to_scf (float): Constant to convert moles to standard cubic feet.
-            air_elevation_const (float): Constant used for air elevation correction.
-            air_density_ratio (float): Constant used for air density ratio calculation.
-            reflux_ratio (float): Reflux ratio used in the gas dehydration process.
-            regeneration_feed_temp (float): Regeneration feed temperature used in the gas dehydration process.
-            eta_reboiler_dehydrator (float): Efficiency of the reboiler in the dehydrator.
-            air_cooler_delta_T (float): Temperature difference across the air cooler.
-            air_cooler_press_drop (float): Pressure drop across the air cooler.
-            air_cooler_fan_eff (float): Efficiency of the air cooler fan.
-            air_cooler_speed_reducer_eff (float): Efficiency of the air cooler speed reducer.
-            water_press (float): Pressure of the water in the process.
-            gas_path (str): The path of the gas in the process.
-            gas_path_dict (dict): Dictionary mapping gas path names to stream names.
+    Attributes:
+        gas_dehydration_tbl (DataFrame): A table containing gas dehydration correlations.
+        mol_to_scf (float): Constant to convert moles to standard cubic feet.
+        air_elevation_const (float): Constant used for air elevation correction.
+        air_density_ratio (float): Constant used for air density ratio calculation.
+        reflux_ratio (float): Reflux ratio used in the gas dehydration process.
+        regeneration_feed_temp (float): Regeneration feed temperature used in the gas dehydration process.
+        eta_reboiler_dehydrator (float): Efficiency of the reboiler in the dehydrator.
+        air_cooler_delta_T (float): Temperature difference across the air cooler.
+        air_cooler_press_drop (float): Pressure drop across the air cooler.
+        air_cooler_fan_eff (float): Efficiency of the air cooler fan.
+        air_cooler_speed_reducer_eff (float): Efficiency of the air cooler speed reducer.
+        water_press (float): Pressure of the water in the process.
+        gas_path (str): The path of the gas in the process.
+        gas_path_dict (dict): Dictionary mapping gas path names to stream names.
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
-        self.gas_path_dict = {"Minimal": "gas for gas partition",
-                              "Acid Gas": "gas for AGR",
-                              "Acid Wet Gas": "gas for AGR",
-                              "CO2-EOR Membrane": "gas for chiller",
-                              "CO2-EOR Ryan Holmes": "gas for Ryan Holmes",
-                              "Sour Gas Reinjection": "gas for sour gas compressor",
-                              "Wet Gas": "gas for demethanizer"}
+        self.gas_path_dict = {
+            "Minimal": "gas for gas partition",
+            "Acid Gas": "gas for AGR",
+            "Acid Wet Gas": "gas for AGR",
+            "CO2-EOR Membrane": "gas for chiller",
+            "CO2-EOR Ryan Holmes": "gas for Ryan Holmes",
+            "Sour Gas Reinjection": "gas for sour gas compressor",
+            "Wet Gas": "gas for demethanizer",
+        }
 
         # TODO: avoid process names in contents.
         self._required_inputs = [
@@ -91,9 +94,9 @@ class GasDehydration(Process):
         self.air_cooler_fan_eff = self.attr("air_cooler_fan_eff")
         self.air_cooler_speed_reducer_eff = self.attr("air_cooler_speed_reducer_eff")
 
-        self.water_press = field.water.density() * \
-                           self.air_cooler_press_drop * \
-                           field.model.const("gravitational-acceleration")
+        self.water_press = (
+            field.water.density() * self.air_cooler_press_drop * field.model.const("gravitational-acceleration")
+        )
 
         self.gas_path = field.gas_path
 
@@ -113,8 +116,10 @@ class GasDehydration(Process):
         try:
             output = self.gas_path_dict[self.gas_path]
         except:
-            raise OpgeeException(f"{self.name} gas path is not recognized:{self.gas_path}. "
-                                 f"Must be one of {list(self.gas_path_dict.keys())}")
+            raise OpgeeException(
+                f"{self.name} gas path is not recognized:{self.gas_path}. "
+                f"Must be one of {list(self.gas_path_dict.keys())}"
+            )
 
         output_gas = self.find_output_stream(output)
         output_gas.copy_flow_rates_from(input)
@@ -144,11 +149,13 @@ class GasDehydration(Process):
 
         # Gas dehydration modeling based on Aspen HYSYS
         # Input values for variable getting from HYSYS
-        variable_bound_dict = {"feed_gas_press": [14.7, 1014.7],  # unit in psia
-                               "feed_gas_temp": [80.0, 100.0],  # unit in degree F
-                               "water_content_volume": [0.0005, 0.005],
-                               "reflux_ratio": [1.5, 3.0],
-                               "regeneration_feed_temp": [190.0, 200.0]}  # unit in degree F
+        variable_bound_dict = {
+            "feed_gas_press": [14.7, 1014.7],  # unit in psia
+            "feed_gas_temp": [80.0, 100.0],  # unit in degree F
+            "water_content_volume": [0.0005, 0.005],
+            "reflux_ratio": [1.5, 3.0],
+            "regeneration_feed_temp": [190.0, 200.0],
+        }  # unit in degree F
 
         x1 = get_bounded_value(feed_gas_press.to("psia").m, "feed_gas_press", variable_bound_dict)
         x2 = get_bounded_value(feed_gas_temp.to("degF").m, "feed_gas_temp", variable_bound_dict)
@@ -157,12 +164,12 @@ class GasDehydration(Process):
         x5 = get_bounded_value(self.regeneration_feed_temp.to("degF").m, "regeneration_feed_temp", variable_bound_dict)
 
         corr_result_df = run_corr_eqns(x1, x2, x3, x4, x5, self.gas_dehydration_tbl)
-        reboiler_heavy_duty = ureg.Quantity(max(0., corr_result_df["Reboiler"] * gas_multiplier), "kW")
+        reboiler_heavy_duty = ureg.Quantity(max(0.0, corr_result_df["Reboiler"] * gas_multiplier), "kW")
         pump_duty = ureg.Quantity(max(0, corr_result_df["Pump"] * gas_multiplier), "kW")
-        condenser_thermal_load = ureg.Quantity(max(0., corr_result_df["Condenser"] * gas_multiplier), "kW")
+        condenser_thermal_load = ureg.Quantity(max(0.0, corr_result_df["Condenser"] * gas_multiplier), "kW")
 
         # TODO: Add this stream to water treatment process
-        water_output = ureg.Quantity(max(0., corr_result_df["Resid water"]), "lb/mmscf") * gas_volume_rate
+        water_output = ureg.Quantity(max(0.0, corr_result_df["Resid water"]), "lb/mmscf") * gas_volume_rate
 
         reboiler_fuel_use = reboiler_heavy_duty * self.eta_reboiler_dehydrator
         air_cooler_energy_consumption = predict_blower_energy_use(self, condenser_thermal_load)
@@ -200,11 +207,8 @@ class GasDehydration(Process):
         Tc_over_T = Tc_over_T.m
         critical_pressure = critical_pressure.m
 
-        Pv_over_Pc = np.exp((a1 * tau +
-                             a2 * tau ** 1.5 +
-                             a3 * tau ** 3 +
-                             a4 * tau ** 3.5 +
-                             a5 * tau ** 4 +
-                             a6 * tau ** 7.5) * Tc_over_T)
+        Pv_over_Pc = np.exp(
+            (a1 * tau + a2 * tau**1.5 + a3 * tau**3 + a4 * tau**3.5 + a5 * tau**4 + a6 * tau**7.5) * Tc_over_T
+        )
         result = Pv_over_Pc * critical_pressure
         return ureg.Quantity(result, "Pa")

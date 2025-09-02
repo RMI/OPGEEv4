@@ -47,12 +47,15 @@ field_groups_model_xml = """
 </Model>
 """
 
+
 def test_field_groups():
     field_groups_model = load_model_from_str(field_groups_model_xml)
     field_groups_model.validate()
 
-    analysis = field_groups_model.get_analysis('test')
+    analysis = field_groups_model.get_analysis("test")
     # Pattern should match only fields 'test1' and 'test2', and not 'test3'
-    assert analysis.get_field('test1') and analysis.get_field('test2') and not analysis.get_field('test3', raiseError=False)
-
-
+    assert (
+        analysis.get_field("test1")
+        and analysis.get_field("test2")
+        and not analysis.get_field("test3", raiseError=False)
+    )

@@ -19,14 +19,15 @@ _logger = getLogger(__name__)
 
 class WaterTreatment(Process):
     """
-        The water treatment process ...
+    The water treatment process ...
 
-        Inputs:
-            - A
+    Inputs:
+        - A
 
-        Outputs:
-            - B
+    Outputs:
+        - B
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -38,10 +39,12 @@ class WaterTreatment(Process):
 
         field = self.field
         if field.steam_flooding:
-            self._required_outputs.extend([
-                "makeup water",
-                "produced water",
-            ])
+            self._required_outputs.extend(
+                [
+                    "makeup water",
+                    "produced water",
+                ]
+            )
 
         if field.water_flooding or field.water_reinjection:
             self._required_outputs.append("water")
@@ -88,8 +91,7 @@ class WaterTreatment(Process):
         self.makeup_water_treatment = None
         self.makeup_water_treatment_tbl = self.attr("makeup_water_treatment_table")
 
-        self.makeup_water_tp = TemperaturePressure(self.attr("makeup_water_temp"),
-                                                   self.attr("makeup_water_press"))
+        self.makeup_water_tp = TemperaturePressure(self.attr("makeup_water_temp"), self.attr("makeup_water_press"))
 
         self.num_stages = self.attr("number_of_stages")
 
@@ -131,32 +133,33 @@ class WaterTreatment(Process):
         makeup_water_mass = max(injected_water_mass_demand - input_water_mass_rate, ureg.Quantity(0.0, "tonne/day"))
         prod_water_mass = min(injected_water_mass_demand, input_water_mass_rate)
 
-        makeup_steam_mass =\
-            max(injected_steam_mass_demand - input_water_mass_rate + prod_water_mass,
-                ureg.Quantity(0.0, "tonne/day"))
-        prod_steam_mass =\
-            min(injected_steam_mass_demand, input_water_mass_rate - prod_water_mass)
+        makeup_steam_mass = max(
+            injected_steam_mass_demand - input_water_mass_rate + prod_water_mass, ureg.Quantity(0.0, "tonne/day")
+        )
+        prod_steam_mass = min(injected_steam_mass_demand, input_water_mass_rate - prod_water_mass)
 
         if self.steam_flooding:
             makeup_water_to_steam = self.find_output_stream("makeup water")
             prod_water_to_steam = self.find_output_stream("produced water")
             prod_water_to_steam.set_liquid_flow_rate("H2O", prod_steam_mass.to("tonne/day"), tp=input.tp)
             if makeup_steam_mass.m != 0:
-                makeup_water_to_steam.set_liquid_flow_rate("H2O", makeup_steam_mass.to("tonne/day"),
-                                                           tp=self.makeup_water_tp)
+                makeup_water_to_steam.set_liquid_flow_rate(
+                    "H2O", makeup_steam_mass.to("tonne/day"), tp=self.makeup_water_tp
+                )
         if self.water_flooding or self.water_reinjection:
             water_to_reinjection = self.find_output_stream("water")
             water_to_reinjection_rate = prod_water_mass + makeup_water_mass
             water_to_reinjection.set_liquid_flow_rate("H2O", water_to_reinjection_rate, tp=input.tp)
 
-        water_for_disp =\
+        water_for_disp = (
             input_water_mass_rate - makeup_water_mass - makeup_steam_mass - prod_water_mass - prod_steam_mass
+        )
         self.set_iteration_value(water_for_disp)
 
         surface_disp_rate = water_for_disp * self.frac_disp_surface
         subsurface_disp_rate = water_for_disp * self.frac_disp_subsurface
 
-        water_density = field.water.density() # water is under the standard conditions
+        water_density = field.water.density()  # water is under the standard conditions
         input_water_volume_rate = input_water_mass_rate / water_density
         makeup_water_vol_downstream = (makeup_water_mass + makeup_steam_mass) / water_density
 
@@ -186,21 +189,19 @@ class WaterTreatment(Process):
         self.sum_intermediate_results()
 
     def get_water_treatment_elec(self, water_treatment_table, water_volume_rate):
-
         electricity = 0
         stages = sorted(water_treatment_table.index.unique())
 
         if self.num_stages > len(stages) or self.num_stages < 0:
             raise OpgeeException(
-                f"water treatment: number of stages ({self.num_stages}) must be > 0 and <= {len(stages)}")
+                f"water treatment: number of stages ({self.num_stages}) must be > 0 and <= {len(stages)}"
+            )
 
-        for stage in stages[:self.num_stages]:
+        for stage in stages[: self.num_stages]:
             stage_row = water_treatment_table.loc[stage]
-            electricity_factor = (stage_row["Apply"].squeeze() *
-                                  stage_row["EC"].squeeze()).sum()
+            electricity_factor = (stage_row["Apply"].squeeze() * stage_row["EC"].squeeze()).sum()
             electricity += electricity_factor * water_volume_rate
-            loss_factor = (stage_row["Apply"].squeeze() *
-                           stage_row["Volume loss"].squeeze()).sum()
-            water_volume_rate *= (1 - loss_factor)
+            loss_factor = (stage_row["Apply"].squeeze() * stage_row["Volume loss"].squeeze()).sum()
+            water_volume_rate *= 1 - loss_factor
 
         return electricity

@@ -44,6 +44,7 @@ class Drilling(Process):
         num_wells : int
             The total number of wells (production + water injection).
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -92,19 +93,23 @@ class Drilling(Process):
         land_use_intensity = land_use_intensity_df.loc[self.field_development_intensity]
         stream = Stream("stream_stp", tp=field.stp)
 
-
         oil_SG = field.oil.oil_specific_gravity
         boundary_API = field.get_process_data("boundary_API")
         if boundary_API is not None:
             oil_SG = field.oil.specific_gravity(boundary_API)
             stream.set_API(boundary_API)
 
-        land_use_emission = \
-            (land_use_intensity.sum() * field.oil_volume_rate * field.oil.volume_energy_density(
-                stream,
-                oil_SG,
-                field.oil.gas_specific_gravity,
-                field.oil.gas_oil_ratio)) if not field.offshore else ureg.Quantity(0, "tonne/day")
+        land_use_emission = (
+            (
+                land_use_intensity.sum()
+                * field.oil_volume_rate
+                * field.oil.volume_energy_density(
+                    stream, oil_SG, field.oil.gas_specific_gravity, field.oil.gas_oil_ratio
+                )
+            )
+            if not field.offshore
+            else ureg.Quantity(0, "tonne/day")
+        )
 
         # energy-use
         energy_use = self.energy
@@ -123,7 +128,7 @@ class Drilling(Process):
 
         value = self.pressure_gradient_fracturing
         tbl = self.fracture_consumption_tbl
-        result = [np.interp(value.m, tbl[col].index, tbl[col].values) for col in ['a', 'b', 'c']]
+        result = [np.interp(value.m, tbl[col].index, tbl[col].values) for col in ["a", "b", "c"]]
 
         return result
 

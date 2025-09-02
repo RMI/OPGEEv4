@@ -17,6 +17,7 @@ class LNGRegasification(Process):
     """
     LNG liquefaction calculate emission of transported gas to regasification
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -63,10 +64,3 @@ class LNGRegasification(Process):
 
         # emissions
         self.set_combustion_emissions()
-
-
-
-
-
-
-

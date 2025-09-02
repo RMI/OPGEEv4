@@ -17,10 +17,12 @@ from ..process import Process
 
 _logger = getLogger(__name__)
 
+
 class TransmissionCompressor(Process):
     """
     Transmission compressor calculate compressor emissions after the production site boundary.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -76,29 +78,24 @@ class TransmissionCompressor(Process):
 
         # initial compressor properties
         overall_compression_ratio_init = station_outlet_press.to("psi_absolute") / input.tp.P
-        energy_consumption_init, output_temp_init, output_press_init = \
-            Compressor.get_compressor_energy_consumption(
-                self.field,
-                self.prime_mover_type,
-                self.eta_compressor,
-                overall_compression_ratio_init,
-                input)
+        energy_consumption_init, output_temp_init, output_press_init = Compressor.get_compressor_energy_consumption(
+            self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio_init, input
+        )
 
         # Along-pipeline booster compressor properties
         overall_compression_ratio_booster = station_outlet_press.to("psi_absolute") / self.transmission_inlet_press
-        energy_consumption_booster, output_temp_booster, output_press_booster = \
+        energy_consumption_booster, output_temp_booster, output_press_booster = (
             Compressor.get_compressor_energy_consumption(
-                self.field,
-                self.prime_mover_type,
-                self.eta_compressor,
-                overall_compression_ratio_booster,
-                input)
+                self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio_booster, input
+            )
+        )
 
         # energy-use
         energy_use = self.energy
         energy_carrier = get_energy_carrier(self.prime_mover_type)
-        energy_use.set_rate(energy_carrier, energy_consumption_init +
-                            energy_consumption_booster * num_compressor_stations)
+        energy_use.set_rate(
+            energy_carrier, energy_consumption_init + energy_consumption_booster * num_compressor_stations
+        )
 
         # import/export
         self.set_import_from_energy(energy_use)

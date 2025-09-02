@@ -11,6 +11,7 @@ from ..process import Process
 
 _logger = getLogger(__name__)
 
+
 class NGL(Process):
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
@@ -23,6 +24,7 @@ class NGL(Process):
         self._required_outputs = [
             "LPG",
         ]
+
     def run(self, analysis):
         self.print_running_msg()
 
@@ -35,4 +37,3 @@ class NGL(Process):
 
         output = self.find_output_stream("LPG")
         output.copy_flow_rates_from(input)
-

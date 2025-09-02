@@ -14,6 +14,7 @@ def test_distro_xml():
     param_list = ParameterList.load()
     assert param_list
 
+
 def test_good_distros_xml():
     xml_string = """
 <ParameterList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -89,31 +90,33 @@ def test_good_distros_xml():
     assert params.parameter("inactive") is None
 
     p = params.parameter("triangle")
-    assert p.rv.dist.name == 'triang'
+    assert p.rv.dist.name == "triang"
 
     p = params.parameter("normal")
-    assert p.rv.dist.name == 'norm'
+    assert p.rv.dist.name == "norm"
 
     p = params.parameter("lognormal")
-    assert p.rv.dist.name == 'lognorm'
+    assert p.rv.dist.name == "lognorm"
 
     p = params.parameter("uniform")
-    assert p.rv.dist.name == 'uniform'
+    assert p.rv.dist.name == "uniform"
 
 
-analysis_name = 'test-mcs'
-field_name = 'test-mcs'
-model_file = path_to_test_file('test_mcs.xml')
-sim_dir = tmpdir('test-mcs')
+analysis_name = "test-mcs"
+field_name = "test-mcs"
+model_file = path_to_test_file("test_mcs.xml")
+sim_dir = tmpdir("test-mcs")
 trials = 100
 
 header = "variable_name,distribution_type,mean,SD,low_bound,high_bound,prob_of_yes,default_value,pathname,notes\n"
 
+
 def read_string_distros(data):
     """Read parameter distributions from a list of strings formatted as CSV data"""
-    csv = StringIO(header + '\n'.join(data))
-    Distribution.instances.clear()              # empty the distros so we read new data without stale info
+    csv = StringIO(header + "\n".join(data))
+    Distribution.instances.clear()  # empty the distros so we read new data without stale info
     read_distributions(pathname=csv)
+
 
 def test_good_distros():
     data = (
@@ -122,32 +125,35 @@ def test_good_distros():
     )
     read_string_distros(data)
     assert len(Distribution.instances) == len(data)
-    assert (foo := Distribution.distro_by_name('foo'))
-    assert str(foo).startswith('<Distribution ')
+    assert (foo := Distribution.distro_by_name("foo"))
+    assert str(foo).startswith("<Distribution ")
 
-    assert (bar := Distribution.distro_by_name('Analysis.bar'))
+    assert (bar := Distribution.distro_by_name("Analysis.bar"))
 
-    assert bar.class_name == 'Analysis' and bar.attr_name == "bar"
+    assert bar.class_name == "Analysis" and bar.attr_name == "bar"
+
 
 def test_bad_distros():
     data = (
-        "foo,uniform,0,0,40,40,,,,",    # high == low
-        "bar,normal,100,0,,,,,,",       # stdev is zero
-        "boo,lognormal,100,0,,,,,,",    # stdev is zero
-        "buz,unknown-distro,,,,,,,,",   # unknown distro
-     )
+        "foo,uniform,0,0,40,40,,,,",  # high == low
+        "bar,normal,100,0,,,,,,",  # stdev is zero
+        "boo,lognormal,100,0,,,,,,",  # stdev is zero
+        "buz,unknown-distro,,,,,,,,",  # unknown distro
+    )
     read_string_distros(data)
 
-    assert len(Distribution.instances) == 0 # all should be ignored
+    assert len(Distribution.instances) == 0  # all should be ignored
 
 
 def test_missing_analysis():
     with pytest.raises(McsUserError, match="Analysis '.*' was not found"):
-        Simulation.new(sim_dir, [], analysis_name + "_Not_A_Valid_Name_", trials,
-                       overwrite=True, field_names=[field_name])
+        Simulation.new(
+            sim_dir, [], analysis_name + "_Not_A_Valid_Name_", trials, overwrite=True, field_names=[field_name]
+        )
+
 
 def test_gensim():
-    cmdline = f'gensim -t {trials} -s {sim_dir} -a test-mcs -f {field_name} -m {model_file} --overwrite'
+    cmdline = f"gensim -t {trials} -s {sim_dir} -a test-mcs -f {field_name} -m {model_file} --overwrite"
     opg(cmdline)
 
     sim = Simulation(sim_dir)
@@ -159,20 +165,20 @@ def test_simulation():
     read_distributions(pathname=None)
     assert all([isinstance(d, Distribution) for d in Distribution.distributions()])
 
-    sim = Simulation.new(sim_dir, model_file, analysis_name, trials,
-                         overwrite=True, field_names=[field_name])
+    sim = Simulation.new(sim_dir, model_file, analysis_name, trials, overwrite=True, field_names=[field_name])
 
     top_dir = Path(sim_dir)
     field_dir = top_dir / field_name
     assert field_dir.is_dir()
-    assert (top_dir / 'metadata.json').exists()
-    assert (top_dir / 'merged_model.xml').exists()
-    assert (field_dir / 'trial_data.csv').exists()
+    assert (top_dir / "metadata.json").exists()
+    assert (top_dir / "merged_model.xml").exists()
+    assert (field_dir / "trial_data.csv").exists()
+
 
 def test_no_overwrite():
     with pytest.raises(McsUserError, match="Directory '.*' already exists"):
-        Simulation.new(sim_dir, [], analysis_name, trials,
-                       overwrite=False, field_names=[field_name])
+        Simulation.new(sim_dir, [], analysis_name, trials, overwrite=False, field_names=[field_name])
+
 
 def test_load_simulation():
     sim = Simulation(sim_dir)
@@ -181,10 +187,11 @@ def test_load_simulation():
 
     field = sim.analysis.fields()[0]
     attr = sim.lookup("Analysis.GWP_horizon", field)
-    assert attr.name == 'GWP_horizon' and attr.value.m == 100
+    assert attr.name == "GWP_horizon" and attr.value.m == 100
 
     with pytest.raises(McsUserError, match="Simulation directory '.*' does not exist."):
         Simulation("/no/such/directory")
+
 
 def test_distribution():
     Distribution.instances.clear()

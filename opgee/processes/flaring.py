@@ -13,16 +13,13 @@ from ..stream import Stream
 
 _logger = getLogger(__name__)
 
-class Flaring(Process):
 
+class Flaring(Process):
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "gas for flaring",
-            "methane slip"
-        ]
+        self._required_inputs = ["gas for flaring", "methane slip"]
 
         self._required_outputs = []
 

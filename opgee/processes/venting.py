@@ -46,10 +46,9 @@ class Venting(Process):
     def cache_attributes(self):
         field = self.field
 
-        #TODO: give warning when frac_venting is not within [0, 1]
+        # TODO: give warning when frac_venting is not within [0, 1]
         frac = field.frac_venting
-        self.frac_venting = min(ureg.Quantity(1., "frac"),
-                                max(frac, ureg.Quantity(0., "frac")))
+        self.frac_venting = min(ureg.Quantity(1.0, "frac"), max(frac, ureg.Quantity(0.0, "frac")))
 
         self.pipe_leakage = field.pipe_leakage
         self.gas_lifting = field.gas_lifting
@@ -75,12 +74,16 @@ class Venting(Process):
             return
 
         methane_to_venting = input.gas_flow_rate("C1") * self.frac_venting
-        venting_frac = \
-            methane_to_venting / input.gas_flow_rate("C1") \
-                if input.gas_flow_rate("C1").m != 0 else ureg.Quantity(0, "frac")
-        fugitive_frac = \
-            self.pipe_leakage / input.gas_flow_rate("C1") \
-                if input.gas_flow_rate("C1").m != 0 else ureg.Quantity(0, "frac")
+        venting_frac = (
+            methane_to_venting / input.gas_flow_rate("C1")
+            if input.gas_flow_rate("C1").m != 0
+            else ureg.Quantity(0, "frac")
+        )
+        fugitive_frac = (
+            self.pipe_leakage / input.gas_flow_rate("C1")
+            if input.gas_flow_rate("C1").m != 0
+            else ureg.Quantity(0, "frac")
+        )
 
         gas_to_vent = Stream("venting_gas", tp=field.stp)
         gas_to_vent.copy_flow_rates_from(input, tp=field.stp)

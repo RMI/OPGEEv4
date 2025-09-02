@@ -16,14 +16,14 @@ from .log import getLogger
 _logger = getLogger(__name__)
 
 # TBD: Decide if these strings are the ones we want to use throughout. Some seem a bit random.
-EN_NATURAL_GAS = 'Natural gas'
-EN_UPG_PROC_GAS = 'Upgrader proc. gas'
-EN_NGL = 'NGL'
-EN_CRUDE_OIL = 'Crude oil'
-EN_DIESEL = 'Diesel'
-EN_RESID = 'Residual fuel'
-EN_PETCOKE = 'Pet. coke'
-EN_ELECTRICITY = 'Electricity'
+EN_NATURAL_GAS = "Natural gas"
+EN_UPG_PROC_GAS = "Upgrader proc. gas"
+EN_NGL = "NGL"
+EN_CRUDE_OIL = "Crude oil"
+EN_DIESEL = "Diesel"
+EN_RESID = "Residual fuel"
+EN_PETCOKE = "Pet. coke"
+EN_ELECTRICITY = "Electricity"
 
 
 class Energy(OpgeeObject):
@@ -36,8 +36,7 @@ class Energy(OpgeeObject):
     #: Note that when used in the code, the defined variables (EN_NATURAL_GAS,
     #: EN_UPG_PROC_GAS, EN_NGL, EN_CRUDE_OIL, EN_DIESEL, EN_RESID, EN_PETCOKE,
     #: EN_ELECTRICITY) should be used to avoid dependencies on the specific strings.
-    carriers = [EN_NATURAL_GAS, EN_UPG_PROC_GAS, EN_NGL, EN_CRUDE_OIL,
-                EN_DIESEL, EN_RESID, EN_PETCOKE, EN_ELECTRICITY]
+    carriers = [EN_NATURAL_GAS, EN_UPG_PROC_GAS, EN_NGL, EN_CRUDE_OIL, EN_DIESEL, EN_RESID, EN_PETCOKE, EN_ELECTRICITY]
 
     _carrier_set = set(carriers)
 
@@ -46,11 +45,11 @@ class Energy(OpgeeObject):
     @classmethod
     def create_energy_series(cls):
         """
-         Create a pandas Series to hold energy consumption rates.
+        Create a pandas Series to hold energy consumption rates.
 
-         :return: (pandas.Series) Zero-filled energy carrier Series
-         """
-        return pd.Series(data=0.0, index=cls.carriers, name='energy', dtype=f"pint[{cls._units}]")
+        :return: (pandas.Series) Zero-filled energy carrier Series
+        """
+        return pd.Series(data=0.0, index=cls.carriers, name="energy", dtype=f"pint[{cls._units}]")
 
     def __init__(self):
         self.data = self.create_energy_series()

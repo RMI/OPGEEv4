@@ -41,8 +41,7 @@ class ReservoirWellInterface(Process):
 
     def cache_attributes(self):
         field = self.field
-        self.res_tp = TemperaturePressure(field.res_temp,
-                                          field.res_press)
+        self.res_tp = TemperaturePressure(field.res_temp, field.res_press)
         self.num_prod_wells = field.num_prod_wells
         self.productivity_index = field.productivity_index
         self.permeability = self.attr("res_perm")
@@ -102,10 +101,9 @@ class ReservoirWellInterface(Process):
         std_P = STP.P.to("Pa")
 
         # injection and production rate
-        oil_prod_volume_rate = oil.volume_flow_rate(input_stream,
-                                                    oil.oil_specific_gravity,
-                                                    oil.gas_specific_gravity,
-                                                    oil.gas_oil_ratio).to("bbl_oil/day")  # bbl/day
+        oil_prod_volume_rate = oil.volume_flow_rate(
+            input_stream, oil.oil_specific_gravity, oil.gas_specific_gravity, oil.gas_oil_ratio
+        ).to("bbl_oil/day")  # bbl/day
         water_prod_volume_rate = water.volume_flow_rate(input_stream).to("bbl_water/day")  # bbl/day
         gas_prod_volume_rate = gas.volume_flow_rate(input_stream).to("ft**3/day")
         fluid_rate_per_well = (oil_prod_volume_rate + water_prod_volume_rate) / self.num_prod_wells
@@ -117,20 +115,32 @@ class ReservoirWellInterface(Process):
         gas_formation_volume_factor = gas.volume_factor(input_stream)
 
         # reservoir and flowing pressures at wellbore interface
-        prod_liquid_flowing_BHP = max((input_stream.tp.P - fluid_rate_per_well / self.productivity_index).to("psia"),
-                                      ureg.Quantity(100, "psia"))
+        prod_liquid_flowing_BHP = max(
+            (input_stream.tp.P - fluid_rate_per_well / self.productivity_index).to("psia"), ureg.Quantity(100, "psia")
+        )
 
-        boundary = ureg.Quantity(2000., "psia")
+        boundary = ureg.Quantity(2000.0, "psia")
         if res_press <= boundary:
             # flowing bottomhole pressure at producer (gas phase, low pressure)
-            delta_P_square = (gas_viscosity * z_factor * std_P * stream_temp *
-                              np.log(1000 / 0.5) * gas_rate_per_well /
-                              (np.pi * self.permeability * self.res_thickness * std_T)).to("psia**2")
-            delta = res_press ** 2 - delta_P_square
+            delta_P_square = (
+                gas_viscosity
+                * z_factor
+                * std_P
+                * stream_temp
+                * np.log(1000 / 0.5)
+                * gas_rate_per_well
+                / (np.pi * self.permeability * self.res_thickness * std_T)
+            ).to("psia**2")
+            delta = res_press**2 - delta_P_square
             prod_gas_flowing_BHP = np.sqrt(delta) if delta > 0.0 else STP.P
         else:
-            delta_P_high = (gas_viscosity * gas_formation_volume_factor * np.log(1000 / 0.5) * gas_rate_per_well /
-                            (2 * np.pi * self.permeability * self.res_thickness)).to("psia")
+            delta_P_high = (
+                gas_viscosity
+                * gas_formation_volume_factor
+                * np.log(1000 / 0.5)
+                * gas_rate_per_well
+                / (2 * np.pi * self.permeability * self.res_thickness)
+            ).to("psia")
             prod_gas_flowing_BHP = res_press - delta_P_high
 
         prod_flowing_BHP = max(min(prod_liquid_flowing_BHP, prod_gas_flowing_BHP), STP.P)

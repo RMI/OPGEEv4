@@ -1,3 +1,3 @@
 # Test case for class missing a subclass of PostProcessor
-class NotAPlugin():
+class NotAPlugin:
     pass

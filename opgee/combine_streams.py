@@ -17,6 +17,7 @@ from .thermodynamics import Oil, Gas, Water
 
 _logger = getLogger(__name__)
 
+
 # TODO: improve this to use temp and press
 def combine_streams(streams):
     """
@@ -36,25 +37,27 @@ def combine_streams(streams):
 
     non_empty_streams_pressure = [stream.tp.P for stream in non_empty_streams]
 
-    non_empty_API_streams = \
-        [stream for stream in non_empty_streams if stream.API is not None and stream.liquid_flow_rate("oil").m > 0]
+    non_empty_API_streams = [
+        stream for stream in non_empty_streams if stream.API is not None and stream.liquid_flow_rate("oil").m > 0
+    ]
 
     def calculated_combined_API_using_weighted_average(streams):
         """
-            Calculate the combined API of crude oil streams using the weighted average method.
+        Calculate the combined API of crude oil streams using the weighted average method.
 
-            Args:
-                streams (List): A list of crude oil stream objects.
+        Args:
+            streams (List): A list of crude oil stream objects.
 
-            Returns:
-                float: The combined API of the crude oil streams.
+        Returns:
+            float: The combined API of the crude oil streams.
         """
         if len(streams) == 1:
             return streams[0].API
 
         total_mass_rate = sum(stream.liquid_flow_rate("oil") for stream in streams)
         sum_of_mass_multiply_specific_gravity = sum(
-            stream.liquid_flow_rate("oil") * Oil.specific_gravity(stream.API) for stream in streams)
+            stream.liquid_flow_rate("oil") * Oil.specific_gravity(stream.API) for stream in streams
+        )
 
         combined_sg = sum_of_mass_multiply_specific_gravity / total_mass_rate
         return Oil.API_from_SG(combined_sg)
@@ -64,23 +67,20 @@ def combine_streams(streams):
 
     comp_matrix = sum([stream.components for stream in streams])
 
-    stream_temperature = pd.Series([stream.tp.T.to("kelvin").m for stream in non_empty_streams],
-                                   dtype="pint[kelvin]")
+    stream_temperature = pd.Series([stream.tp.T.to("kelvin").m for stream in non_empty_streams], dtype="pint[kelvin]")
 
-    stream_specific_heat = pd.Series([mixture_specific_heat_capacity(stream).m for
-                                      stream in non_empty_streams],
-                                     dtype="pint[btu/degF/day]")
+    stream_specific_heat = pd.Series(
+        [mixture_specific_heat_capacity(stream).m for stream in non_empty_streams], dtype="pint[btu/degF/day]"
+    )
 
     stream_sp_heat_sum = stream_specific_heat.sum()
     if stream_sp_heat_sum.m != 0.0:
         temperature = (stream_temperature * stream_specific_heat).sum() / stream_sp_heat_sum
         temperature = temperature.to("degF")
         min_pressure = min(non_empty_streams_pressure)
-        stream = Stream('combined',
-                        TemperaturePressure(temperature, max(STP.P, min_pressure)),
-                        comp_matrix=comp_matrix)
+        stream = Stream("combined", TemperaturePressure(temperature, max(STP.P, min_pressure)), comp_matrix=comp_matrix)
     else:
-        stream = Stream('empty_stream', tp=STP)
+        stream = Stream("empty_stream", tp=STP)
 
     if len(non_empty_API_streams) > 0:
         stream.API = calculated_combined_API_using_weighted_average(non_empty_API_streams)

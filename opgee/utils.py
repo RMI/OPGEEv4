@@ -1,4 +1,4 @@
-'''
+"""
 .. Created as part of pygcam (2015)
    Imported into opgee (2021)
 
@@ -6,7 +6,8 @@
 
 .. Copyright (c) 2015-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-'''
+"""
+
 import argparse
 import os
 import sys
@@ -18,13 +19,15 @@ from .log import getLogger
 
 _logger = getLogger(__name__)
 
+
 def ipython_info():  # pragma: no cover
     ip = False
-    if 'ipykernel' in sys.modules:
-        ip = 'notebook'
-    elif 'IPython' in sys.modules:
-        ip = 'terminal'
+    if "ipykernel" in sys.modules:
+        ip = "notebook"
+    elif "IPython" in sys.modules:
+        ip = "terminal"
     return ip
+
 
 @contextmanager
 def pushd(directory):
@@ -50,12 +53,13 @@ def positive_int(value):
     try:
         i = int(value)
     except:
-        i = 0   # the effect is to convert a ValueError into an ArgumentTypeError
+        i = 0  # the effect is to convert a ValueError into an ArgumentTypeError
 
     if i <= 0:
         raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
 
     return i
+
 
 #
 # Custom argparse "action" to parse comma-delimited strings to lists
@@ -68,16 +72,18 @@ class ParseCommaList(argparse.Action):
         super(ParseCommaList, self).__init__(option_strings, dest, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, splitAndStrip(values, ','))
+        setattr(namespace, self.dest, splitAndStrip(values, ","))
 
 
 def splitAndStrip(s, delim):
     items = [item.strip() for item in s.split(delim)]
     return items
 
+
 def is_relpath(p):
     drive, path = os.path.splitdrive(p)
-    return not (drive or path.startswith('/'))
+    return not (drive or path.startswith("/"))
+
 
 def mkdirs(newdir, mode=0o770):
     """
@@ -97,6 +103,7 @@ def mkdirs(newdir, mode=0o770):
 
 def removeTree(path, ignore_errors=True):
     import shutil
+
     _logger.debug(f"shutil.rmtree('{path}')")
     if os.path.lexists(path) and os.path.islink(path):
         os.remove(path)
@@ -119,8 +126,9 @@ def removeTree(path, ignore_errors=True):
 #         raise
 #
 
+
 def filecopy(src, dst, removeDst=True):
-    'Copy src file to dst, optionally removing dst first to avoid writing through symlinks'
+    "Copy src file to dst, optionally removing dst first to avoid writing through symlinks"
     from shutil import copy2  # equivalent to "cp -p"
 
     _logger.debug(f"copyfile({src}, dst, removeDst)")
@@ -128,6 +136,7 @@ def filecopy(src, dst, removeDst=True):
         os.remove(dst)
 
     copy2(src, dst)
+
 
 # def copyfiles(files, dstdir, removeDst=True):
 #     '''
@@ -139,6 +148,7 @@ def filecopy(src, dst, removeDst=True):
 #     mkdirs(dstdir)
 #     for f in files:
 #         filecopy(f, dstdir, removeDst=removeDst)
+
 
 # used only in opgee modules
 def getBooleanXML(value):
@@ -159,7 +169,7 @@ def getBooleanXML(value):
     if val not in valid:
         raise OpgeeException(f"Can't convert '{value}' to boolean; must be one of {valid} (case sensitive).")
 
-    return (val in true)
+    return val in true
 
 
 # Function to return current function name, or the caller, and so on up
@@ -200,13 +210,13 @@ def coercible(value, pytype, raiseError=True):
         return value
 
     if type(pytype) == str:
-        if pytype == 'float':
+        if pytype == "float":
             pytype_func = float
-        elif pytype == 'int':
+        elif pytype == "int":
             pytype_func = lambda s: to_int(s)  # allow "24.0" to be truncated to 24
-        elif pytype == 'str':
+        elif pytype == "str":
             pytype_func = str
-        elif pytype == 'binary':
+        elif pytype == "binary":
             pytype_func = binary
         else:
             raise OpgeeException(f"coercible: '{pytype}' is not a recognized type string")
@@ -225,7 +235,7 @@ def coercible(value, pytype, raiseError=True):
     return value
 
 
-TRIAL_STRING_DELIMITER = ','
+TRIAL_STRING_DELIMITER = ","
 
 
 def parseTrialString(string):
@@ -241,11 +251,11 @@ def parseTrialString(string):
     rangeStrs = string.split(TRIAL_STRING_DELIMITER)
     res = set()
     for rangeStr in rangeStrs:
-        r = [int(x) for x in rangeStr.strip().split('-')]
+        r = [int(x) for x in rangeStr.strip().split("-")]
         if len(r) == 2:
             r = range(r[0], r[1] + 1)
         elif len(r) != 1:
-            raise ValueError('Malformed trial string.')
+            raise ValueError("Malformed trial string.")
         res = res.union(set(r))
     return list(res)
 
@@ -283,7 +293,7 @@ def loadModuleFromPath(module_path, raiseError=True):
     # Extract the module name from the module path
     module_path = unixPath(module_path)
     base = os.path.basename(module_path)
-    module_name = base.split('.')[0]
+    module_name = base.split(".")[0]
 
     try:
         module = sys.modules[module_name]
@@ -298,7 +308,7 @@ def loadModuleFromPath(module_path, raiseError=True):
     try:
         spec = importlib.util.spec_from_file_location(module_name, module_path)
         module = importlib.util.module_from_spec(spec)  # creates a new module
-        sys.modules[module_name] = module               # record it to sys.module
+        sys.modules[module_name] = module  # record it to sys.module
         spec.loader.exec_module(module)
 
     except Exception as e:

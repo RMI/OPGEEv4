@@ -62,6 +62,7 @@ class DownholePump(Process):
         impute()
             Estimates the completion and workover fugitive stream and adjusts the input stream.
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -117,7 +118,7 @@ class DownholePump(Process):
         if input.is_uninitialized():
             return
 
-        lift_gas = self.find_input_stream('lifting gas', raiseError=None)
+        lift_gas = self.find_input_stream("lifting gas", raiseError=None)
         if lift_gas is not None and lift_gas.is_initialized():
             input = combine_streams([input, lift_gas])
 
@@ -143,30 +144,16 @@ class DownholePump(Process):
         energy_carrier = get_energy_carrier(self.prime_mover_type)
         if not self.gas_lifting:
             oil_SG = oil.specific_gravity(input.API)
-            solution_gas_oil_ratio_input = oil.solution_gas_oil_ratio(input,
-                                                                      oil_SG,
-                                                                      oil.gas_specific_gravity,
-                                                                      oil.gas_oil_ratio)
-            solution_gas_oil_ratio_output = oil.solution_gas_oil_ratio(output,
-                                                                       oil_SG,
-                                                                       oil.gas_specific_gravity,
-                                                                       oil.gas_oil_ratio)
-            oil_density_input = oil.density(input,
-                                            oil_SG,
-                                            oil.gas_specific_gravity,
-                                            oil.gas_oil_ratio)
-            oil_density_output = oil.density(output,
-                                             oil_SG,
-                                             oil.gas_specific_gravity,
-                                             oil.gas_oil_ratio)
-            volume_oil_lifted_input = oil.volume_flow_rate(input,
-                                                           oil_SG,
-                                                           oil.gas_specific_gravity,
-                                                           oil.gas_oil_ratio)
-            volume_oil_lifted_output = oil.volume_flow_rate(output,
-                                                            oil_SG,
-                                                            oil.gas_specific_gravity,
-                                                            oil.gas_oil_ratio)
+            solution_gas_oil_ratio_input = oil.solution_gas_oil_ratio(
+                input, oil_SG, oil.gas_specific_gravity, oil.gas_oil_ratio
+            )
+            solution_gas_oil_ratio_output = oil.solution_gas_oil_ratio(
+                output, oil_SG, oil.gas_specific_gravity, oil.gas_oil_ratio
+            )
+            oil_density_input = oil.density(input, oil_SG, oil.gas_specific_gravity, oil.gas_oil_ratio)
+            oil_density_output = oil.density(output, oil_SG, oil.gas_specific_gravity, oil.gas_oil_ratio)
+            volume_oil_lifted_input = oil.volume_flow_rate(input, oil_SG, oil.gas_specific_gravity, oil.gas_oil_ratio)
+            volume_oil_lifted_output = oil.volume_flow_rate(output, oil_SG, oil.gas_specific_gravity, oil.gas_oil_ratio)
 
             # properties of crude oil (all at average conditions along wellbore, in production tubing)
             average_solution_GOR = (solution_gas_oil_ratio_input + solution_gas_oil_ratio_output) / 2
@@ -190,22 +177,27 @@ class DownholePump(Process):
             gas_FVF = gas.volume_factor(stream)
             gas_density = gas.density(stream)
             volume_free_gas = free_gas * gas_FVF
-            volume_free_gas_lifted = (volume_free_gas * self.oil_volume_rate)
+            volume_free_gas_lifted = volume_free_gas * self.oil_volume_rate
 
-            total_volume_fluid_lifted = (average_volume_oil_lifted +
-                                         volume_water_lifted +
-                                         volume_free_gas_lifted)
-            fluid_velocity = (total_volume_fluid_lifted / (self.prod_tubing_xsection_area * self.num_prod_wells))
+            total_volume_fluid_lifted = average_volume_oil_lifted + volume_water_lifted + volume_free_gas_lifted
+            fluid_velocity = total_volume_fluid_lifted / (self.prod_tubing_xsection_area * self.num_prod_wells)
 
-            total_mass_fluid_lifted = (average_oil_density * average_volume_oil_lifted +
-                                       water_density * volume_water_lifted +
-                                       gas_density * volume_free_gas_lifted)
-            fluid_lifted_density = (total_mass_fluid_lifted / total_volume_fluid_lifted)
+            total_mass_fluid_lifted = (
+                average_oil_density * average_volume_oil_lifted
+                + water_density * volume_water_lifted
+                + gas_density * volume_free_gas_lifted
+            )
+            fluid_lifted_density = total_mass_fluid_lifted / total_volume_fluid_lifted
 
             # downhole pump
             pressure_drop_elev = fluid_lifted_density * self.gravitational_acceleration * self.depth
-            pressure_drop_fric = (fluid_lifted_density * self.friction_factor * self.depth * fluid_velocity ** 2 /
-                                  (2 * self.prod_tubing_diam))
+            pressure_drop_fric = (
+                fluid_lifted_density
+                * self.friction_factor
+                * self.depth
+                * fluid_velocity**2
+                / (2 * self.prod_tubing_diam)
+            )
             pressure_drop_total = pressure_drop_fric + pressure_drop_elev
             pressure_for_lifting = max(ureg.Quantity(0.0, "psia"), wellhead_P + pressure_drop_total - input.tp.P)
             liquid_flow_rate_per_well = (average_volume_oil_lifted + volume_water_lifted) / self.num_prod_wells

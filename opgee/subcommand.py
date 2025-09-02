@@ -1,16 +1,17 @@
-'''
+"""
 .. Created as part of pygcam. Imported into opgee (2021).
 
 .. Copyright (c) 2016-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-'''
+"""
+
 from abc import ABCMeta, abstractmethod
 
 
 # Fixes help strings to display properly with sphinx-argparse
 def clean_help(s):
     lines = s.splitlines()
-    return ' '.join(map(lambda s: s.strip(), lines))
+    return " ".join(map(lambda s: s.strip(), lines))
 
 
 class SubcommandABC(object):
@@ -30,6 +31,7 @@ class SubcommandABC(object):
        Defaults to the sub-command name, capitalized.
     :param guiSuppress: (bool) if True, do not display this sub-command in the GUI.
     """
+
     __metaclass__ = ABCMeta
 
     Instances = {}  # SubCommand instances keyed by name
@@ -45,8 +47,7 @@ class SubcommandABC(object):
     #     obj = cls.getInstance(name)
     #     return obj.parser
 
-    def __init__(self, name, subparsers, kwargs, group=None, label=None,
-                 guiSuppress=False):
+    def __init__(self, name, subparsers, kwargs, group=None, label=None, guiSuppress=False):
         self.name = name
         self.label = label or name.capitalize()  # label to display in GUI
         self.parser = parser = subparsers.add_parser(self.name, **kwargs)
@@ -58,7 +59,7 @@ class SubcommandABC(object):
         # For grouping commands in the GUI. Set this in subclass' addArgs().
         # Set to None if the command should not be presented in the GUI.
         # Note: 'group' can be set as standalone var or in guiInfo['group'].
-        self.group = group or 'main'
+        self.group = group or "main"
         # self.group = group or (guiInfo.get('group') if guiInfo else 'main')
 
         self.addArgs(parser)

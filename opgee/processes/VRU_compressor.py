@@ -17,25 +17,22 @@ _logger = getLogger(__name__)
 
 class VRUCompressor(Process):
     """
-        TBD
+    TBD
 
-        input streams:
-            -
+    input streams:
+        -
 
-        output streams:
-            -
+    output streams:
+        -
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "gas for VRU"
-        ]
+        self._required_inputs = ["gas for VRU"]
 
-        self._required_outputs = [
-            "gas"
-        ]
+        self._required_outputs = ["gas"]
 
         self.discharge_press = None
         self.eta_compressor = None
@@ -62,13 +59,9 @@ class VRUCompressor(Process):
         gas_to_gathering = self.find_output_stream("gas")
 
         overall_compression_ratio = self.discharge_press / input.tp.P
-        energy_consumption, output_temp, output_press = \
-            Compressor.get_compressor_energy_consumption(
-                self.field,
-                self.prime_mover_type,
-                self.eta_compressor,
-                overall_compression_ratio,
-                input)
+        energy_consumption, output_temp, output_press = Compressor.get_compressor_energy_consumption(
+            self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         gas_to_gathering.copy_flow_rates_from(input)
         gas_to_gathering.subtract_rates_from(gas_fugitives)

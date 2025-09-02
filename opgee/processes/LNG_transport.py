@@ -52,13 +52,9 @@ class LNGTransport(Process):
 
         # energy use
         energy_use = self.energy
-        fuel_consumption = \
-            field.transport_energy.get_transport_energy_dict(self.field,
-                                                             self.transport_parameter,
-                                                             self.transport_share_fuel,
-                                                             self.transport_by_mode,
-                                                             gas_LHV_rate,
-                                                             "LNG")
+        fuel_consumption = field.transport_energy.get_transport_energy_dict(
+            self.field, self.transport_parameter, self.transport_share_fuel, self.transport_by_mode, gas_LHV_rate, "LNG"
+        )
 
         for name, value in fuel_consumption.items():
             energy_use.set_rate(get_energy_carrier(name), value.to("mmBtu/day"))

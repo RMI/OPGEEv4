@@ -22,16 +22,17 @@ from ..log import getLogger
 
 _logger = getLogger(__name__)
 
+
 def rankCorrCoef(m):
-    '''
+    """
     Take a 2-D array of values and produce a array of rank correlation
     coefficients representing the rank correlation among the columns.
-    '''
+    """
     dummy, cols = m.shape
     corrCoef = np.zeros((cols, cols))  # @UndefinedVariable
 
     for i in range(cols):
-        corrCoef[i, i] = 1.  # All columns are perfectly correlated with themselves
+        corrCoef[i, i] = 1.0  # All columns are perfectly correlated with themselves
         for j in range(i + 1, cols):
             corr = stats.spearmanr(m[:, i], m[:, j])[0]
             corrCoef[i, j] = corrCoef[j, i] = corr
@@ -40,7 +41,7 @@ def rankCorrCoef(m):
 
 
 def genRankValues(params, trials, corrMat):
-    '''
+    """
     Generate a data set of 'trials' ranks for 'params'
     parameters that obey the given correlation matrix.
 
@@ -63,7 +64,7 @@ def genRankValues(params, trials, corrMat):
      [6,5,2],
      [5,2,1],
      [3,6,4]]
-    '''
+    """
     # Create van der Waarden scores
     strata = np.arange(1.0, trials + 1) / (trials + 1)
     vdwScores = stats.norm().ppf(strata)
@@ -79,7 +80,7 @@ def genRankValues(params, trials, corrMat):
     Q = np.array(np.linalg.cholesky(E))
     final = np.dot(np.dot(S, np.linalg.inv(Q).T), P.T)
 
-    ranks = np.zeros((trials, params), dtype='i')
+    ranks = np.zeros((trials, params), dtype="i")
     for i in range(params):
         ranks[:, i] = stats.rankdata(final[:, i])
 
@@ -87,13 +88,13 @@ def genRankValues(params, trials, corrMat):
 
 
 def getPercentiles(trials=100):
-    '''
+    """
     Generate a list of 'trials' values, one from each of 'trials' equal-size
     segments from a uniform distribution. These are used with an RV's ppf
     (percent point function = inverse cumulative function) to retrieve the
     values for that RV at the corresponding percentiles.
-    '''
-    segmentSize = float(1. / trials)
+    """
+    segmentSize = float(1.0 / trials)
     points = stats.uniform.rvs(size=trials) * segmentSize + np.arange(trials) * segmentSize  # @UndefinedVariable
     return points
 
@@ -127,7 +128,7 @@ def lhs(paramList, trials, corrMat=None, columns=None, skip=None):
 
     for i, param in enumerate(paramList):
         if param in skip:
-            continue    # process later
+            continue  # process later
 
         values = param.ppf(getPercentiles(trials))  # extract values from the RV for these percentiles
 
@@ -140,11 +141,12 @@ def lhs(paramList, trials, corrMat=None, columns=None, skip=None):
             np.random.shuffle(values)  # randomize the stratified samples
         else:
             indices = ranks[:, i] - 1  # make them 0-relative
-            values = values[indices]   # reorder to respect correlations
+            values = values[indices]  # reorder to respect correlations
 
         samples[:, i] = values
 
     return DataFrame(samples, columns=columns) if columns else samples
+
 
 def lhsAmend(df, rvList, trials, shuffle=True):
     """
@@ -160,10 +162,10 @@ def lhsAmend(df, rvList, trials, shuffle=True):
     for rv in rvList:
         values = rv.ppf(getPercentiles(trials))  # extract values from the RV for these percentiles
         if not isinstance(values, np.ndarray):
-            values = values.values               # convert pandas Series if needed
+            values = values.values  # convert pandas Series if needed
 
         if shuffle:
-            np.random.shuffle(values)            # randomize the stratified samples
+            np.random.shuffle(values)  # randomize the stratified samples
 
         param = rv.getParameter()
         paramName = param.getName()

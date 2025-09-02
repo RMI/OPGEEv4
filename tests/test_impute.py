@@ -3,6 +3,7 @@ from opgee.process import Process
 from .utils_for_tests import load_test_model
 from opgee.units import ureg
 
+
 class CopyingProcess(Process):
     def run(self, analysis):
         pass
@@ -15,27 +16,40 @@ class CopyingProcess(Process):
             input.tp.T = output.tp.T
             input.tp.P = output.tp.P
 
-class Impute1(CopyingProcess): pass
-class Impute2(CopyingProcess): pass
-class Impute3(CopyingProcess): pass
-class Impute4(CopyingProcess): pass
+
+class Impute1(CopyingProcess):
+    pass
+
+
+class Impute2(CopyingProcess):
+    pass
+
+
+class Impute3(CopyingProcess):
+    pass
+
+
+class Impute4(CopyingProcess):
+    pass
+
 
 @pytest.fixture(scope="module")
 def good_model(configure_logging_for_tests):
-    return load_test_model('test_impute_model_good.xml')
+    return load_test_model("test_impute_model_good.xml")
+
 
 @pytest.fixture(scope="module")
 def bad_model(configure_logging_for_tests):
-    return load_test_model('test_impute_model_bad.xml')
+    return load_test_model("test_impute_model_bad.xml")
 
 
 def test_impute_cycle_good(good_model):
     model = good_model
     model.validate()
-    analysis = model.get_analysis('test')
-    field = analysis.get_field('test')
+    analysis = model.get_analysis("test")
+    field = analysis.get_field("test")
     field._impute()
 
-    stream = field.find_stream('Impute1 => Impute2')
+    stream = field.find_stream("Impute1 => Impute2")
     t, p = stream.tp.get()
-    assert p == ureg.Quantity(150.0, 'psia') and t == ureg.Quantity(90.0, "degF")
+    assert p == ureg.Quantity(150.0, "psia") and t == ureg.Quantity(90.0, "degF")

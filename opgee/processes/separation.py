@@ -28,7 +28,7 @@ class Separation(Process):
         ]
 
         self._required_outputs = [
-            "gas for partition",    # TODO: this is called "gas for gas partition" elsewhere
+            "gas for partition",  # TODO: this is called "gas for gas partition" elsewhere
         ]
 
         self.compressor_eff = None
@@ -61,13 +61,12 @@ class Separation(Process):
         self.loss_rate = self.venting_fugitive_rate()
         self.loss_rate = (1 / (1 - self.loss_rate)).to("frac")
 
-        self.outlet_tp = TemperaturePressure(self.attr("temperature_outlet"),
-                                             self.attr("pressure_outlet"))
+        self.outlet_tp = TemperaturePressure(self.attr("temperature_outlet"), self.attr("pressure_outlet"))
 
         self.temperature_stage1 = field.wellhead_t
         self.temperature_stage2 = (self.temperature_stage1.to("kelvin") + self.outlet_tp.T.to("kelvin")) / 2
 
-        #TODO: move it to smart default
+        # TODO: move it to smart default
         self.pressure_stage1 = min(field.wellhead_p, self.attr("pressure_first_stage"))
         self.pressure_stage2 = self.attr("pressure_second_stage")
         self.pressure_stage3 = self.attr("pressure_third_stage")
@@ -76,7 +75,7 @@ class Separation(Process):
         self.gas_comp = field.gas_comp
 
         self.num_of_stages = self.attr("number_stages")
-        #TODO: move it to smart default
+        # TODO: move it to smart default
         if field.wellhead_p.m < 500:
             self.num_of_stages = 1
 
@@ -89,7 +88,7 @@ class Separation(Process):
         self.print_running_msg()
         field = self.field
 
-        #TODO: Fix this after data pipeline is done
+        # TODO: Fix this after data pipeline is done
         water_oil_ratio = field.attr("WOR")
 
         # mass rate
@@ -108,13 +107,15 @@ class Separation(Process):
         # energy rate
 
         free_gas_stages, final_GOR = self.get_free_gas_stages(field, input)  # (float, list) scf/bbl
-        gas_compression_volume_stages = [(self.oil_volume_rate * free_gas).to("mmscf/day") for free_gas in
-                                         free_gas_stages]
-        compressor_brake_horsepower_of_stages = self.compressor_brake_horsepower_of_stages(self.field,
-                                                                                           gas_after,
-                                                                                           gas_compression_volume_stages)
-        energy_consumption_of_stages = get_energy_consumption_stages(self.prime_mover_type,
-                                                                     compressor_brake_horsepower_of_stages)
+        gas_compression_volume_stages = [
+            (self.oil_volume_rate * free_gas).to("mmscf/day") for free_gas in free_gas_stages
+        ]
+        compressor_brake_horsepower_of_stages = self.compressor_brake_horsepower_of_stages(
+            self.field, gas_after, gas_compression_volume_stages
+        )
+        energy_consumption_of_stages = get_energy_consumption_stages(
+            self.prime_mover_type, compressor_brake_horsepower_of_stages
+        )
         energy_consumption_sum = sum(energy_consumption_of_stages)
 
         energy_use = self.energy
@@ -146,7 +147,6 @@ class Separation(Process):
         field.save_process_data(wellhead_LHV_rate=gas_LHV_rate + oil_LHV_rate)
 
     def get_stages_temperature_and_pressure(self):
-
         temperature_of_stages = [self.temperature_stage1, self.temperature_stage2.to("degF"), self.outlet_tp.T]
 
         pressure_of_stages = [self.pressure_stage1, self.pressure_stage2, self.pressure_stage3]
@@ -162,13 +162,14 @@ class Separation(Process):
         gas_after = self.find_output_stream("gas for partition")
 
         last = self.num_of_stages - 1
-        stream = Stream("stage_stream", TemperaturePressure(temperature_of_stages[last],
-                                                            pressure_of_stages[last]))
+        stream = Stream("stage_stream", TemperaturePressure(temperature_of_stages[last], pressure_of_stages[last]))
 
-        density = oil.density(stream,  # lb/ft3
-                              oil.oil_specific_gravity,
-                              oil.gas_specific_gravity,
-                              oil.gas_oil_ratio)
+        density = oil.density(
+            stream,  # lb/ft3
+            oil.oil_specific_gravity,
+            oil.gas_specific_gravity,
+            oil.gas_oil_ratio,
+        )
 
         gas_volume_rate = self.oil_volume_rate * self.gas_oil_ratio * self.gas_comp
         gas_density = gas.component_gas_rho_STP[self.gas_comp.index]
@@ -209,18 +210,17 @@ class Separation(Process):
         solution_gas_oil_ratio_of_stages = [oil.gas_oil_ratio]
         oil_SG = oil.specific_gravity(input_stream.API)
         for stage in range(self.num_of_stages):
-            stream_stages = Stream("stage_stream", TemperaturePressure(temperature_of_stages[stage],
-                                                                       pressure_of_stages[stage]))
-            solution_gas_oil_ratio = oil.solution_gas_oil_ratio(stream_stages,
-                                                                oil_SG,
-                                                                oil.gas_specific_gravity,
-                                                                oil.gas_oil_ratio)
+            stream_stages = Stream(
+                "stage_stream", TemperaturePressure(temperature_of_stages[stage], pressure_of_stages[stage])
+            )
+            solution_gas_oil_ratio = oil.solution_gas_oil_ratio(
+                stream_stages, oil_SG, oil.gas_specific_gravity, oil.gas_oil_ratio
+            )
             solution_gas_oil_ratio_of_stages.append(solution_gas_oil_ratio)
 
         free_gas_of_stages = []
         for i in range(1, len(solution_gas_oil_ratio_of_stages)):
-            free_gas_of_stages.append(solution_gas_oil_ratio_of_stages[i - 1] -
-                                      solution_gas_oil_ratio_of_stages[i])
+            free_gas_of_stages.append(solution_gas_oil_ratio_of_stages[i - 1] - solution_gas_oil_ratio_of_stages[i])
 
         return free_gas_of_stages, solution_gas_oil_ratio_of_stages[-1]
 
@@ -236,19 +236,18 @@ class Separation(Process):
 
         temperature_of_stages, pressure_of_stages = self.get_stages_temperature_and_pressure()
 
-        overall_compression_ratio_stages = [self.pressure_after_boosting /
-                                            pressure_of_stages[stage] for stage in range(self.num_of_stages)]
+        overall_compression_ratio_stages = [
+            self.pressure_after_boosting / pressure_of_stages[stage] for stage in range(self.num_of_stages)
+        ]
         compression_ratio_per_stages = Compressor.get_compression_ratio_stages(overall_compression_ratio_stages)
 
         brake_horsepower_of_stages = []
-        for (inlet_temp, inlet_press, (compression_ratio, num_of_compression),
-             gas_compression_volume) \
-                in zip(temperature_of_stages,
-                       pressure_of_stages,
-                       compression_ratio_per_stages,
-                       gas_compression_volume_stages):
-            work_sum, _, _ = Compressor.get_compressor_work_temp(field, inlet_temp, inlet_press,
-                                                                 gas_stream, compression_ratio, num_of_compression)
+        for inlet_temp, inlet_press, (compression_ratio, num_of_compression), gas_compression_volume in zip(
+            temperature_of_stages, pressure_of_stages, compression_ratio_per_stages, gas_compression_volume_stages
+        ):
+            work_sum, _, _ = Compressor.get_compressor_work_temp(
+                field, inlet_temp, inlet_press, gas_stream, compression_ratio, num_of_compression
+            )
             horsepower = work_sum * gas_compression_volume
             brake_horsepower = horsepower / self.compressor_eff
             brake_horsepower_of_stages.append(brake_horsepower)

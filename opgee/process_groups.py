@@ -20,10 +20,11 @@ class ProcessChoice(XmlInstantiable):
     """
     Contains a set of mutually-exclusive `ProcessGroups`.
     """
+
     def __init__(self, name, groups, extend, default):
         super().__init__(name)
 
-        self.extend = extend    # TBD: unclear if this is used
+        self.extend = extend  # TBD: unclear if this is used
         self.default = default
 
         # store the groups in a dict for fast lookup, but maintain order for display
@@ -55,8 +56,8 @@ class ProcessChoice(XmlInstantiable):
         name = elt_name(elt)
 
         a = elt.attrib
-        extend = getBooleanXML(a.get('extend', 'false'))
-        default = a.get('default')
+        extend = getBooleanXML(a.get("extend", "false"))
+        default = a.get("default")
 
         groups = instantiate_subelts(elt, ProcessGroup)
 
@@ -69,6 +70,7 @@ class ProcessGroup(XmlInstantiable):
     Contains a set of `ProcessRef` and `StreamRef` instances defining one coherent
     choice of Processes.
     """
+
     def __init__(self, name, process_refs, stream_refs, choices):
         super().__init__(name)
 
@@ -92,8 +94,8 @@ class ProcessGroup(XmlInstantiable):
 
         :return: (tuple of lists of Process and Stream instances)
         """
-        procs   = [field.find_process(name) for name in self.process_refs]
-        streams = [field.find_stream(name)  for name in self.stream_refs]
+        procs = [field.find_process(name) for name in self.process_refs]
+        streams = [field.find_stream(name) for name in self.stream_refs]
         return (procs, streams)
 
     @classmethod
@@ -106,9 +108,9 @@ class ProcessGroup(XmlInstantiable):
         :return: (Process) instance populated from XML
         """
         name = elt_name(elt)
-        process_refs = [elt_name(node) for node in elt.findall('ProcessRef')]
-        stream_refs  = [elt_name(node) for node in elt.findall('StreamRef')]
+        process_refs = [elt_name(node) for node in elt.findall("ProcessRef")]
+        stream_refs = [elt_name(node) for node in elt.findall("StreamRef")]
 
-        choices = instantiate_subelts(elt, ProcessChoice)   # nested choices
+        choices = instantiate_subelts(elt, ProcessChoice)  # nested choices
 
         return ProcessGroup(name, process_refs, stream_refs, choices)

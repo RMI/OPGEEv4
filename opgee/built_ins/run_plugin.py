@@ -4,6 +4,7 @@
 .. Copyright (c) 2021 Richard Plevin and Stanford University
    See the https://opensource.org/licenses/MIT for license details.
 """
+
 from ..subcommand import SubcommandABC
 from opgee.constants import SIMPLE_RESULT
 from ..log import getLogger
@@ -34,7 +35,7 @@ class RunCommand(SubcommandABC):
 
         partition = getParam("SLURM.Partition")
         min_per_task = getParam("SLURM.MinutesPerTask")
-        packet_size = getParamAsInt("OPGEE.MaxTrialsPerPacket") # 10 default
+        packet_size = getParamAsInt("OPGEE.MaxTrialsPerPacket")  # 10 default
 
         # User can specify fields by name, or the number of fields to run MCS for, but not both.
         group = parser.add_mutually_exclusive_group()
@@ -146,9 +147,7 @@ class RunCommand(SubcommandABC):
                             (Mutually exclusive with -f/--fields.)""",
         )
 
-        parser.add_argument(
-            "-o", "--output-dir", help="""Write output to the specified directory."""
-        )
+        parser.add_argument("-o", "--output-dir", help="""Write output to the specified directory.""")
 
         parser.add_argument(
             "-p",
@@ -159,15 +158,17 @@ class RunCommand(SubcommandABC):
                                 Ignored if --cluster-type=slurm is not specified.""",
         )
 
-        parser.add_argument(
-            "-P",
-            "--packet-size",
-            type=positive_int,
-            default=packet_size,
-            help=f"""Divide runs for a single field into groups of this size
+        (
+            parser.add_argument(
+                "-P",
+                "--packet-size",
+                type=positive_int,
+                default=packet_size,
+                help=f"""Divide runs for a single field into groups of this size
                             to run serially on a single worker. Default is the value of configuration 
                             file parameter "OPGEE.MaxTrialsPerPacket", currently {packet_size}.""",
-        ),
+            ),
+        )
 
         parser.add_argument(
             "-r",
@@ -261,9 +262,7 @@ class RunCommand(SubcommandABC):
         if sim_dir:
             metadata = Simulation.read_metadata(sim_dir)
             field_names = field_names or metadata["field_names"]
-            trial_nums = (
-                range(metadata["trials"]) if trials == "all" else parseTrialString(trials)
-            )
+            trial_nums = range(metadata["trials"]) if trials == "all" else parseTrialString(trials)
             model_xml_file = model_xml_file or model_file_path(sim_dir)
 
             output_dir = f"{sim_dir}/results"
@@ -277,13 +276,11 @@ class RunCommand(SubcommandABC):
         if not output_dir:
             raise CommandlineError("Non-MCS runs must specify -o/--output-dir")
 
-        setParam("OPGEE.output_dir", output_dir )
+        setParam("OPGEE.output_dir", output_dir)
         mkdirs(output_dir)
 
         if not (field_names or analysis_names):
-            raise CommandlineError(
-                "Must indicate one or more fields or analyses to run"
-            )
+            raise CommandlineError("Must indicate one or more fields or analyses to run")
 
         if not (use_default_model or model_files):
             raise CommandlineError(
@@ -291,25 +288,17 @@ class RunCommand(SubcommandABC):
             )
 
         # TBD: unclear if this is necessary
-        setParam(
-            "OPGEE.XmlSavePathname", ""
-        )  # avoid writing /tmp/final.xml since no need
+        setParam("OPGEE.XmlSavePathname", "")  # avoid writing /tmp/final.xml since no need
 
         # TBD: decide if we need to support multiple analysis names (only 1st is used currently)
-        analysis_name = (
-            analysis_names[0]
-            if analysis_names
-            else model_analysis_names(model_xml_file)[0]
-        )
+        analysis_name = analysis_names[0] if analysis_names else model_analysis_names(model_xml_file)[0]
         all_fields = fields_for_analysis(model_xml_file, analysis_name)
 
         field_names = [name.strip() for name in field_names] if field_names else None
         if field_names:
             unknown = set(field_names) - set(all_fields)
             if unknown:
-                raise CommandlineError(
-                    f"Fields not found in {model_xml_file}: {unknown}"
-                )
+                raise CommandlineError(f"Fields not found in {model_xml_file}: {unknown}")
         else:
             field_names = all_fields
 
@@ -322,9 +311,7 @@ class RunCommand(SubcommandABC):
             field_names = field_names[:num_fields]
 
         if skip_fields:
-            field_names = [
-                name.strip() for name in field_names if name not in skip_fields
-            ]
+            field_names = [name.strip() for name in field_names if name not in skip_fields]
 
         mgr = Manager(cluster_type=args.cluster_type)
 
@@ -332,13 +319,9 @@ class RunCommand(SubcommandABC):
             if num_tasks is None:
                 num_tasks = len(field_names)
 
-            packets = TrialPacket.packetize(
-                sim_dir, trial_nums, field_names, packet_size
-            )
+            packets = TrialPacket.packetize(sim_dir, trial_nums, field_names, packet_size)
         else:
-            packets = FieldPacket.packetize(
-                model_xml_file, analysis_name, field_names, packet_size
-            )
+            packets = FieldPacket.packetize(model_xml_file, analysis_name, field_names, packet_size)
 
         results_list = []
         save_batches = batch_size is not None
@@ -350,7 +333,6 @@ class RunCommand(SubcommandABC):
             num_engines=num_tasks,
             minutes_per_task=minutes_per_task,
         ):
-
             # Save to disk, optionally in batches.
             results_list.append(results)
             if save_batches:
@@ -360,9 +342,7 @@ class RunCommand(SubcommandABC):
                     batch_num += 1
 
         if results_list:
-            save_results(
-                results_list, output_dir, batch_num=batch_num if batch_size else None
-            )
+            save_results(results_list, output_dir, batch_num=batch_num if batch_size else None)
 
         if collect and save_batches:
             # Combine partial result files into one

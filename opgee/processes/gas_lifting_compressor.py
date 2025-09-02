@@ -21,13 +21,9 @@ class GasLiftingCompressor(Process):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "lifting gas"
-        ]
+        self._required_inputs = ["lifting gas"]
 
-        self._required_outputs = [
-            "lifting gas"
-        ]
+        self._required_outputs = ["lifting gas"]
 
         self.res_press = None
         self.prime_mover_type = None
@@ -67,12 +63,9 @@ class GasLiftingCompressor(Process):
         input_tp = input.tp
         discharge_press = (self.res_press + input_tp.P) / 2 + ureg.Quantity(100.0, "psia")
         overall_compression_ratio = discharge_press / input_tp.P
-        energy_consumption, output_temp, _ = \
-            Compressor.get_compressor_energy_consumption(field,
-                                                         self.prime_mover_type,
-                                                         self.eta_compressor,
-                                                         overall_compression_ratio,
-                                                         input)
+        energy_consumption, output_temp, _ = Compressor.get_compressor_energy_consumption(
+            field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         lifting_gas.tp.set(T=output_temp, P=discharge_press)
 

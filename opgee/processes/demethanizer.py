@@ -60,15 +60,13 @@ class Demethanizer(Process):
        run(analysis)
            Simulates the Demethanizer process to separate the incoming gas stream
            into a methane-rich stream and a heavier hydrocarbon stream.
-   """
+    """
 
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "gas for demethanizer"
-        ]
+        self._required_inputs = ["gas for demethanizer"]
 
         self._required_outputs = [
             "gas for gas partition",
@@ -103,9 +101,9 @@ class Demethanizer(Process):
         self.air_cooler_delta_T = self.attr("air_cooler_delta_T")
         self.air_cooler_fan_eff = self.attr("air_cooler_fan_eff")
         self.air_cooler_press_drop = self.attr("air_cooler_press_drop")
-        self.water_press = (field.water.density() *
-                           self.air_cooler_press_drop *
-                           field.model.const("gravitational-acceleration"))
+        self.water_press = (
+            field.water.density() * self.air_cooler_press_drop * field.model.const("gravitational-acceleration")
+        )
         self.eta_compressor = self.attr("eta_compressor")
         self.prime_mover_type = self.attr("prime_mover_type")
 
@@ -116,7 +114,7 @@ class Demethanizer(Process):
         # mass rate
         input = self.find_input_stream("gas for demethanizer")
         processing_unit_loss_rate_df = field.get_process_data("processing_unit_loss_rate_df")
-        if input.is_uninitialized() or  processing_unit_loss_rate_df is None:
+        if input.is_uninitialized() or processing_unit_loss_rate_df is None:
             return
 
         loss_rate = processing_unit_loss_rate_df.T[self.name].values[0]
@@ -124,17 +122,20 @@ class Demethanizer(Process):
 
         # Demethanizer modeling based on Aspen HYSYS
         # Input values for variable getting from HYSYS
-        variable_bound_dict = {"feed_gas_press": [600.0, 1000.0],  # unit in psia
-                               "column_press": [155.0, 325.0],  # unit in psia
-                               "methane_to_LPG_ratio": [0.01, 0.05],
-                               "inlet_C1_mol_frac": [0.50, 0.95],
-                               "inlet_C2_mol_frac": [0.05, 0.95]}
-        feed_gas_press =\
-            get_bounded_value(self.feed_press_demethanizer.to("psia").m, "feed_gas_press", variable_bound_dict)
-        column_press =\
-            get_bounded_value(self.column_pressure.to("psia").m, "column_press", variable_bound_dict)
-        methane_to_LPG_ratio =\
-            get_bounded_value(self.methane_to_LPG_ratio.to("frac").m, "methane_to_LPG_ratio", variable_bound_dict)
+        variable_bound_dict = {
+            "feed_gas_press": [600.0, 1000.0],  # unit in psia
+            "column_press": [155.0, 325.0],  # unit in psia
+            "methane_to_LPG_ratio": [0.01, 0.05],
+            "inlet_C1_mol_frac": [0.50, 0.95],
+            "inlet_C2_mol_frac": [0.05, 0.95],
+        }
+        feed_gas_press = get_bounded_value(
+            self.feed_press_demethanizer.to("psia").m, "feed_gas_press", variable_bound_dict
+        )
+        column_press = get_bounded_value(self.column_pressure.to("psia").m, "column_press", variable_bound_dict)
+        methane_to_LPG_ratio = get_bounded_value(
+            self.methane_to_LPG_ratio.to("frac").m, "methane_to_LPG_ratio", variable_bound_dict
+        )
 
         feed_gas_mol_frac = self.gas.component_molar_fractions(input)
 
@@ -142,15 +143,17 @@ class Demethanizer(Process):
             _logger.warning("Feed gas does not contain C1")
             inlet_C1_mol_frac = 0
         else:
-            inlet_C1_mol_frac =\
-                get_bounded_value(feed_gas_mol_frac["C1"].to("frac").m, "inlet_C1_mol_frac", variable_bound_dict)
+            inlet_C1_mol_frac = get_bounded_value(
+                feed_gas_mol_frac["C1"].to("frac").m, "inlet_C1_mol_frac", variable_bound_dict
+            )
 
         if "C2" not in feed_gas_mol_frac.index:
             _logger.warning("Feed gas does not contain C2")
             inlet_C2_mol_frac = 0
         else:
-            inlet_C2_mol_frac =\
-                get_bounded_value(feed_gas_mol_frac["C2"].to("frac").m, "inlet_C2_mol_frac", variable_bound_dict)
+            inlet_C2_mol_frac = get_bounded_value(
+                feed_gas_mol_frac["C2"].to("frac").m, "inlet_C2_mol_frac", variable_bound_dict
+            )
 
         gas_volume_rate = self.gas.volume_flow_rate_STP(input)
 
@@ -164,27 +167,37 @@ class Demethanizer(Process):
         x4 = inlet_C1_mol_frac
         x5 = inlet_C2_mol_frac
         corr_result_df = run_corr_eqns(x1, x2, x3, x4, x5, self.demethanizer_tbl)
-        reboiler_heavy_duty = ureg.Quantity(max(0., corr_result_df.loc["Reboiler", :].sum() * scale_value), "kW")
-        cooler_thermal_load = ureg.Quantity(max(0., corr_result_df.loc["HEX", :].sum() * scale_value), "kW")
+        reboiler_heavy_duty = ureg.Quantity(max(0.0, corr_result_df.loc["Reboiler", :].sum() * scale_value), "kW")
+        cooler_thermal_load = ureg.Quantity(max(0.0, corr_result_df.loc["HEX", :].sum() * scale_value), "kW")
         NGL_label = ["NGL C1", "NGL C2", "NGL C3", "NGL C4"]
         fuel_gas_label = ["fuel gas C1", "fuel gas C2", "fuel gas C3", "fuel gas C4"]
         hydrocarbon_label = ["C1", "C2", "C3", "C4"]
-        NGL_mol_frac = pd.Series({name: max(0, corr_result_df.loc[tbl_name, :].sum()) for name, tbl_name in
-                                  zip(hydrocarbon_label, NGL_label)},
-                                 dtype="pint[frac]")
-        fuel_gas_mol_frac = pd.Series({name: max(0, corr_result_df.loc[tbl_name, :].sum()) for name, tbl_name in
-                                       zip(hydrocarbon_label, fuel_gas_label)},
-                                      dtype="pint[frac]")
+        NGL_mol_frac = pd.Series(
+            {
+                name: max(0, corr_result_df.loc[tbl_name, :].sum())
+                for name, tbl_name in zip(hydrocarbon_label, NGL_label)
+            },
+            dtype="pint[frac]",
+        )
+        fuel_gas_mol_frac = pd.Series(
+            {
+                name: max(0, corr_result_df.loc[tbl_name, :].sum())
+                for name, tbl_name in zip(hydrocarbon_label, fuel_gas_label)
+            },
+            dtype="pint[frac]",
+        )
 
         gas_volume_rates = field.gas.volume_flow_rates_STP(input)
 
-        if NGL_mol_frac["C2"].m == 0 or (
-                fuel_gas_mol_frac["C1"] - NGL_mol_frac["C1"] * fuel_gas_mol_frac["C2"] / NGL_mol_frac["C2"]).m == 0:
+        if (
+            NGL_mol_frac["C2"].m == 0
+            or (fuel_gas_mol_frac["C1"] - NGL_mol_frac["C1"] * fuel_gas_mol_frac["C2"] / NGL_mol_frac["C2"]).m == 0
+        ):
             fuel_gas_prod = ureg.Quantity(0, "mole/day")
         else:
-            fuel_gas_prod = \
-                (gas_volume_rates["C1"] - NGL_mol_frac["C1"] / NGL_mol_frac["C2"] * gas_volume_rates["C2"]) / \
-                (fuel_gas_mol_frac["C1"] - NGL_mol_frac["C1"] * fuel_gas_mol_frac["C2"] / NGL_mol_frac["C2"])
+            fuel_gas_prod = (
+                gas_volume_rates["C1"] - NGL_mol_frac["C1"] / NGL_mol_frac["C2"] * gas_volume_rates["C2"]
+            ) / (fuel_gas_mol_frac["C1"] - NGL_mol_frac["C1"] * fuel_gas_mol_frac["C2"] / NGL_mol_frac["C2"])
 
         reboiler_fuel_use = reboiler_heavy_duty * self.eta_reboiler_demethanizer
         cooler_energy_consumption = predict_blower_energy_use(self, cooler_thermal_load)
@@ -209,31 +222,30 @@ class Demethanizer(Process):
         input_tp = input.tp
 
         # inlet boosting compressor
-        inlet_compressor_energy_consump, _, _ = \
-            Compressor.get_compressor_energy_consumption(field,
-                                                         self.prime_mover_type,
-                                                         self.eta_compressor,
-                                                         self.feed_press_demethanizer / input_tp.P,
-                                                         input,
-                                                         inlet_tp=input.tp)
+        inlet_compressor_energy_consump, _, _ = Compressor.get_compressor_energy_consumption(
+            field,
+            self.prime_mover_type,
+            self.eta_compressor,
+            self.feed_press_demethanizer / input_tp.P,
+            input,
+            inlet_tp=input.tp,
+        )
 
         # outlet compressor
         fuel_gas_exit_press = ureg.Quantity(corr_result_df.loc["fuel gas pressure", :].sum(), "psia")
         fuel_gas_stream = Stream("fuel_gas", tp=TemperaturePressure(input_tp.T, fuel_gas_exit_press))
         fuel_gas_stream.set_rates_from_series(fuel_gas_mass, PHASE_GAS, upper_bound_stream=input)
 
-        outlet_compressor_energy_consump, _, _ = \
-            Compressor.get_compressor_energy_consumption(field,
-                                                         self.prime_mover_type,
-                                                         self.eta_compressor,
-                                                         input_tp.P / fuel_gas_exit_press,
-                                                         fuel_gas_stream)
+        outlet_compressor_energy_consump, _, _ = Compressor.get_compressor_energy_consumption(
+            field, self.prime_mover_type, self.eta_compressor, input_tp.P / fuel_gas_exit_press, fuel_gas_stream
+        )
 
         # energy-use
         energy_use = self.energy
         energy_carrier = get_energy_carrier(self.prime_mover_type)
-        energy_use.set_rate(energy_carrier,
-                            inlet_compressor_energy_consump + outlet_compressor_energy_consump + reboiler_fuel_use)
+        energy_use.set_rate(
+            energy_carrier, inlet_compressor_energy_consump + outlet_compressor_energy_consump + reboiler_fuel_use
+        )
         energy_use.set_rate(EN_ELECTRICITY, cooler_energy_consumption)
 
         # import/export

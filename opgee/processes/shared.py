@@ -11,16 +11,11 @@ from ..energy import EN_NATURAL_GAS, EN_ELECTRICITY, EN_DIESEL, EN_RESID
 from ..error import OpgeeException
 from ..stream import Stream, PHASE_GAS
 
-_slope = {"NG_engine": -0.6035,
-          "NG_turbine": -0.1279}
+_slope = {"NG_engine": -0.6035, "NG_turbine": -0.1279}
 
-_intercept = {"NG_engine": 7922.4,
-              "NG_turbine": 9219.6}
+_intercept = {"NG_engine": 7922.4, "NG_turbine": 9219.6}
 
-_maxBHP = {"NG_engine": 2800.0,
-           "Diesel_engine": 3000.0,
-           "NG_turbine": 21000.0,
-           "Electric_motor": 1000.0}
+_maxBHP = {"NG_engine": 2800.0, "Diesel_engine": 3000.0, "NG_turbine": 21000.0, "Electric_motor": 1000.0}
 
 
 def get_efficiency(prime_mover_type, brake_horsepower):
@@ -36,16 +31,14 @@ def get_efficiency(prime_mover_type, brake_horsepower):
     if prime_mover_type == "Electric_motor":
         efficiency = 2967 * brake_horsepower ** (-0.018) if brake_horsepower != 0.0 else 3038
     elif prime_mover_type == "Diesel_engine":
-        efficiency = 0.0004 * brake_horsepower ** 2 - 1.6298 * brake_horsepower + 7955.8
+        efficiency = 0.0004 * brake_horsepower**2 - 1.6298 * brake_horsepower + 7955.8
     else:
         efficiency = _slope[prime_mover_type] * brake_horsepower + _intercept[prime_mover_type]
 
     return ureg.Quantity(efficiency, "btu/horsepower/hour")
 
 
-def get_init_lifting_stream(gas,
-                            lifting_gas_stream,
-                            gas_lifting_vol_rate):
+def get_init_lifting_stream(gas, lifting_gas_stream, gas_lifting_vol_rate):
     """
     Generate initial gas stream for lifting
 
@@ -57,9 +50,11 @@ def get_init_lifting_stream(gas,
 
     lifting_gas_mass_fracs = gas.component_mass_fractions(gas.component_molar_fractions(lifting_gas_stream))
 
-    series = (lifting_gas_mass_fracs *
-              gas_lifting_vol_rate *
-              gas.component_gas_rho_STP[lifting_gas_stream.gas_flow_rates().index])
+    series = (
+        lifting_gas_mass_fracs
+        * gas_lifting_vol_rate
+        * gas.component_gas_rho_STP[lifting_gas_stream.gas_flow_rates().index]
+    )
 
     stream = Stream("gas lifting stream", lifting_gas_stream.tp)
     stream.set_rates_from_series(series, PHASE_GAS)
@@ -70,8 +65,14 @@ def get_init_lifting_stream(gas,
 #
 # Helper function shared by acid_gas_removal and demethanizer
 #
-def predict_blower_energy_use(proc, thermal_load, air_cooler_delta_T=None, water_press=None,
-                              air_cooler_fan_eff=None, air_cooler_speed_reducer_eff=None):
+def predict_blower_energy_use(
+    proc,
+    thermal_load,
+    air_cooler_delta_T=None,
+    water_press=None,
+    air_cooler_fan_eff=None,
+    air_cooler_speed_reducer_eff=None,
+):
     """
     Predict blower energy use per day. Any parameters not explicitly provided are taken
     from the `proc` object.
@@ -85,7 +86,7 @@ def predict_blower_energy_use(proc, thermal_load, air_cooler_delta_T=None, water
     """
 
     def _value(value, dflt):
-        return (dflt if value is None else value)
+        return dflt if value is None else value
 
     air_cooler_delta_T = _value(air_cooler_delta_T, proc.air_cooler_delta_T)
     water_press = _value(water_press, proc.water_press)

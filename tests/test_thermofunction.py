@@ -194,8 +194,7 @@ def test_component_molar_fraction_C1(gas_instance, stream):
 
 
 def test_component_mass_fraction(gas_instance, stream):
-    molar_fracs = pd.Series([0.004, 0.9666, 0.02, 0.01],
-                            index=["N2", "C1", "C2", "C3"], dtype="pint[mol/mol]")
+    molar_fracs = pd.Series([0.004, 0.9666, 0.02, 0.01], index=["N2", "C1", "C2", "C3"], dtype="pint[mol/mol]")
     mass_fracs = gas_instance.component_mass_fractions(molar_fracs)
     assert mass_fracs["C1"] == ureg.Quantity(pytest.approx(0.9307131413113588))
 
@@ -273,8 +272,7 @@ def test_molar_weight(gas_instance, stream):
 
 
 def test_molar_weight_from_molar_fracs(gas_instance, stream):
-    molar_fracs = pd.Series([0.004, 0.9666, 0.02, 0.01],
-                            index=["N2", "C1", "C2", "C3"], dtype="pint[mol/mol]")
+    molar_fracs = pd.Series([0.004, 0.9666, 0.02, 0.01], index=["N2", "C1", "C2", "C3"], dtype="pint[mol/mol]")
     mol_weight = gas_instance.molar_weight_from_molar_fracs(molar_fracs)
     assert mol_weight == ureg.Quantity(pytest.approx(16.6610324), "g/mol")
 
@@ -310,15 +308,13 @@ def test_gas_mass_energy_density(gas_instance, stream):
 
 
 def test_gas_mass_energy_density_from_molar_fracs(gas_instance, stream):
-    molar_fracs = pd.Series([0.004, 0.9666, 0.02, 0.01],
-                            index=["N2", "C1", "C2", "C3"], dtype="pint[mol/mol]")
+    molar_fracs = pd.Series([0.004, 0.9666, 0.02, 0.01], index=["N2", "C1", "C2", "C3"], dtype="pint[mol/mol]")
     mass_energy_density = gas_instance.mass_energy_density_from_molar_fracs(molar_fracs)
     assert mass_energy_density == ureg.Quantity(pytest.approx(49.7703477), "MJ/kg")
 
 
 def test_combustion_enthalpy(gas_instance, stream):
-    molar_fracs = pd.Series([9.2878, 2.4624, 0.0035, 0.2399],
-                            index=["N2", "O2", "CO2", "H2O"], dtype="pint[mol/mol]")
+    molar_fracs = pd.Series([9.2878, 2.4624, 0.0035, 0.2399], index=["N2", "O2", "CO2", "H2O"], dtype="pint[mol/mol]")
     temperature = ureg.Quantity(80.33, "degF")
     enthalpy = gas_instance.combustion_enthalpy(molar_fracs, temperature, PHASE_GAS)
     assert enthalpy["H2O"] == ureg.Quantity(pytest.approx(2162.8143928135105), "joule/mole")
@@ -374,7 +370,7 @@ def test_water_saturated_temperature(water_instance):
 def test_water_enthalpy_PT(water_instance):
     press = ureg.Quantity(13.7895, "bar")
     temp = ureg.Quantity(60.0, "degC")
-    mass_rate = ureg.Quantity(3.94E7, "kg/day")
+    mass_rate = ureg.Quantity(3.94e7, "kg/day")
     enthalpy = water_instance.enthalpy_PT(press, temp, mass_rate)
     assert enthalpy == ureg.Quantity(pytest.approx(9940445.92), "MJ/day")
 
@@ -382,16 +378,16 @@ def test_water_enthalpy_PT(water_instance):
 def test_steam_enthalpy(water_instance):
     press = ureg.Quantity(77.359177, "bar")
     steam_quality = ureg.Quantity(0.7, "frac")
-    mass_rate = ureg.Quantity(5.52E7, "kg/day")
+    mass_rate = ureg.Quantity(5.52e7, "kg/day")
     enthalpy = water_instance.steam_enthalpy(press, steam_quality, mass_rate)
-    assert enthalpy == ureg.Quantity(pytest.approx(1.28341315e+08), "MJ/day")
+    assert enthalpy == ureg.Quantity(pytest.approx(1.28341315e08), "MJ/day")
 
 
 def test_check_balance(test_model):
     from opgee.error import BalanceError
 
     field = test_model.get_field("test")
-    proc = field.find_process('SteamGeneration')
+    proc = field.find_process("SteamGeneration")
 
     input = ureg.Quantity(100.0, "tonne/day")
     output1 = ureg.Quantity(100.0001, "tonne/day")

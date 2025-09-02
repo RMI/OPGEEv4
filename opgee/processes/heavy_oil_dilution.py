@@ -17,14 +17,9 @@ class HeavyOilDilution(Process):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "oil for dilution"
-        ]
+        self._required_inputs = ["oil for dilution"]
 
-        self._required_outputs = [
-            ("oil for storage",
-             "oil for upgrading")
-        ]
+        self._required_outputs = [("oil for storage", "oil for upgrading")]
 
         self.water_density = self.water.density()
 
@@ -55,8 +50,7 @@ class HeavyOilDilution(Process):
         self.downhole_pump = field.downhole_pump
         self.oil_sands_mine = field.oil_sands_mine
 
-        self.bitumen_tp = TemperaturePressure(field.mined_bitumen_t,
-                                              field.mined_bitumen_p)
+        self.bitumen_tp = TemperaturePressure(field.mined_bitumen_t, field.mined_bitumen_p)
 
         self.diluent_API = self.attr("diluent_API")
         self.dilution_SG = self.oil.specific_gravity(self.diluent_API)
@@ -64,12 +58,11 @@ class HeavyOilDilution(Process):
         self.dilbit_SG = self.oil.specific_gravity(self.dilbit_API)
 
         self.dilution_type = self.attr("dilution_type")
-        self.diluent_tp = TemperaturePressure(self.attr("diluent_temp"),
-                                              self.attr("diluent_temp"))
-        self.before_diluent_tp = TemperaturePressure(self.attr("before_diluent_temp"),
-                                                     self.attr("before_diluent_press"))
-        self.final_mix_tp = TemperaturePressure(self.attr("final_mix_temp"),
-                                                self.attr("final_mix_press"))
+        self.diluent_tp = TemperaturePressure(self.attr("diluent_temp"), self.attr("diluent_temp"))
+        self.before_diluent_tp = TemperaturePressure(
+            self.attr("before_diluent_temp"), self.attr("before_diluent_press")
+        )
+        self.final_mix_tp = TemperaturePressure(self.attr("final_mix_temp"), self.attr("final_mix_press"))
 
     def run(self, analysis):
         self.print_running_msg()
@@ -90,8 +83,11 @@ class HeavyOilDilution(Process):
         input_liquid_volume_rate = input_liquid_mass_rate / (oil_SG * self.water_density)
 
         frac_diluent = self.frac_diluent
-        expected_volume_oil_bitumen = input_liquid_volume_rate if abs(frac_diluent.to("frac").m - 1) <= 0.01 else \
-            input_liquid_volume_rate / (1 - frac_diluent)
+        expected_volume_oil_bitumen = (
+            input_liquid_volume_rate
+            if abs(frac_diluent.to("frac").m - 1) <= 0.01
+            else input_liquid_volume_rate / (1 - frac_diluent)
+        )
         required_volume_diluent = expected_volume_oil_bitumen * frac_diluent
 
         if self.dilution_type == DILUENT:
@@ -100,8 +96,9 @@ class HeavyOilDilution(Process):
             diluent_LHV = field.oil.mass_energy_density(API=self.diluent_API)
         else:
             total_mass_diluted_oil = expected_volume_oil_bitumen * self.dilbit_SG * self.water_density
-            required_mass_dilution = total_mass_diluted_oil if frac_diluent == 1 else \
-                max(0, total_mass_diluted_oil - input_liquid_mass_rate)
+            required_mass_dilution = (
+                total_mass_diluted_oil if frac_diluent == 1 else max(0, total_mass_diluted_oil - input_liquid_mass_rate)
+            )
             diluent_SG = required_mass_dilution / required_volume_diluent / self.water_density
             diluent_LHV = field.oil.mass_energy_density(API=field.oil.API_from_SG(diluent_SG))
 
@@ -113,20 +110,21 @@ class HeavyOilDilution(Process):
 
         field.save_process_data(final_diluent_LHV_mass=diluent_LHV)
 
-        final_diluent_SG = \
-            total_mass_diluted_oil / expected_volume_oil_bitumen / self.water_density
+        final_diluent_SG = total_mass_diluted_oil / expected_volume_oil_bitumen / self.water_density
         final_diluent_API = field.oil.API_from_SG(final_diluent_SG)
         output_oil.set_API(final_diluent_API)
 
         diluent_energy_rate = required_mass_dilution * diluent_LHV
 
         # Calculate imported diluent energy consumption
-        fuel_consumption = field.transport_energy.get_transport_energy_dict(self.field,
-                                                                            self.transport_parameter,
-                                                                            self.transport_share_fuel,
-                                                                            self.transport_by_mode,
-                                                                            diluent_energy_rate,
-                                                                            DILUENT)
+        fuel_consumption = field.transport_energy.get_transport_energy_dict(
+            self.field,
+            self.transport_parameter,
+            self.transport_share_fuel,
+            self.transport_by_mode,
+            diluent_energy_rate,
+            DILUENT,
+        )
 
         energy_use = self.energy
         for name, value in fuel_consumption.items():

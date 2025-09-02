@@ -55,9 +55,7 @@ def read_distributions(pathname=None):
     :param pathname: (str) the pathname of the CSV file describing parameter distributions
     :return: (none)
     """
-    distros_csv = pathname or resourceStream(
-        DISTROS_CSV, stream_type="bytes", decode=None
-    )
+    distros_csv = pathname or resourceStream(DISTROS_CSV, stream_type="bytes", decode=None)
 
     df = pd.read_csv(distros_csv, skip_blank_lines=True, comment="#").fillna("")
 
@@ -75,13 +73,7 @@ def read_distributions(pathname=None):
         if name == "":
             continue
 
-        if (
-            low == ""
-            and high == ""
-            and mean == ""
-            and prob_of_yes == ""
-            and shape != "empirical"
-        ):
+        if low == "" and high == "" and mean == "" and prob_of_yes == "" and shape != "empirical":
             _logger.info(
                 f"* {name} depends on other distributions / smart defaults"
             )  # TODO add in lookup of attribute value
@@ -89,29 +81,21 @@ def read_distributions(pathname=None):
 
         if shape == "binary":
             if prob_of_yes == 0 or prob_of_yes == 1:
-                _logger.info(
-                    f"* Ignoring distribution on {name}, Binary distribution has prob_of_yes = {prob_of_yes}"
-                )
+                _logger.info(f"* Ignoring distribution on {name}, Binary distribution has prob_of_yes = {prob_of_yes}")
                 continue
 
-            rv = get_frozen_rv(
-                "weighted_binary", prob_of_one=0.5 if prob_of_yes == "" else prob_of_yes
-            )
+            rv = get_frozen_rv("weighted_binary", prob_of_one=0.5 if prob_of_yes == "" else prob_of_yes)
 
         elif shape == "uniform":
             if low == high:
-                _logger.info(
-                    f"* Ignoring distribution on {name}, Uniform high and low bounds are both {low}"
-                )
+                _logger.info(f"* Ignoring distribution on {name}, Uniform high and low bounds are both {low}")
                 continue
 
             rv = get_frozen_rv("uniform", min=low, max=high)
 
         elif shape == "triangular":
             if low == high:
-                _logger.info(
-                    f"* Ignoring distribution on {name}, Triangle high and low bounds are both {low}"
-                )
+                _logger.info(f"* Ignoring distribution on {name}, Triangle high and low bounds are both {low}")
                 continue
 
             rv = get_frozen_rv("triangle", min=low, mode=default, max=high)
@@ -124,15 +108,11 @@ def read_distributions(pathname=None):
             if low == "" or high == "":
                 rv = get_frozen_rv("normal", mean=mean, stdev=stdev)
             else:
-                rv = get_frozen_rv(
-                    "truncated_normal", mean=mean, stdev=stdev, low=low, high=high
-                )
+                rv = get_frozen_rv("truncated_normal", mean=mean, stdev=stdev, low=low, high=high)
 
         elif shape == "lognormal":
             if stdev == 0.0:
-                _logger.info(
-                    f"* Ignoring distribution on {name}, Lognormal has stdev = 0"
-                )
+                _logger.info(f"* Ignoring distribution on {name}, Lognormal has stdev = 0")
                 continue
 
             if low == "" or high == "":  # must specify both low and high
@@ -157,7 +137,6 @@ def read_distributions(pathname=None):
 
 
 class Distribution(OpgeeObject):
-
     instances = {}
 
     def __init__(self, full_name, rv):
@@ -223,7 +202,6 @@ class Simulation(OpgeeObject):
         save_to_path=None,
         meta_data_only=False,
     ):
-
         if not os.path.isdir(sim_dir):
             raise McsUserError(f"Simulation directory '{sim_dir}' does not exist.")
 
@@ -248,9 +226,7 @@ class Simulation(OpgeeObject):
         if trials > 0:
             self.generate()
 
-        if (
-            meta_data_only
-        ):  # a slight misnomer since we may generate trial_data.csv, too
+        if meta_data_only:  # a slight misnomer since we may generate trial_data.csv, too
             return
 
         try:
@@ -258,9 +234,7 @@ class Simulation(OpgeeObject):
             with open(model_file) as f:
                 self.model_xml_string = f.read()
         except Exception as e:
-            raise McsSystemError(
-                f"Failed to read model file '{model_file}' to XML string: {e}"
-            )
+            raise McsSystemError(f"Failed to read model file '{model_file}' to XML string: {e}")
 
         # TBD: to allow the same trial_num to be run across fields, cache field
         #      trial_data in a dict by field name rather than a single DF
@@ -286,9 +260,7 @@ class Simulation(OpgeeObject):
 
         self.analysis = self.model.get_analysis(self.analysis_name, raiseError=False)
         if not self.analysis:
-            raise CommandlineError(
-                f"Analysis '{self.analysis_name}' was not found in model"
-            )
+            raise CommandlineError(f"Analysis '{self.analysis_name}' was not found in model")
 
     @classmethod
     def read_metadata(cls, sim_dir):
@@ -319,9 +291,7 @@ class Simulation(OpgeeObject):
         if field_names:
             names = set(field_names)
             # Use list comprehension rather than set.intersection to maintain original order
-            self.field_names = [
-                name for name in metadata["field_names"] if name in names
-            ]
+            self.field_names = [name for name in metadata["field_names"] if name in names]
         else:
             self.field_names = metadata["field_names"]
 
@@ -357,8 +327,7 @@ class Simulation(OpgeeObject):
         if os.path.lexists(sim_dir):
             if not overwrite:
                 raise McsUserError(
-                    f"Directory '{sim_dir}' already exists. Use "
-                    "Simulation.new(sim_dir, overwrite=True) to replace it."
+                    f"Directory '{sim_dir}' already exists. Use Simulation.new(sim_dir, overwrite=True) to replace it."
                 )
             removeTree(sim_dir, ignore_errors=False)
 
@@ -465,9 +434,7 @@ class Simulation(OpgeeObject):
         else:
             obj = field.find_process(class_name)
             if obj is None:
-                raise McsUserError(
-                    f"A process of class '{class_name}' was not found in {field}"
-                )
+                raise McsUserError(f"A process of class '{class_name}' was not found in {field}")
 
         attr_obj = obj.attr_dict.get(attr_name)
         if attr_obj is None:
@@ -495,13 +462,9 @@ class Simulation(OpgeeObject):
 
             for dist in distributions:
                 rv_list.append(dist.rv)
-                cols.append(
-                    dist.attr_name if dist.class_name == "Field" else dist.full_name
-                )
+                cols.append(dist.attr_name if dist.class_name == "Field" else dist.full_name)
 
-            self.trial_data_df = df = lhs(
-                rv_list, trials, columns=cols, corrMat=corr_mat
-            )
+            self.trial_data_df = df = lhs(rv_list, trials, columns=cols, corrMat=corr_mat)
             df.index.name = "trial_num"
             self.save_trial_data(field_name)
 
@@ -644,9 +607,7 @@ class Simulation(OpgeeObject):
                 )
                 results.append(result)
 
-                _logger.warning(
-                    f"Exception raised in trial {trial_num} in {field_name}: {e}"
-                )
+                _logger.warning(f"Exception raised in trial {trial_num} in {field_name}: {e}")
                 _logger.debug(traceback.format_exc())
                 continue
 

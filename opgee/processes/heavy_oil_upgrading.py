@@ -26,9 +26,7 @@ class HeavyOilUpgrading(Process):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "oil for upgrading"
-        ]
+        self._required_inputs = ["oil for upgrading"]
 
         self._required_outputs = [
             "oil for storage",
@@ -62,7 +60,6 @@ class HeavyOilUpgrading(Process):
         self.oil_sands_mine = field.oil_sands_mine
         self.upgrader_type = field.upgrader_type
 
-
     def check_enabled(self):
         if self.upgrader_type == "None":
             self.set_enabled(False)
@@ -90,9 +87,9 @@ class HeavyOilUpgrading(Process):
         heavy_oil_upgrading_table = df[self.upgrader_type]
         heavy_oil_upgrading_table.index = df["Items"]
 
-        upgrader_process_gas_heating_value = (self.upgrader_gas_comp *
-                                              self.oil.component_LHV_molar[self.upgrader_gas_comp.index] *
-                                              self.mole_to_scf).sum()
+        upgrader_process_gas_heating_value = (
+            self.upgrader_gas_comp * self.oil.component_LHV_molar[self.upgrader_gas_comp.index] * self.mole_to_scf
+        ).sum()
         SCO_bitumen_ratio = heavy_oil_upgrading_table["SCO/bitumen ratio"]
 
         field.save_process_data(SCO_bitumen_ratio=SCO_bitumen_ratio)  # used in the Flaring process
@@ -135,16 +132,21 @@ class HeavyOilUpgrading(Process):
 
         # NG calculation
         NG_dict = d["Natural gas intensity (W/O cogen)"] * SCO_output
-        NG_to_cogen_yield = \
-            frac_electricity_self_gene * electricity_yield / heavy_oil_upgrading_table[
-                "Cogen turbine efficiency"] / self.NG_heating_value
+        NG_to_cogen_yield = (
+            frac_electricity_self_gene
+            * electricity_yield
+            / heavy_oil_upgrading_table["Cogen turbine efficiency"]
+            / self.NG_heating_value
+        )
         NG_to_H2 = NG_dict["Fraction NG - H2"]
         NG_to_H2_mass_rate = calculate_mass_rate_from_volume_rate(NG_to_H2, self.NG_comp)
         NG_to_cogen = NG_to_cogen_yield * SCO_output
-        heat_from_cogen = \
+        heat_from_cogen = (
             NG_to_cogen * self.NG_heating_value * heavy_oil_upgrading_table["Cogeneration steam efficiency"]
+        )
         NG_to_heat = max(
-            NG_dict["Fraction NG - Heating (W/O cogen)"] - heat_from_cogen / upgrader_process_gas_heating_value, 0)
+            NG_dict["Fraction NG - Heating (W/O cogen)"] - heat_from_cogen / upgrader_process_gas_heating_value, 0
+        )
 
         proc_gas_flaring_mass_rate = calculate_mass_rate_from_volume_rate(proc_gas_flared, self.upgrader_gas_comp)
         flaring_gas = self.find_output_stream("gas for flaring")
@@ -153,23 +155,34 @@ class HeavyOilUpgrading(Process):
 
         # Petrocoke calculation
         coke_dict = d["Coke yield per bbl SCO output"] * SCO_output
-        coke_to_stockpile_and_transport = \
-            ureg.Quantity(max(0, (
-                    input_liquid_mass_rate -
-                    SCO_output_mass_rate -
-                    proc_gas_exported_mass_rate.sum() -
-                    proc_gas_flaring_mass_rate.sum()).to("tonne/day").m), "tonne/day")
-        coke_to_heat = \
-            ureg.Quantity(max(0, (coke_dict.sum() - coke_to_stockpile_and_transport).to("tonne/day").m), "tonne/day")
+        coke_to_stockpile_and_transport = ureg.Quantity(
+            max(
+                0,
+                (
+                    input_liquid_mass_rate
+                    - SCO_output_mass_rate
+                    - proc_gas_exported_mass_rate.sum()
+                    - proc_gas_flaring_mass_rate.sum()
+                )
+                .to("tonne/day")
+                .m,
+            ),
+            "tonne/day",
+        )
+        coke_to_heat = ureg.Quantity(
+            max(0, (coke_dict.sum() - coke_to_stockpile_and_transport).to("tonne/day").m), "tonne/day"
+        )
 
         coke_to_transport = self.find_output_stream("petrocoke")
         coke_to_transport.set_solid_flow_rate("PC", coke_to_stockpile_and_transport)
         coke_to_transport.set_tp(STP)
 
-        self.set_iteration_value(SCO_to_storage.total_flow_rate() +
-                                 coke_to_transport.total_flow_rate() +
-                                 flaring_gas.total_flow_rate() +
-                                 output_proc_gas.total_flow_rate())
+        self.set_iteration_value(
+            SCO_to_storage.total_flow_rate()
+            + coke_to_transport.total_flow_rate()
+            + flaring_gas.total_flow_rate()
+            + output_proc_gas.total_flow_rate()
+        )
 
         # energy use
         energy_use = self.energy
@@ -177,9 +190,9 @@ class HeavyOilUpgrading(Process):
         NG_stream = Stream("NG_stream", tp=STP)
         upgrader_gas_stream = Stream("upgrader_gas_stream", tp=STP)
         NG_mass_rate = calculate_mass_rate_from_volume_rate(NG_to_cogen + NG_to_heat + NG_to_H2, self.NG_comp)
-        upgrader_mass_rate = \
-            calculate_mass_rate_from_volume_rate(proc_gas_to_heat + proc_gas_to_H2 + proc_gas_flared,
-                                                 self.upgrader_gas_comp)
+        upgrader_mass_rate = calculate_mass_rate_from_volume_rate(
+            proc_gas_to_heat + proc_gas_to_H2 + proc_gas_flared, self.upgrader_gas_comp
+        )
         NG_stream.set_rates_from_series(NG_mass_rate, PHASE_GAS)
         upgrader_gas_stream.set_rates_from_series(upgrader_mass_rate, PHASE_GAS)
 

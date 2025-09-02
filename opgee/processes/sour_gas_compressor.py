@@ -58,13 +58,9 @@ class SourGasCompressor(Process):
 
         discharge_press = self.res_press + ureg.Quantity(500.0, "psia")
         overall_compression_ratio = discharge_press / input.tp.P
-        energy_consumption, output_temp, _ = \
-            Compressor.get_compressor_energy_consumption(
-                self.field,
-                self.prime_mover_type,
-                self.eta_compressor,
-                overall_compression_ratio,
-                input)
+        energy_consumption, output_temp, _ = Compressor.get_compressor_energy_consumption(
+            self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         gas_to_injection.tp.set(T=output_temp, P=discharge_press)
         field.save_process_data(sour_gas_reinjection_mass_rate=gas_to_injection.gas_flow_rate("CO2"))
@@ -80,6 +76,3 @@ class SourGasCompressor(Process):
         # emissions
         self.set_combustion_emissions()
         self.emissions.set_from_stream(EM_FUGITIVES, gas_fugitives)
-
-
-

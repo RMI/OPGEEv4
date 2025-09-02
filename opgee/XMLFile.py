@@ -1,10 +1,11 @@
-'''
+"""
 .. Created as part of pygcam (2015)
    Imported into opgee (2021)
 
 .. Copyright (c) 2015-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-'''
+"""
+
 from io import BytesIO
 
 from lxml import etree as ET
@@ -15,12 +16,20 @@ from .log import getLogger
 
 _logger = getLogger(__name__)
 
+
 class XMLFile(object):
+    parsed_schemas = {}  # cache parsed schemas to avoid re-reading and parsing opgee.xsd
 
-    parsed_schemas = {} # cache parsed schemas to avoid re-reading and parsing opgee.xsd
-
-    def __init__(self, filename, xml_string=None, load=True, schemaPath=None,
-                 removeComments=True, conditionalXML=False, varDict=None):
+    def __init__(
+        self,
+        filename,
+        xml_string=None,
+        load=True,
+        schemaPath=None,
+        removeComments=True,
+        conditionalXML=False,
+        varDict=None,
+    ):
         """
         Stores information about an XML file; provides wrapper to parse and access
         the file tree, and handle "conditional XML".
@@ -41,10 +50,10 @@ class XMLFile(object):
         self.xml_string = str.encode(xml_string) if xml_string else None
         self.tree = None
         self.conditionalXML = conditionalXML
-        self.varDict = varDict or getConfigDict(section=getParam('OPGEE.DefaultProject'))
+        self.varDict = varDict or getConfigDict(section=getParam("OPGEE.DefaultProject"))
         self.removeComments = removeComments
 
-        self.schemaPath   = schemaPath
+        self.schemaPath = schemaPath
         self.schemaStream = None
 
         # if filename and load:
@@ -52,15 +61,15 @@ class XMLFile(object):
             self.read()
 
     def getRoot(self):
-        'Return the root node of the parse tree'
+        "Return the root node of the parse tree"
         return self.tree.getroot()
 
     def getTree(self):
-        'Return XML parse tree.'
+        "Return XML parse tree."
         return self.tree
 
     def getFilename(self):
-        'Return the filename for this ``XMLFile``'
+        "Return the filename for this ``XMLFile``"
         return self.filename
 
     def read(self):
@@ -86,7 +95,7 @@ class XMLFile(object):
             raise XmlFormatError(f"Can't read from XML {thing}: {e}")
 
         if self.removeComments:
-            for elt in tree.iterfind('.//comment'):
+            for elt in tree.iterfind(".//comment"):
                 parent = elt.getparent()
                 if parent is not None:
                     parent.remove(elt)
@@ -114,7 +123,7 @@ class XMLFile(object):
         # use the cached version if available
         schema = self.parsed_schemas.get(self.schemaPath)
         if not schema:
-            ref = imp.files('opgee') / self.schemaPath
+            ref = imp.files("opgee") / self.schemaPath
 
             with imp.as_file(ref) as path:
                 xsd = ET.parse(path)
@@ -126,7 +135,9 @@ class XMLFile(object):
                 schema.assertValid(tree)
                 return True
             except ET.DocumentInvalid as e:
-                raise XmlFormatError(f"Validation of '{self.filename}'\n  using schema '{self.schemaPath}' failed:\n  {e}")
+                raise XmlFormatError(
+                    f"Validation of '{self.filename}'\n  using schema '{self.schemaPath}' failed:\n  {e}"
+                )
         else:
             valid = schema.validate(tree)
             return valid

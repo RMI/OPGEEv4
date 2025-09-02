@@ -15,14 +15,15 @@ _logger = getLogger(__name__)
 
 class CO2InjectionWell(Process):
     """
-        This process models a injection well used for injecting CO2 into the reservoir.
+    This process models a injection well used for injecting CO2 into the reservoir.
 
-        input streams:
-            - gas: gas stream with CO2 for injection
+    input streams:
+        - gas: gas stream with CO2 for injection
 
-        output streams:
-            - gas for gas partition: gas stream with CO2 injected into reservoir
+    output streams:
+        - gas for gas partition: gas stream with CO2 injected into reservoir
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 

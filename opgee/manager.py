@@ -36,6 +36,7 @@ from .mcs.simulation import Simulation, RESULTS_CSV, FAILURES_CSV
 
 _logger = getLogger(__name__)
 
+
 def _walltime(minutes: int) -> str:
     """
     Convert minutes to a walltime string suitable for SLURM
@@ -43,7 +44,8 @@ def _walltime(minutes: int) -> str:
     :param minutes: (int) a number of minutes
     :return: (str) a string of the form "HH:MM:00"
     """
-    return f"{minutes // 60 :02d}:{minutes % 60 :02d}:00"
+    return f"{minutes // 60:02d}:{minutes % 60:02d}:00"
+
 
 # From recipes at https://docs.python.org/3/library/itertools.html
 def _batched(iterable, length):
@@ -54,7 +56,7 @@ def _batched(iterable, length):
     from itertools import islice
 
     if length < 1:
-        raise ValueError('_batched: length must be > 0')
+        raise ValueError("_batched: length must be > 0")
 
     it = iter(iterable)
     while batch := tuple(islice(it, length)):
@@ -65,6 +67,7 @@ class AbsPacket(OpgeeObject):
     """
     Abstract superclass for FieldPacket and TrialPacket
     """
+
     _next_packet_num: int = 1
 
     def __init__(self, items):
@@ -92,18 +95,20 @@ class AbsPacket(OpgeeObject):
           SIMPLE_RESULT or DETAILED_RESULT
         :return: (list of FieldResult)
         """
-        raise AbstractMethodError(self.__class__, 'run')
+        raise AbstractMethodError(self.__class__, "run")
 
     def packetize(self, *args, **kwargs):
         "Must be implemented by subclass"
-        raise AbstractMethodError(self.__class__, 'packetize')
+        raise AbstractMethodError(self.__class__, "packetize")
 
 
 class FieldPacket(AbsPacket):
-    def __init__(self,
-                 model_xml_file: str,
-                 analysis_name: str,             # TBD: might not be needed here
-                 field_names: Sequence[str]): # by default this is a list of 10 field names
+    def __init__(
+        self,
+        model_xml_file: str,
+        analysis_name: str,  # TBD: might not be needed here
+        field_names: Sequence[str],
+    ):  # by default this is a list of 10 field names
         """
         Create a ``FieldPacket`` of OPGEE runs to perform on a worker process.
         FieldPackets are defined by a list of field names. The worker process will
@@ -117,24 +122,21 @@ class FieldPacket(AbsPacket):
         self.analysis_name = analysis_name
 
     @classmethod
-    def packetize(cls,
-                  model_xml_file: str,
-                  analysis_name: str,
-                  field_names: Sequence[str],
-                  packet_size: int):
+    def packetize(cls, model_xml_file: str, analysis_name: str, field_names: Sequence[str], packet_size: int):
         """
         Packetizes over ``field_names``. Each packet contains a set of
         field names to iterate over.
         """
-        packets = [FieldPacket(model_xml_file, analysis_name, field_names)
-                   for field_names in _batched(field_names, packet_size)]
+        packets = [
+            FieldPacket(model_xml_file, analysis_name, field_names)
+            for field_names in _batched(field_names, packet_size)
+        ]
         return packets
 
     def run(self, result_type):
         timer = Timer(f"FieldPacket.run({self})")
         field_names = self.items
-        results = run_serial(self.model_xml_file, self.analysis_name, field_names,
-                             result_type=result_type)
+        results = run_serial(self.model_xml_file, self.analysis_name, field_names, result_type=result_type)
         timer.stop()
 
         _logger.debug(f"FieldPacket.run({self}) returning {len(results)} results")
@@ -148,18 +150,16 @@ class TrialPacket(AbsPacket):
         self.field_name = field_name
 
     @classmethod
-    def packetize(cls,
-                  sim_dir: str,
-                  trial_nums: Sequence[int],
-                  field_names: Sequence[str],
-                  packet_size: int):
+    def packetize(cls, sim_dir: str, trial_nums: Sequence[int], field_names: Sequence[str], packet_size: int):
         """
         Packetizes over ``trial_nums`` for each name in ``field_names``.
         Each resulting packet identifies a set of trials for one field.
         """
-        packets = [TrialPacket(sim_dir, field_name, trial_batch)
-                   for field_name in field_names
-                   for trial_batch in _batched(trial_nums, packet_size)]
+        packets = [
+            TrialPacket(sim_dir, field_name, trial_batch)
+            for field_name in field_names
+            for trial_batch in _batched(trial_nums, packet_size)
+        ]
         return packets
 
     def run(self, result_type):
@@ -190,15 +190,14 @@ class TrialPacket(AbsPacket):
         return results
 
 
-
 class Manager(OpgeeObject):
     def __init__(self, cluster_type=None):
         from .constants import CLUSTER_TYPES
-        cluster_type = (cluster_type or getParam('OPGEE.ClusterType')).lower()
+
+        cluster_type = (cluster_type or getParam("OPGEE.ClusterType")).lower()
 
         if cluster_type not in CLUSTER_TYPES:
-            raise McsSystemError(f"Unknown cluster type '{cluster_type}'. "
-                                 f"Valid options are {CLUSTER_TYPES}.")
+            raise McsSystemError(f"Unknown cluster type '{cluster_type}'. Valid options are {CLUSTER_TYPES}.")
 
         self.cluster_type = cluster_type
         self.cluster = None
@@ -213,38 +212,38 @@ class Manager(OpgeeObject):
 
         _logger.info(f"Creating {cluster_type} cluster")
 
-        cores = getParamAsInt('SLURM.CoresPerNode') # "Total number of cores per job"
+        cores = getParamAsInt("SLURM.CoresPerNode")  # "Total number of cores per job"
 
-        local_dir = getParam('SLURM.TempDir')
+        local_dir = getParam("SLURM.TempDir")
         mkdirs(local_dir)
 
-        if cluster_type == 'slurm':
+        if cluster_type == "slurm":
             # "Cut the job up into this many processes. Good for GIL workloads or for nodes with
             #  many cores. By default, process ~= sqrt(cores) so that the number of processes and
             #  the number of threads per process is roughly the same."
-            processes_per_core = getParamAsInt('SLURM.ProcessesPerCore')
+            processes_per_core = getParamAsInt("SLURM.ProcessesPerCore")
             processes = cores // processes_per_core
-            shell = getParam('SLURM.Shell')
+            shell = getParam("SLURM.Shell")
 
             # N.B. "Failed to launch worker. You cannot use the --no-nanny argument when n_workers > 1."
-            nanny = getParamAsBoolean('SLURM.UseNanny')  # "Whether to start a nanny process"
+            nanny = getParamAsBoolean("SLURM.UseNanny")  # "Whether to start a nanny process"
 
-            job_script_prologue = None # ['conda activate opgee'] failed
+            job_script_prologue = None  # ['conda activate opgee'] failed
             minutes_per_task = minutes_per_task or getParamAsInt("SLURM.MinutesPerTask")
 
             arg_dict = dict(
-                account = getParam('SLURM.Account') or None,
-                job_name = getParam('SLURM.JobName'),
-                queue = getParam('SLURM.Partition'),
-                walltime = _walltime(minutes_per_task),
+                account=getParam("SLURM.Account") or None,
+                job_name=getParam("SLURM.JobName"),
+                queue=getParam("SLURM.Partition"),
+                walltime=_walltime(minutes_per_task),
                 cores=cores,
                 processes=processes,
-                memory = getParam('SLURM.MemPerJob'),
-                local_directory = local_dir,
-                interface = getParam('SLURM.Interface') or None,
-                shebang = '#!' + shell if shell else None,
-                nanny = nanny,  # can't seem to get nanny = False to work...
-                job_script_prologue = job_script_prologue,
+                memory=getParam("SLURM.MemPerJob"),
+                local_directory=local_dir,
+                interface=getParam("SLURM.Interface") or None,
+                shebang="#!" + shell if shell else None,
+                nanny=nanny,  # can't seem to get nanny = False to work...
+                job_script_prologue=job_script_prologue,
             )
 
             _logger.debug(f"calling SLURMCluster({arg_dict})")
@@ -256,29 +255,31 @@ class Manager(OpgeeObject):
             _logger.debug(f"calling cluster.scale(cores={num_workers})")
             cluster.scale(cores=num_workers)  # scale up to the desired total number of cores
 
-        elif cluster_type == 'local':
+        elif cluster_type == "local":
             # Set processes=False and swap n_workers and threads_per_worker to use threads in one
             # process, which is helpful for debugging. Note that some packages are not thread-safe.
             # Running with n_workers=1, threads_per_worker=2 resulted in weird runtime errors in Chemical.
             # self.cluster = cluster = SubprocessCluster(n_workers=1, threads_per_worker=num_engines, processes=False)
 
-            self.cluster = cluster = SubprocessCluster(n_workers=num_workers, threads_per_worker=1, worker_kwargs=dict(local_directory=local_dir))
+            self.cluster = cluster = SubprocessCluster(
+                n_workers=num_workers, threads_per_worker=1, worker_kwargs=dict(local_directory=local_dir)
+            )
 
         else:
             raise McsSystemError(f"Unknown cluster type '{cluster_type}'. Valid options are 'slurm' and 'local'.")
 
-        _logger.info(f"Starting {cluster_type } cluster")
+        _logger.info(f"Starting {cluster_type} cluster")
         self.client = client = Client(cluster)
 
         _logger.info("Waiting for workers")
         while True:
             try:
                 # print('.', sep='', end='')
-                client.wait_for_workers(1, 15) # wait for 1 worker with 15 sec timeout
+                client.wait_for_workers(1, 15)  # wait for 1 worker with 15 sec timeout
                 break
             except (dask.distributed.TimeoutError, asyncio.exceptions.TimeoutError):
                 pass
-                #print(e) # prints "Only 0/1 workers arrived after 15"
+                # print(e) # prints "Only 0/1 workers arrived after 15"
 
         _logger.info("Workers are running")
         return client
@@ -292,17 +293,19 @@ class Manager(OpgeeObject):
         self.client.shutdown()
         sleep(5)
 
-        #self.client.retire_workers()
-        #sleep(1)
-        #self.client.scheduler.shutdown()
+        # self.client.retire_workers()
+        # sleep(1)
+        # self.client.scheduler.shutdown()
 
         self.client = self.cluster = None
 
-    def run_packets(self,
-                    packets: list[AbsPacket],
-                    result_type: str = SIMPLE_RESULT,
-                    num_engines: int = 0,
-                    minutes_per_task: int = 10):
+    def run_packets(
+        self,
+        packets: list[AbsPacket],
+        result_type: str = SIMPLE_RESULT,
+        num_engines: int = 0,
+        minutes_per_task: int = 10,
+    ):
         """
         Run a set of packets (i.e., FieldPackets or TrialPackets) on a dask cluster.
         Yields each packet's results as they are available.
@@ -313,7 +316,7 @@ class Manager(OpgeeObject):
         :param minutes_per_task: (int) how many minutes of walltime to allocate for each worker.
         :return: (list of FieldResult) results for individual runs.
         """
-        timer = Timer('Manager.run_packets')
+        timer = Timer("Manager.run_packets")
 
         # This is useful mainly for testing. Any real MCS will use a proper cluster.
         if self.cluster_type == CLUSTER_NONE:
@@ -328,7 +331,7 @@ class Manager(OpgeeObject):
             client = self.start_cluster(num_workers=num_engines, minutes_per_task=minutes_per_task)
 
             # Start the worker processes on all available CPUs.
-            futures = client.map(lambda pkt: pkt.run(result_type),packets)
+            futures = client.map(lambda pkt: pkt.run(result_type), packets)
 
             for future, results in as_completed(futures, with_results=True):
                 yield results
@@ -339,8 +342,8 @@ class Manager(OpgeeObject):
         _logger.info(timer.stop())
         return None
 
-def _run_field(analysis_name, field_name, xml_string, result_type,
-               use_default_model=True):
+
+def _run_field(analysis_name, field_name, xml_string, result_type, use_default_model=True):
     """
     Run a single field, once, using the model in ``xml_string`` and return a
     ``FieldResult`` instance with results of ``result_type``.
@@ -360,11 +363,14 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
     mf = None
     field = None
     try:
-        mf = ModelFile.from_xml_string(xml_string, add_stream_components=False,
-                                       use_class_path=False,
-                                       use_default_model=use_default_model,
-                                       analysis_names=[analysis_name],
-                                       field_names=[field_name])
+        mf = ModelFile.from_xml_string(
+            xml_string,
+            add_stream_components=False,
+            use_class_path=False,
+            use_default_model=use_default_model,
+            analysis_names=[analysis_name],
+            field_names=[field_name],
+        )
 
         analysis = mf.model.get_analysis(analysis_name)
         field = analysis.get_field(field_name)
@@ -381,15 +387,15 @@ def _run_field(analysis_name, field_name, xml_string, result_type,
 
     return result
 
+
 # TODO: could be method of Manager
 def run_serial(model_xml_file, analysis_name, field_names, result_type=DETAILED_RESULT):
-    timer = Timer('run_serial')
+    timer = Timer("run_serial")
 
     results = []
 
     # even though we pass 10 field names by default, each is passed singularly to `_run_field`
-    for field_name, xml_string in extract_model(model_xml_file, analysis_name,
-                                                field_names):
+    for field_name, xml_string in extract_model(model_xml_file, analysis_name, field_names):
         result = _run_field(analysis_name, field_name, xml_string, result_type)
         if result.error:
             _logger.error(f"Failed: {result}")
@@ -398,6 +404,7 @@ def run_serial(model_xml_file, analysis_name, field_names, result_type=DETAILED_
 
     _logger.info(timer.stop())
     return results
+
 
 def save_results(results, output_dir, batch_num=None):
     """
@@ -427,11 +434,9 @@ def save_results(results, output_dir, batch_num=None):
     stream_dfs = []
     audit_dfs = []
 
-    def create_dict(analysis, field, trial,
-                    name=None, value=None, unit_col=True):
+    def create_dict(analysis, field, trial, name=None, value=None, unit_col=True):
         # create the common portion of result dicts
-        d = {"analysis": analysis,
-             "field": field}
+        d = {"analysis": analysis, "field": field}
 
         if trial is not None:
             d["trial"] = trial
@@ -439,7 +444,7 @@ def save_results(results, output_dir, batch_num=None):
         if name:
             if isinstance(value, pint.Quantity):
                 if unit_col:
-                    d['units'] = value.u
+                    d["units"] = value.u
                 value = value.m
             d[name] = value
         return d
@@ -452,17 +457,17 @@ def save_results(results, output_dir, batch_num=None):
 
         if result.result_type == ERROR_RESULT:
             d = create_dict(analysis_name, field_name, trial)
-            d['error'] = result.error
+            d["error"] = result.error
             error_rows.append(d)
             audit_dfs.append(result.audit_data)
             continue
 
         if result.result_type != SIMPLE_RESULT:
             if trial is not None:
-                result.streams['trial'] = trial
-                result.gases['trial'] = trial
-                result.emissions['trial'] = trial
-                result.energy['trial'] = trial      # energy consumption
+                result.streams["trial"] = trial
+                result.gases["trial"] = trial
+                result.emissions["trial"] = trial
+                result.energy["trial"] = trial  # energy consumption
 
             energy_cols.append(result.energy)
             emission_cols.append(result.emissions)
@@ -470,15 +475,14 @@ def save_results(results, output_dir, batch_num=None):
             gas_dfs.append(result.gases)
 
             # Add a row for total energy output
-            d = create_dict(analysis_name, field_name, trial,
-                            name='energy_output', value=result.energy_output)
+            d = create_dict(analysis_name, field_name, trial, name="energy_output", value=result.energy_output)
             energy_output_rows.append(d)
 
         for name, ci in result.ci_results:
-            d = create_dict(analysis_name, field_name, trial, name='CI', value=ci)
-            d['node'] = name
+            d = create_dict(analysis_name, field_name, trial, name="CI", value=ci)
+            d["node"] = name
             ci_rows.append(d)
-        
+
         # always audit if configured
         if result.audit_data is not None:
             audit_dfs.append(result.audit_data["field"])
@@ -488,7 +492,7 @@ def save_results(results, output_dir, batch_num=None):
                 proc_graph.write_png(pathjoin(procs_path, f"{field_name}_process_graph.png"))
 
     # Append batch number to filename if not None
-    batch = '' if batch_num is None else f"_{batch_num}"
+    batch = "" if batch_num is None else f"_{batch_num}"
 
     def _to_csv(df, file_prefix):
         pathname = pathjoin(output_dir, f"{file_prefix}{batch}.csv")
@@ -496,11 +500,11 @@ def save_results(results, output_dir, batch_num=None):
         df.to_csv(pathname, index=False)
 
     df = pd.DataFrame(data=ci_rows)
-    _to_csv(df, 'carbon_intensity')
+    _to_csv(df, "carbon_intensity")
 
     if error_rows:
         df = pd.DataFrame(data=error_rows)
-        _to_csv(df, 'errors')
+        _to_csv(df, "errors")
 
     audit_dfs = [pd.DataFrame(df) for df in audit_dfs if df is not None]
     if len(audit_dfs) > 0:
@@ -514,11 +518,11 @@ def save_results(results, output_dir, batch_num=None):
         def _reformat(df):
             df = df.sort_index(axis="rows").reset_index()
 
-            id_vars = ['process', 'unit']
-            if 'trial' in df.columns:
-                id_vars.append('trial')
+            id_vars = ["process", "unit"]
+            if "trial" in df.columns:
+                id_vars.append("trial")
 
-            df = df.melt(value_name='value', var_name='field', id_vars=id_vars)
+            df = df.melt(value_name="value", var_name="field", id_vars=id_vars)
             return df
 
         dfs = [_reformat(df) for df in dfs]
@@ -527,9 +531,9 @@ def save_results(results, output_dir, batch_num=None):
         df = pd.concat(dfs, axis="rows")
 
         # reordering the columns
-        col_order = ['field', 'process', 'value', 'unit']
-        if 'trial' in df.columns:
-            col_order.insert(0, 'trial')
+        col_order = ["field", "process", "value", "unit"]
+        if "trial" in df.columns:
+            col_order.insert(0, "trial")
 
         df = df[col_order]
         _to_csv(df, file_prefix)
@@ -556,12 +560,13 @@ def save_results(results, output_dir, batch_num=None):
     # Save any results captured by optional post-processor plugins
     PostProcessor.save_post_processor_results(output_dir)
 
+
 def _combine_results(filenames, output_name, sort_by=None):
     if not filenames:
         return
 
     dfs = [pd.read_csv(name, index_col=False) for name in filenames]
-    combined = pd.concat(dfs, axis='rows')
+    combined = pd.concat(dfs, axis="rows")
 
     if sort_by:
         combined.sort_values(sort_by, inplace=True)
@@ -570,8 +575,9 @@ def _combine_results(filenames, output_name, sort_by=None):
     combined.to_csv(output_name, index=False)
 
 
-results_pat  = re.compile(r'results-\d+\.csv$')
-failures_pat = re.compile(r'failures-\d+\.csv$')
+results_pat = re.compile(r"results-\d+\.csv$")
+failures_pat = re.compile(r"failures-\d+\.csv$")
+
 
 def combine_mcs_results(sim_dir, field_names, delete=False):
     """
@@ -588,15 +594,16 @@ def combine_mcs_results(sim_dir, field_names, delete=False):
             # TBD: handle case that field directory isn't present
             with pushd(field_name):
                 # use glob with its limited wildcard capability, then filter for the real pattern
-                result_files = [name for name in glob(r'results-*.csv') if re.match(results_pat, name)]
-                _combine_results(result_files, RESULTS_CSV, sort_by='trial_num')
+                result_files = [name for name in glob(r"results-*.csv") if re.match(results_pat, name)]
+                _combine_results(result_files, RESULTS_CSV, sort_by="trial_num")
 
-                failure_files = [name for name in glob(r'failures-*.csv') if re.match(failures_pat, name)]
-                _combine_results(failure_files, FAILURES_CSV, sort_by='trial_num')
+                failure_files = [name for name in glob(r"failures-*.csv") if re.match(failures_pat, name)]
+                _combine_results(failure_files, FAILURES_CSV, sort_by="trial_num")
 
                 if delete:
                     for name in result_files + failure_files:
                         os.remove(name)
+
 
 def combine_field_results(output_dir, field_names, delete=False):
     """
@@ -612,10 +619,10 @@ def combine_field_results(output_dir, field_names, delete=False):
         for field_name in field_names:
             with pushd(field_name):
                 # use glob with its limited wildcard capability, then filter for the real pattern
-                result_files = [name for name in glob(r'results-*.csv') if re.match(results_pat, name)]
+                result_files = [name for name in glob(r"results-*.csv") if re.match(results_pat, name)]
                 _combine_results(result_files, RESULTS_CSV)
 
-                failure_files = [name for name in glob(r'failures-*.csv') if re.match(failures_pat, name)]
+                failure_files = [name for name in glob(r"failures-*.csv") if re.match(failures_pat, name)]
                 _combine_results(failure_files, FAILURES_CSV)
 
                 if delete:

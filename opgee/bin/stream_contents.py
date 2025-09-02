@@ -7,10 +7,11 @@ from opgee.config import getParam
 from opgee.pkg_utils import resourceStream
 from opgee.XMLFile import XMLFile
 
+
 def main():
-    opgee_xml = getParam('OPGEE.ModelFile')
-    base_stream = resourceStream(opgee_xml, stream_type='bytes', decode=None)
-    xml_file = XMLFile(base_stream, schemaPath='etc/opgee.xsd')
+    opgee_xml = getParam("OPGEE.ModelFile")
+    base_stream = resourceStream(opgee_xml, stream_type="bytes", decode=None)
+    xml_file = XMLFile(base_stream, schemaPath="etc/opgee.xsd")
     root = xml_file.getRoot()
 
     # use a Set to store unique values
@@ -18,5 +19,6 @@ def main():
     for txt in sorted(contents):
         print(txt)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

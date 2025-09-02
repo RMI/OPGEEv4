@@ -1,10 +1,11 @@
-'''
+"""
 .. Created 2016 as part of pygcam.
    Imported into opgee on 3/29/21
 
 .. Copyright (c) 2015-2022 Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
-'''
+"""
+
 import configparser
 import os
 import platform
@@ -12,15 +13,15 @@ import platform
 from .error import ConfigFileError, OpgeeException
 from .pkg_utils import getResource
 
-DEFAULT_SECTION = 'DEFAULT'
-USR_CONFIG_FILE = 'opgee.cfg'
-USR_DEFAULTS_FILE = '.opgee.defaults'
+DEFAULT_SECTION = "DEFAULT"
+USR_CONFIG_FILE = "opgee.cfg"
+USR_DEFAULTS_FILE = ".opgee.defaults"
 
 PlatformName = platform.system()
 
-IsWindows = platform.system() == 'Windows'
+IsWindows = platform.system() == "Windows"
 
-_ConfigParser = None # type: configparser.ConfigParser
+_ConfigParser = None  # type: configparser.ConfigParser
 
 _ProjectSection = DEFAULT_SECTION
 
@@ -42,6 +43,7 @@ OPGEE.ShowStackTrace = True
 # OPGEE.StreamComponents = foo, bar , baz
 """
 
+
 # The unixPath and pathjoin funcs are here rather than in utils.py
 # since this functionality is needed here and this avoids import loops.
 def unixPath(path, abspath=False):
@@ -55,12 +57,13 @@ def unixPath(path, abspath=False):
     """
 
     # Use str values, not Paths
-    path = str(path).replace('\\', '/')
+    path = str(path).replace("\\", "/")
 
     if abspath:
         path = os.path.abspath(path)
 
     return path
+
 
 def pathjoin(*elements, expanduser=False, abspath=False, realpath=False):
     path = os.path.join(*elements)
@@ -75,6 +78,7 @@ def pathjoin(*elements, expanduser=False, abspath=False, realpath=False):
         path = os.path.realpath(path)
 
     return unixPath(path)
+
 
 # Deprecated (docker)
 # def savePathMap(mapString):
@@ -132,8 +136,10 @@ def pathjoin(*elements, expanduser=False, abspath=False, realpath=False):
 #
 #     return semver.parse_version_info(vers)
 
+
 def getSection():
     return _ProjectSection
+
 
 def setSection(section):
     """
@@ -145,22 +151,27 @@ def setSection(section):
     global _ProjectSection
     _ProjectSection = section
 
+
 def configLoaded():
     return bool(_ConfigParser)
 
+
 def ensure_default_config():
-    '''
+    """
     Check that config file exists or create default one.
-    '''
+    """
     configPath = userConfigPath()
 
     if not os.path.lexists(configPath) or os.stat(configPath).st_size == 0:
         try:
-            with open(configPath, 'w') as f:
+            with open(configPath, "w") as f:
                 f.write(_DEFAULT_CONFIG)
 
         except Exception as e:
-            raise OpgeeException(f'\n***\n*** Failed to write default opgee configuration file {configPath}: {e}.\n***\n')
+            raise OpgeeException(
+                f"\n***\n*** Failed to write default opgee configuration file {configPath}: {e}.\n***\n"
+            )
+
 
 def getConfig(reload=False, allowMissing=False, createDefault=False, systemConfigOnly=False):
     """
@@ -188,13 +199,12 @@ def getConfig(reload=False, allowMissing=False, createDefault=False, systemConfi
         global _ConfigParser
         _ConfigParser = None
 
-    return _ConfigParser or readConfigFiles(allowMissing=allowMissing,
-                                            systemConfigOnly=systemConfigOnly)
+    return _ConfigParser or readConfigFiles(allowMissing=allowMissing, systemConfigOnly=systemConfigOnly)
 
 
-def _readConfigResourceFile(filename, package='opgee', raiseError=True):
+def _readConfigResourceFile(filename, package="opgee", raiseError=True):
     try:
-        data = getResource(filename, decode='utf-8')
+        data = getResource(filename, decode="utf-8")
     except IOError:
         if raiseError:
             raise
@@ -204,26 +214,29 @@ def _readConfigResourceFile(filename, package='opgee', raiseError=True):
     _ConfigParser.read_string(data, source=filename)
     return data
 
+
 def getHomeDir():
     env = os.environ
 
-    if PlatformName == 'Windows':
+    if PlatformName == "Windows":
         # HOME exists on all Unix-like systems; for Windows it's HOMEPATH or HOMESHARE.
         # If set, we use OPGEE_HOME to identify the folder with the config file;
         # otherwise, we use HOMESHARE if set, or HOMEPATH, in that order.
-        homedir = env.get('OPGEE_HOME') or env.get('HOMESHARE') or env.get('HOMEPATH')
+        homedir = env.get("OPGEE_HOME") or env.get("HOMESHARE") or env.get("HOMEPATH")
         drive, path = os.path.splitdrive(homedir)
-        drive = drive or env.get('HOMEDRIVE') or 'C:'
+        drive = drive or env.get("HOMEDRIVE") or "C:"
         home = os.path.realpath(drive + path)
-        home = home.replace('\\', '/')            # avoids '\' quoting issues
+        home = home.replace("\\", "/")  # avoids '\' quoting issues
     else:
-        home = env.get('OPGEE_HOME') or os.getenv('HOME')
+        home = env.get("OPGEE_HOME") or os.getenv("HOME")
 
     return home
+
 
 def userConfigPath():
     path = pathjoin(getHomeDir(), USR_CONFIG_FILE)
     return path
+
 
 def readConfigFile(path_or_stream):
     # N.B. doesn't handle Path-like objs but we aren't using them here
@@ -233,6 +246,7 @@ def readConfigFile(path_or_stream):
     else:
         # test code passes a StringIO instance to set up test environment
         _ConfigParser.read_file(path_or_stream)
+
 
 def readConfigFiles(allowMissing=False, systemConfigOnly=False):
     """
@@ -247,32 +261,30 @@ def readConfigFiles(allowMissing=False, systemConfigOnly=False):
     global _ConfigParser
 
     # Strict mode prevents duplicate sections, which we do not restrict
-    _ConfigParser = configparser.ConfigParser(comment_prefixes=('#'),
-                                              strict=False,
-                                              empty_lines_in_values=False)
+    _ConfigParser = configparser.ConfigParser(comment_prefixes=("#"), strict=False, empty_lines_in_values=False)
 
     # don't force keys to lower-case: variable names are case sensitive
     _ConfigParser.optionxform = lambda option: option
 
     home = getHomeDir()
-    _ConfigParser.set(DEFAULT_SECTION, 'Home', home)
+    _ConfigParser.set(DEFAULT_SECTION, "Home", home)
 
     if not systemConfigOnly:
-        _ConfigParser.set(DEFAULT_SECTION, 'User', os.getenv('USER', 'unknown'))
+        _ConfigParser.set(DEFAULT_SECTION, "User", os.getenv("USER", "unknown"))
 
         # Create vars from environment variables as '$' + variable name, as in the shell
         for name, value in os.environ.items():
-            value = value.replace(r'%', r'%%')
-            _ConfigParser.set(DEFAULT_SECTION, '$' + name, value)
+            value = value.replace(r"%", r"%%")
+            _ConfigParser.set(DEFAULT_SECTION, "$" + name, value)
 
     # Initialize config parser with default values
-    _readConfigResourceFile('etc/system.cfg')
+    _readConfigResourceFile("etc/system.cfg")
 
     if not systemConfigOnly:
         # Read platform-specific defaults, if defined. No error if file is missing.
-        _readConfigResourceFile(f'etc/{PlatformName}.cfg', raiseError=False)
+        _readConfigResourceFile(f"etc/{PlatformName}.cfg", raiseError=False)
 
-        siteConfig = os.getenv('OPGEE_SITE_CONFIG')
+        siteConfig = os.getenv("OPGEE_SITE_CONFIG")
         if siteConfig:
             try:
                 readConfigFile(siteConfig)
@@ -296,20 +308,24 @@ def readConfigFiles(allowMissing=False, systemConfigOnly=False):
 
         # Dynamically set (if not defined) OPGEE.ProjectName in each section, holding the
         # section (i.e., project) name. If user has set this, the value is unchanged.
-        projectNameVar = 'OPGEE.ProjectName'
+        projectNameVar = "OPGEE.ProjectName"
         for section in getSections():
-            if not (_ConfigParser.has_option(section, projectNameVar) and   # var must exist
-                    _ConfigParser.get(section, projectNameVar)):            # and not be blank
+            if not (
+                _ConfigParser.has_option(section, projectNameVar)  # var must exist
+                and _ConfigParser.get(section, projectNameVar)
+            ):  # and not be blank
                 _ConfigParser.set(section, projectNameVar, section)
 
-        projectName = getParam('OPGEE.DefaultProject', section=DEFAULT_SECTION)
+        projectName = getParam("OPGEE.DefaultProject", section=DEFAULT_SECTION)
         if projectName:
             setSection(projectName)
 
     return _ConfigParser
 
+
 def getSections():
     return _ConfigParser.sections()
+
 
 def getConfigDict(section=DEFAULT_SECTION, raw=False):
     """
@@ -327,8 +343,9 @@ def getConfigDict(section=DEFAULT_SECTION, raw=False):
 
     func = lambda x: x  # no-op
 
-    d = {key : func(value) for key, value in _ConfigParser.items(section, raw=raw)}
+    d = {key: func(value) for key, value in _ConfigParser.items(section, raw=raw)}
     return d
+
 
 def setParam(name, value, section=None):
     """
@@ -344,6 +361,7 @@ def setParam(name, value, section=None):
     section = section or getSection()
     _ConfigParser.set(section, name, value)
     return value
+
 
 def getParam(name, section=None, raw=False, raiseError=True):
     """
@@ -393,8 +411,10 @@ def getParam(name, section=None, raw=False, raiseError=True):
 
     return value
 
-_True  = ['t', 'y', 'true',  'yes', 'on',  '1']
-_False = ['f', 'n', 'false', 'no',  'off', '0']
+
+_True = ["t", "y", "true", "yes", "on", "1"]
+_False = ["f", "n", "false", "no", "off", "0"]
+
 
 def stringTrue(value, raiseError=True):
     value = str(value).lower()
@@ -410,6 +430,7 @@ def stringTrue(value, raiseError=True):
         raise ConfigFileError(msg)
     else:
         return None
+
 
 def getParamAsBoolean(name, section=None):
     """
@@ -436,6 +457,7 @@ def getParamAsBoolean(name, section=None):
 
     return result
 
+
 def getParamAsInt(name, section=None):
     """
     Get the value of the configuration parameter `name`, coerced
@@ -449,6 +471,7 @@ def getParamAsInt(name, section=None):
     """
     value = getParam(name, section=section)
     return int(value)
+
 
 def getParamAsFloat(name, section=None):
     """
@@ -464,7 +487,8 @@ def getParamAsFloat(name, section=None):
     value = getParam(name, section=section)
     return float(value)
 
+
 def getParamAsList(name):
     value = getParam(name)
-    values = [s.strip() for s in value.split(',')]
+    values = [s.strip() for s in value.split(",")]
     return values

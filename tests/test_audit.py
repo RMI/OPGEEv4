@@ -35,9 +35,7 @@ def test_audit_source_input(audit_model_file: ModelFile):
     field = model.get_field("audit-field")
 
     original_xml_root = audit_model_file.root
-    original_field_elem_list = original_xml_root.xpath(
-        f".//Field[@name='{field.name}']"
-    )
+    original_field_elem_list = original_xml_root.xpath(f".//Field[@name='{field.name}']")
     assert len(original_field_elem_list) == 1
     original_field_elem = original_field_elem_list[0]
 
@@ -91,7 +89,7 @@ def test_audit_field(audit_model_file: ModelFile, tmp_path):
 
 
 def audit_setup_and_run(tmp_path: Path, opgee, audit_level: str | None = None):
-    _ = getConfig(createDefault=True,reload=True)
+    _ = getConfig(createDefault=True, reload=True)
     results_dir = Path(os.path.join(tmp_path, "audit_results"))
     results_dir.mkdir(exist_ok=True, parents=True)
 
@@ -102,40 +100,39 @@ def audit_setup_and_run(tmp_path: Path, opgee, audit_level: str | None = None):
     audit_xml_path = path_to_test_file("audit_model.xml")
     mf = ModelFile.from_xml_string(open(audit_xml_path).read())
     field = mf.model.get_field("audit-field")
-    cmd = [
-        "run",
-        "-m", str(audit_xml_path),
-        "-a", "audit-analysis",
-        "-r", "detailed",
-        "-o", str(results_dir)
-    ]
+    cmd = ["run", "-m", str(audit_xml_path), "-a", "audit-analysis", "-r", "detailed", "-o", str(results_dir)]
 
     opgee.run(argList=cmd)
     return results_dir / "field_audit.csv", results_dir / "process_graphs" / f"{field.name}_process_graph.png"
+
 
 def test_audit_save_results(tmp_path: Path, audit_model_file: ModelFile, opgee_main):
     audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "Field")
     assert not proc_graph_path.exists()
     assert audit_path.exists()
     audit_df = pd.read_csv(audit_path)
-    inputs = audit_df[audit_df['source'] == 'input']
-    vals = inputs['value'].values
+    inputs = audit_df[audit_df["source"] == "input"]
+    vals = inputs["value"].values
     assert len(vals == 2)
-    assert vals[0] == '25.5'
-    assert vals[1] == '1500.0'
+    assert vals[0] == "25.5"
+    assert vals[1] == "1500.0"
+
 
 def test_audit_save_procs(tmp_path: Path, opgee_main):
     audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "Processes")
     assert proc_graph_path.exists()
     assert not audit_path.exists()
 
+
 def test_audit_save_all(tmp_path: Path, opgee_main):
     audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "All")
     assert proc_graph_path.exists() and audit_path.exists()
 
+
 def test_audit_save_none(tmp_path: Path, opgee_main):
     audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main)
     assert not (audit_path.exists() or proc_graph_path.exists())
+
 
 # it should audit if Field.run fails
 def test_audit_on_run_failure(tmp_path: Path, opgee_main):
@@ -145,4 +142,3 @@ def test_audit_on_run_failure(tmp_path: Path, opgee_main):
     with patch("opgee.field.Field.run_processes", mocked_field_run_processes):
         audit_path, proc_graph_path = audit_setup_and_run(tmp_path, opgee_main, "Field")
         assert audit_path.exists()
-

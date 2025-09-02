@@ -18,6 +18,7 @@ class StorageWell(Process):
     Storage well calculate fugitive emission from storage wells.
 
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 

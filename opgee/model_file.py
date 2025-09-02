@@ -25,12 +25,14 @@ from .XMLFile import XMLFile
 
 _logger = getLogger(__name__)
 
+
 class ModelCache(object):
     """
     Support for optimizing reading / running fields from large (i.e., thousands)
     of Fields from Model files generated from XML. XMLFile instances are cached by
     pathname to avoid rereading large files.
     """
+
     model_file_cache = {}
 
     @classmethod
@@ -52,10 +54,11 @@ class ModelCache(object):
         try:
             obj = cls.model_file_cache[model_xml]
         except KeyError:
-            obj = XMLFile(model_xml, schemaPath='etc/opgee.xsd')
+            obj = XMLFile(model_xml, schemaPath="etc/opgee.xsd")
             cls.model_file_cache[model_xml] = obj
 
         return obj
+
 
 def model_analysis_names(model_xml):
     """
@@ -67,8 +70,9 @@ def model_analysis_names(model_xml):
     xml_file_obj = ModelCache.get_xml_file(model_xml)
 
     root = xml_file_obj.getRoot()
-    analyses = root.xpath('/Model/Analysis/@name')
+    analyses = root.xpath("/Model/Analysis/@name")
     return analyses
+
 
 def fields_for_analysis(model_xml, analysis_name):
     """
@@ -81,7 +85,8 @@ def fields_for_analysis(model_xml, analysis_name):
         Analysis.
     """
     import re
-    timer = Timer('fields_for_analysis')
+
+    timer = Timer("fields_for_analysis")
 
     xml_file_obj = ModelCache.get_xml_file(model_xml)
 
@@ -95,19 +100,19 @@ def fields_for_analysis(model_xml, analysis_name):
     group_fields = []
 
     if len(groups_elts) > 0:
-        model_fields = root.xpath('/Model/Field/@name')
-        field_groups = root.xpath('/Model/Field/Group')
+        model_fields = root.xpath("/Model/Field/@name")
+        field_groups = root.xpath("/Model/Field/Group")
 
         for group_elt in groups_elts:
             text = group_elt.text
-            is_regex = getBooleanXML(group_elt.attrib.get('regex', '0'))
+            is_regex = getBooleanXML(group_elt.attrib.get("regex", "0"))
 
             if is_regex:
                 prog = re.compile(text)
                 matches = [name for name in model_fields if prog.match(name)]
             else:
                 # find matching group declarations in <Field> elements
-                matches = [g.getparent().attrib['name'] for g in field_groups if g.text == text]
+                matches = [g.getparent().attrib["name"] for g in field_groups if g.text == text]
 
             group_fields.extend(matches)
 
@@ -115,6 +120,7 @@ def fields_for_analysis(model_xml, analysis_name):
 
     _logger.debug(timer.stop())
     return field_names
+
 
 # TBD: this is used only by extract_model(..., as_string=True) so perhaps
 #   this can be simplified or split into two functions
@@ -151,18 +157,19 @@ def _get_xml_str(model_xml, analysis_name, field_name, with_model_elt=False):
     field_def = field_defs[0]
 
     # Create a model with just the extracted Field and surrounding elements
-    model = ET.Element('Model')
-    analysis = ET.SubElement(model, 'Analysis', name=analysis_name)
+    model = ET.Element("Model")
+    analysis = ET.SubElement(model, "Analysis", name=analysis_name)
     analysis_attrs = root.xpath(f'/Model/Analysis[@name="{analysis_name}"]/A')
     for attr in analysis_attrs:
         analysis.append(deepcopy(attr))
 
-    ET.SubElement(analysis, 'FieldRef', name=field_name)
-    
+    ET.SubElement(analysis, "FieldRef", name=field_name)
+
     model.append(deepcopy(field_def))
 
     xml_string = ET.tostring(model, pretty_print=True, encoding="unicode")
     return (xml_string, model) if with_model_elt else xml_string
+
 
 def _get_tmp_xml_file(model_xml, analysis_name, field_name):
     """
@@ -180,18 +187,17 @@ def _get_tmp_xml_file(model_xml, analysis_name, field_name):
     """
     from lxml import etree as ET
 
-    xml_string, model = _get_xml_str(model_xml, analysis_name, field_name,
-                                     with_model_elt=True)
+    xml_string, model = _get_xml_str(model_xml, analysis_name, field_name, with_model_elt=True)
 
     # replaces spaces with underscores
-    field_name = field_name.replace(' ', '_')
-    tmp_dir = pathjoin(getParam('OPGEE.TempDir'), 'extracted_xml')
+    field_name = field_name.replace(" ", "_")
+    tmp_dir = pathjoin(getParam("OPGEE.TempDir"), "extracted_xml")
     mkdirs(tmp_dir)
-    xml_file = pathjoin(tmp_dir, field_name + '.xml')
+    xml_file = pathjoin(tmp_dir, field_name + ".xml")
 
     # Write the XML to a file in tmp_dir
     tree = ET.ElementTree(model)
-    tree.write(xml_file, xml_declaration=True, pretty_print=True, encoding='utf-8')
+    tree.write(xml_file, xml_declaration=True, pretty_print=True, encoding="utf-8")
 
     return xml_file
 
@@ -216,9 +222,11 @@ def extract_model(model_xml, analysis_name, field_names):
     for field_name in field_names:
         yield field_name, _get_xml_str(model_xml, analysis_name, field_name)
 
+
 # TBD: extract the XML file merging logic to a function or @classmethod so it can
 #  be used prior to instantiating the ModelFile instance. Or, is it adequate to
 #  pass the xml_string in lieu of the .xml file(s) to be merged?
+
 
 class ModelFile(XMLFile):
     """
@@ -231,10 +239,18 @@ class ModelFile(XMLFile):
     _loaded_stream_components = False
     _loaded_user_classes = False
 
-    def __init__(self, pathnames, xml_string=None, add_stream_components=True,
-                 use_class_path=True, use_default_model=True,
-                 instantiate_model=True, save_to_path=None,
-                 analysis_names=None, field_names=None):
+    def __init__(
+        self,
+        pathnames,
+        xml_string=None,
+        add_stream_components=True,
+        use_class_path=True,
+        use_default_model=True,
+        instantiate_model=True,
+        save_to_path=None,
+        analysis_names=None,
+        field_names=None,
+    ):
         """
         Several steps are performed, some of which are dependent on the function's parameters:
 
@@ -273,7 +289,7 @@ class ModelFile(XMLFile):
             ignored when building the model from the XML. (Avoids long model build times for
             Monte Carlo simulations on a large number of fields.)
         """
-        load_timer = Timer('ModelFile load XML')
+        load_timer = Timer("ModelFile load XML")
 
         source = "XML string" if xml_string else (pathnames or "default model")
         _logger.debug(f"Loading model from: {source}")
@@ -284,33 +300,36 @@ class ModelFile(XMLFile):
         if not (pathnames or use_default_model or xml_string):
             raise OpgeeException("ModelFile: no model XML file or string specified")
 
-        opgee_xml = getParam('OPGEE.ModelFile')           # default is 'etc/opgee.xml'
-        attributes_xml = getParam('OPGEE.AttributesFile') # default is 'etc/attributes.xml'
+        opgee_xml = getParam("OPGEE.ModelFile")  # default is 'etc/opgee.xml'
+        attributes_xml = getParam("OPGEE.AttributesFile")  # default is 'etc/attributes.xml'
 
         base_stream = base_path = None
 
         # Assemble a list of built-in and user XML files to read and merge
         if use_default_model:
             if is_relpath(opgee_xml):
-                base_stream = resourceStream(opgee_xml, stream_type='bytes', decode=None)
+                base_stream = resourceStream(opgee_xml, stream_type="bytes", decode=None)
             else:
                 base_path = opgee_xml
         else:
             base_path = pathnames.pop(0) if pathnames else None
 
         # Use superclass XMLFile to load base file we will merge into
-        super().__init__(base_stream or base_path, xml_string=xml_string, schemaPath='etc/opgee.xsd')
+        super().__init__(base_stream or base_path, xml_string=xml_string, schemaPath="etc/opgee.xsd")
         self.root = base_root = self.tree.getroot()
 
         # Read and validate the format of any other input files.
-        xml_files = [XMLFile(path, schemaPath='etc/opgee.xsd') for path in pathnames]
+        xml_files = [XMLFile(path, schemaPath="etc/opgee.xsd") for path in pathnames]
 
         if not xml_string:
             # Push the XMLFile for attributes.xml onto the front of 'xml_files'
-            attr_stream_or_path = (resourceStream(attributes_xml, stream_type='bytes', decode=None)
-                                   if is_relpath(attributes_xml) else attributes_xml)
+            attr_stream_or_path = (
+                resourceStream(attributes_xml, stream_type="bytes", decode=None)
+                if is_relpath(attributes_xml)
+                else attributes_xml
+            )
 
-            xml_file = XMLFile(attr_stream_or_path, schemaPath='etc/opgee.xsd')
+            xml_file = XMLFile(attr_stream_or_path, schemaPath="etc/opgee.xsd")
             xml_files.insert(0, xml_file)
 
         # Read all XML files and merge everything below <Model> into base_root
@@ -321,14 +340,16 @@ class ModelFile(XMLFile):
         # Find Fields with modifies="..." attribute, copy the indicated Field, merge in the
         # elements under the Field with modifies=, and replace elt. This is useful for
         # debugging and storing the expanded "final" XML facilitates publication and replication.
-        found = base_root.xpath('//Field[@modifies]')
+        found = base_root.xpath("//Field[@modifies]")
         for elt in found:
             attrib = elt.attrib
-            modifies = attrib['modifies']
-            new_name = attrib['name'] + '__TMP__'
+            modifies = attrib["modifies"]
+            new_name = attrib["name"] + "__TMP__"
 
             if base_root.find(f"Field[@name='{new_name}']") is not None:
-                raise XmlFormatError(f"Can't copy field '{modifies}' to '{new_name}': a field named '{new_name}' already exists.")
+                raise XmlFormatError(
+                    f"Can't copy field '{modifies}' to '{new_name}': a field named '{new_name}' already exists."
+                )
 
             to_copy = base_root.find(f"Field[@name='{modifies}']")
 
@@ -336,15 +357,15 @@ class ModelFile(XMLFile):
                 raise XmlFormatError(f"Can't create field '{new_name}': source field '{modifies}' not found.")
 
             # Change attribute from "modifies" to "modified" to record action and avoid redoing it
-            del attrib['modifies']
-            attrib['modified'] = modifies
+            del attrib["modifies"]
+            attrib["modified"] = modifies
 
-            copied = deepcopy(to_copy)      # don't modify the original
-            copied.attrib.update(attrib)    # copy elt's attributes into `copied`
+            copied = deepcopy(to_copy)  # don't modify the original
+            copied.attrib.update(attrib)  # copy elt's attributes into `copied`
 
             # N.B. Elements don't match unless *all* attribs are identical. Maybe match only on tag and name attribute??
-            merge_elements(copied, elt[:])      # merge elt's children into `copied`
-            base_root.append(copied)            # add the copy to the Model
+            merge_elements(copied, elt[:])  # merge elt's children into `copied`
+            base_root.append(copied)  # add the copy to the Model
 
             # Remove old <Field modifies="{name}"> after inserting the expanded copy
             parent = elt.getparent()
@@ -353,14 +374,14 @@ class ModelFile(XMLFile):
         # TBD: currently each worker overwrites the same file. Maybe just skip this next line? Skip if running MCS?
         if not xml_string:
             # function argument overrides config file variable
-            save_to_path = getParam('OPGEE.XmlSavePathname') if save_to_path is None else save_to_path
+            save_to_path = getParam("OPGEE.XmlSavePathname") if save_to_path is None else save_to_path
 
             # Save the merged file if indicated
             if save_to_path:
                 save_xml(save_to_path, base_root, backup=True)
 
         # There must be exactly one <AttrDefs> as child of <Model>
-        found = base_root.findall('AttrDefs')
+        found = base_root.findall("AttrDefs")
         if found is None or len(found) == 0:
             raise XmlFormatError(f"Missing <AttrDefs> as child of <Model> in '{pathnames}'")
 
@@ -371,9 +392,9 @@ class ModelFile(XMLFile):
 
         # Process user configuration settings
         if add_stream_components:
-            extra_components = getParam('OPGEE.StreamComponents')   # DOCUMENT this config parameter
+            extra_components = getParam("OPGEE.StreamComponents")  # DOCUMENT this config parameter
             if extra_components:
-                names = splitAndStrip(extra_components, ',')
+                names = splitAndStrip(extra_components, ",")
                 Stream.extend_components(names)
 
         def _load_from_path(module_path):
@@ -383,11 +404,11 @@ class ModelFile(XMLFile):
 
         # Load user classes, if indicated in config file, prior to parsing the XML structure
         if use_class_path:
-            class_path = getParam('OPGEE.ClassPath')
+            class_path = getParam("OPGEE.ClassPath")
             paths = [Path(path) for path in class_path.split(os.path.pathsep) if path]
             for path in paths:
                 if path.is_dir():
-                    for module_path in path.glob('*.py'):  # load all .py files found in directory
+                    for module_path in path.glob("*.py"):  # load all .py files found in directory
                         _load_from_path(module_path)
                 else:
                     print(f"Loading module from '{path}'")
@@ -400,7 +421,7 @@ class ModelFile(XMLFile):
 
         # the merge subcommand specifies instantiate_model=False, but normally the model is loaded.
         if instantiate_model:
-            build_timer = Timer('ModelFile build model')
+            build_timer = Timer("ModelFile build model")
             _logger.debug(build_timer)
 
             # TODO: debugging support
@@ -408,8 +429,7 @@ class ModelFile(XMLFile):
             # print(f"Writing model to '{outfile}'")
             # save_xml(outfile, base_root, overwrite=True)
 
-            self.model = model = Model.from_xml(base_root, analysis_names=analysis_names,
-                                                field_names=field_names)
+            self.model = model = Model.from_xml(base_root, analysis_names=analysis_names, field_names=field_names)
             _logger.debug(build_timer.stop())
 
             model.validate()
@@ -421,9 +441,15 @@ class ModelFile(XMLFile):
             self.model = None
 
     @classmethod
-    def from_xml_string(cls, xml_string, add_stream_components=True,
-                 use_class_path=True, use_default_model=True,
-                 analysis_names=None, field_names=None):
+    def from_xml_string(
+        cls,
+        xml_string,
+        add_stream_components=True,
+        use_class_path=True,
+        use_default_model=True,
+        analysis_names=None,
+        field_names=None,
+    ):
         """
         Create a ModelFile instance from an XML string representing the XML model structure.
         This provides an alternative to storing the model in a separate XML file, e.g., for
@@ -438,19 +464,21 @@ class ModelFile(XMLFile):
         import os
         from tempfile import mkstemp
 
-        fd, tmp_file = mkstemp(suffix='.xml', text=True)
+        fd, tmp_file = mkstemp(suffix=".xml", text=True)
         os.write(fd, str.encode(xml_string))
         os.close(fd)
 
         try:
-            model_file = ModelFile([tmp_file], # TBD: use xml_string=xml_string instead of tmp_file
-                                   add_stream_components=add_stream_components,
-                                   use_class_path=use_class_path,
-                                   use_default_model=use_default_model,
-                                   analysis_names=analysis_names,
-                                   field_names=field_names,
-                                   instantiate_model=True,
-                                   save_to_path="")     # ensures no saving. Passing None falls back to config var
+            model_file = ModelFile(
+                [tmp_file],  # TBD: use xml_string=xml_string instead of tmp_file
+                add_stream_components=add_stream_components,
+                use_class_path=use_class_path,
+                use_default_model=use_default_model,
+                analysis_names=analysis_names,
+                field_names=field_names,
+                instantiate_model=True,
+                save_to_path="",
+            )  # ensures no saving. Passing None falls back to config var
         except Exception as e:
             raise XmlFormatError(f"Failed to create ModelFile from string: {e}")
 

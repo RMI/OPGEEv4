@@ -18,9 +18,7 @@ class GasReinjectionWell(Process):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "gas"
-        ]
+        self._required_inputs = ["gas"]
 
         self._required_outputs = [
             "gas",

@@ -4,13 +4,15 @@
 .. Copyright (c) 2021  Richard Plevin
    See the https://opensource.org/licenses/MIT for license details.
 """
+
 from pathlib import Path
 from ..subcommand import SubcommandABC
 from ..log import getLogger
 
 _logger = getLogger(__name__)
 
-DEFAULT_MODIFIES = 'template'
+DEFAULT_MODIFIES = "template"
+
 
 def read_fields(csv_path, from_package=False, skip_fields=None):
     """
@@ -34,24 +36,25 @@ def read_fields(csv_path, from_package=False, skip_fields=None):
 
     # If we decide to translate attribute names here, add mappings to this dict
     v3_to_v4 = {
-        'old name': 'new name',
-        'old name2': 'new name2',
+        "old name": "new name",
+        "old name2": "new name2",
     }
 
     df.rename(index=v3_to_v4, inplace=True)
 
     if skip_fields:
-        df.drop(skip_fields, axis='columns', inplace=True)
+        df.drop(skip_fields, axis="columns", inplace=True)
 
     # Pull dtypes out as a separate series
-    dtypes = df['Type']
-    df.drop('Type', axis='columns', inplace=True)
+    dtypes = df["Type"]
+    df.drop("Type", axis="columns", inplace=True)
 
     return (df, dtypes)
 
 
-def import_fields(csv_path, xml_path, analysis_name, count=0, skip_fields=None,
-                  modifies=DEFAULT_MODIFIES, from_package=False):
+def import_fields(
+    csv_path, xml_path, analysis_name, count=0, skip_fields=None, modifies=DEFAULT_MODIFIES, from_package=False
+):
     """
     Import Field information from a CSV file.
 
@@ -66,63 +69,91 @@ def import_fields(csv_path, xml_path, analysis_name, count=0, skip_fields=None,
     """
     from ..xml_utils import attr_to_xml
 
-    fields, dtypes = read_fields(csv_path,
-                                 from_package=from_package,
-                                 skip_fields=skip_fields)
+    fields, dtypes = read_fields(csv_path, from_package=from_package, skip_fields=skip_fields)
 
     if count:
         fields = fields[fields.columns[:count]]
 
     if not analysis_name:
         p = Path(csv_path)
-        analysis_name = p.name[:-(len(p.suffix))]
+        analysis_name = p.name[: -(len(p.suffix))]
 
     attr_to_xml(fields, dtypes, xml_path, analysis_name, modifies=modifies)
 
 
 class Csv2XmlCommand(SubcommandABC):
-
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Convert various CSV files to their corresponding XML representation.'''}
-        super().__init__('csv2xml', subparsers, kwargs, group='project')
+        kwargs = {"help": """Convert various CSV files to their corresponding XML representation."""}
+        super().__init__("csv2xml", subparsers, kwargs, group="project")
 
     def addArgs(self, parser):
         from ..utils import ParseCommaList
 
-        parser.add_argument('-a', '--analysis',
-                            help='''The name to give the <Analysis> element. Default is the file basename 
-                            with the extension removed.''')
+        parser.add_argument(
+            "-a",
+            "--analysis",
+            help="""The name to give the <Analysis> element. Default is the file basename 
+                            with the extension removed.""",
+        )
 
-        default_format = 'fields'
-        format_choices = [default_format, 'attributes'] # extend as needed
-        parser.add_argument('-f', '--format', choices=format_choices, default=default_format,
-                            help=f'''Which type of conversion to perform. Default is "{default_format}".''')
+        default_format = "fields"
+        format_choices = [default_format, "attributes"]  # extend as needed
+        parser.add_argument(
+            "-f",
+            "--format",
+            choices=format_choices,
+            default=default_format,
+            help=f'''Which type of conversion to perform. Default is "{default_format}".''',
+        )
 
-        parser.add_argument('-m', '--modifies', default=DEFAULT_MODIFIES,
-                            help=f'''The name to use in the <Field modifies="NAME"> element. 
-                            Default is "{DEFAULT_MODIFIES}"''')
+        parser.add_argument(
+            "-m",
+            "--modifies",
+            default=DEFAULT_MODIFIES,
+            help=f'''The name to use in the <Field modifies="NAME"> element. 
+                            Default is "{DEFAULT_MODIFIES}"''',
+        )
 
-        parser.add_argument('-i', '--inputCSV', default=None, required=True,
-                            help='''The pathname of the file to import''')
+        parser.add_argument(
+            "-i", "--inputCSV", default=None, required=True, help="""The pathname of the file to import"""
+        )
 
-        parser.add_argument('-n', '--count', type=int, default=0,
-                            help='''The number of rows to import from the CSV file. 
-                            Default is 0, which means import all rows.''')
+        parser.add_argument(
+            "-n",
+            "--count",
+            type=int,
+            default=0,
+            help="""The number of rows to import from the CSV file. 
+                            Default is 0, which means import all rows.""",
+        )
 
-        parser.add_argument('-o', '--outputXML', default=None,
-                            help='''The pathname of the XML file to create. Default is the same
+        parser.add_argument(
+            "-o",
+            "--outputXML",
+            default=None,
+            help="""The pathname of the XML file to create. Default is the same
                             name as the input CSV file, but with the extension changed to "xml". Refuses
-                            to overwrite an existing file unless --overwrite is specified.''')
+                            to overwrite an existing file unless --overwrite is specified.""",
+        )
 
-        parser.add_argument('--overwrite', action='store_true',
-                            help='''If set, allows existing XML file to be overwritten.''')
+        parser.add_argument(
+            "--overwrite", action="store_true", help="""If set, allows existing XML file to be overwritten."""
+        )
 
-        parser.add_argument('-p', '--fromPackage', action='store_true',
-                            help='''If specified, the inputCSV argument is treated as relative to 
-                            the opgee package and loaded as an internal resource.''')
+        parser.add_argument(
+            "-p",
+            "--fromPackage",
+            action="store_true",
+            help="""If specified, the inputCSV argument is treated as relative to 
+                            the opgee package and loaded as an internal resource.""",
+        )
 
-        parser.add_argument('-s', '--skipFields', action=ParseCommaList,
-                            help='''Comma-delimited list of field names to exclude from analysis''')
+        parser.add_argument(
+            "-s",
+            "--skipFields",
+            action=ParseCommaList,
+            help="""Comma-delimited list of field names to exclude from analysis""",
+        )
 
         return parser
 
@@ -131,19 +162,28 @@ class Csv2XmlCommand(SubcommandABC):
 
         input_csv = args.inputCSV
         if input_csv is None:
-            raise CommandlineError('Required input CSV is missing')
+            raise CommandlineError("Required input CSV is missing")
 
         input_path = Path(input_csv)
         from_package = args.fromPackage
 
         if not input_path.exists() and not from_package:
-            raise CommandlineError(f"Input file '{input_path}' does not exist. (Hint: do you need to specify --fromPackage?)")
+            raise CommandlineError(
+                f"Input file '{input_path}' does not exist. (Hint: do you need to specify --fromPackage?)"
+            )
 
         output_xml = args.outputXML
-        output_path = Path(output_xml) if output_xml else input_path.with_stem('xml')
+        output_path = Path(output_xml) if output_xml else input_path.with_stem("xml")
 
         if output_path.exists() and not args.overwrite:
             raise CommandlineError(f"Refusing to overwrite '{output_path}'; use --overwrite to override this.")
 
-        import_fields(input_csv, output_xml, args.analysis, count=args.count,
-                      modifies=args.modifies, from_package=from_package, skip_fields=args.skipFields)
+        import_fields(
+            input_csv,
+            output_xml,
+            args.analysis,
+            count=args.count,
+            modifies=args.modifies,
+            from_package=from_package,
+            skip_fields=args.skipFields,
+        )

@@ -46,9 +46,7 @@ def molecule_to_carbon(molecule):
 
     m = _hydrocarbon_prog.match(molecule)
     if m is None:
-        raise OpgeeException(
-            f"Expected hydrocarbon molecule name like CxHy, got {molecule}"
-        )
+        raise OpgeeException(f"Expected hydrocarbon molecule name like CxHy, got {molecule}")
 
     c_name = m.group(1)
     return c_name
@@ -99,9 +97,7 @@ class Stream(AttributeMixin, XmlInstantiable):
 
     # Verify that the pubchem-cid index includes 1..N where N is the max_carbon number
     if set(_carbon_number_dict.keys()) != set(idx):
-        raise ModelValidationError(
-            f"{table_name} must contain carbon numbers 1..{max_carbon_number}."
-        )
+        raise ModelValidationError(f"{table_name} must contain carbon numbers 1..{max_carbon_number}.")
 
     # All hydrocarbon gases other than methane (C1) are considered VOCs.
     VOCs = _hydrocarbons[1:]
@@ -143,7 +139,7 @@ class Stream(AttributeMixin, XmlInstantiable):
     _extensions = {}
 
     _units = ureg.Unit("tonne/day")
-    
+
     tp: TemperaturePressure
 
     def __init__(
@@ -162,9 +158,7 @@ class Stream(AttributeMixin, XmlInstantiable):
         XmlInstantiable.__init__(self, name, parent=parent)
 
         # TBD: rename this self.comp_matrix for clarity
-        self.components = (
-            self.create_component_matrix() if comp_matrix is None else comp_matrix
-        )
+        self.components = self.create_component_matrix() if comp_matrix is None else comp_matrix
 
         self.tp = copy(tp)
 
@@ -198,9 +192,7 @@ class Stream(AttributeMixin, XmlInstantiable):
 
         :return: (pd.DataFrame) data series
         """
-        df = self.components.reset_index().melt(
-            id_vars=["index"], var_name="phase", value_name="value"
-        )
+        df = self.components.reset_index().melt(id_vars=["index"], var_name="phase", value_name="value")
         df.rename(columns={"index": "component"}, inplace=True)
 
         df["units"] = "metric_ton / day"
@@ -215,20 +207,19 @@ class Stream(AttributeMixin, XmlInstantiable):
 
         columns = ["phase", "component", "value", "units"]
 
-        items = [('T', self.tp.T),
-                 ('P', self.tp.P),
-                 ('API', self.API)]
+        items = [("T", self.tp.T), ("P", self.tp.P), ("API", self.API)]
 
-        tuples = [(no_phase, name, value.m, str(value.units))
-                    for name, value in items if value is not None and value.m != 0]
+        tuples = [
+            (no_phase, name, value.m, str(value.units)) for name, value in items if value is not None and value.m != 0
+        ]
 
         extras = pd.DataFrame(data=tuples, columns=columns)
-        result = pd.concat([df, extras], axis='rows')
+        result = pd.concat([df, extras], axis="rows")
 
-        result['field'] = self.parent.name
-        result['stream'] = self.name
-        result['source'] = self.src_name
-        result['destination'] = self.dst_name
+        result["field"] = self.parent.name
+        result["stream"] = self.name
+        result["source"] = self.src_name
+        result["destination"] = self.dst_name
 
         col_order = ["field", "stream", "source", "destination"] + columns
         return result[col_order]
@@ -248,9 +239,7 @@ class Stream(AttributeMixin, XmlInstantiable):
         :return: none
         """
         self.initialized = has_xml_data = self.xml_data is not None
-        self.components = (
-            self.xml_data if has_xml_data else self.create_component_matrix()
-        )
+        self.components = self.xml_data if has_xml_data else self.create_component_matrix()
 
         self.tp.copy_from(self.initial_tp)
 
@@ -280,9 +269,7 @@ class Stream(AttributeMixin, XmlInstantiable):
         # ensure no duplicate names
         bad = name_set.intersection(set(cls._extensions))
         if bad:
-            raise OpgeeException(
-                f"extend_components: these proposed extensions are already defined: {bad}"
-            )
+            raise OpgeeException(f"extend_components: these proposed extensions are already defined: {bad}")
 
         _logger.info(f"Extended stream components to include {names}")
 
@@ -479,9 +466,9 @@ class Stream(AttributeMixin, XmlInstantiable):
         self.initialized = True
         self.components.loc[series.index, phase] = series.clip(lower=0)
         if upper_bound_stream is not None:
-            self.components.loc[series.index, phase] = self.components.loc[
-                series.index, phase
-            ].clip(upper=upper_bound_stream.components.loc[series.index, phase])
+            self.components.loc[series.index, phase] = self.components.loc[series.index, phase].clip(
+                upper=upper_bound_stream.components.loc[series.index, phase]
+            )
 
     def multiply_factor_from_series(self, series, phase):
         """
@@ -492,9 +479,7 @@ class Stream(AttributeMixin, XmlInstantiable):
         :return:
         """
         self.initialized = True
-        self.components.loc[series.index, phase] = (
-            series * self.components.loc[series.index, phase]
-        )
+        self.components.loc[series.index, phase] = series * self.components.loc[series.index, phase]
 
     def set_tp(self, tp):
         """
@@ -686,9 +671,7 @@ class Stream(AttributeMixin, XmlInstantiable):
         attr_dict = cls.instantiate_attrs(elt)
         expected = {"temperature", "pressure", "API"}
         if set(attr_dict.keys()) != expected:
-            raise OpgeeException(
-                f"Stream {name}: expected attributes {sorted(expected)}"
-            )
+            raise OpgeeException(f"Stream {name}: expected attributes {sorted(expected)}")
 
         temp = attr_dict["temperature"].value
         pres = attr_dict["pressure"].value
@@ -709,18 +692,14 @@ class Stream(AttributeMixin, XmlInstantiable):
                 a = comp_elt.attrib
                 comp_name = elt_name(comp_elt)
                 rate = coercible(comp_elt.text, float)
-                phase = a[
-                    "phase"
-                ]  # required by XML schema to be one of the 3 legal values
+                phase = a["phase"]  # required by XML schema to be one of the 3 legal values
 
                 # convert hydrocarbon molecule name to carbon number format
                 if is_hydrocarbon(comp_name):
                     comp_name = molecule_to_carbon(comp_name)
 
                 if comp_name not in matrix.index:
-                    raise OpgeeException(
-                        f"Unrecognized stream component name '{comp_name}'."
-                    )
+                    raise OpgeeException(f"Unrecognized stream component name '{comp_name}'.")
 
                 matrix.loc[comp_name, phase] = rate
 

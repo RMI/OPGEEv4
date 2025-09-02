@@ -18,26 +18,27 @@ _logger = getLogger(__name__)
 
 class CO2ReinjectionCompressor(Process):
     """
-        A process that compresses CO2 gas for reinjection into the reservoir.
+    A process that compresses CO2 gas for reinjection into the reservoir.
 
-        Inputs:
-        - gas for CO2 compressor: The inlet stream of CO2 gas to the compressor.
+    Inputs:
+    - gas for CO2 compressor: The inlet stream of CO2 gas to the compressor.
 
-        Outputs:
-        - gas: The outlet stream of CO2 gas that is reinjected into the reservoir.
+    Outputs:
+    - gas: The outlet stream of CO2 gas that is reinjected into the reservoir.
 
-        Attributes:
-        - res_press: The reservoir pressure in psia.
-        - eta_compressor: The compressor efficiency.
-        - prime_mover_type: The type of prime mover used to power the compressor.
+    Attributes:
+    - res_press: The reservoir pressure in psia.
+    - eta_compressor: The compressor efficiency.
+    - prime_mover_type: The type of prime mover used to power the compressor.
 
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
         self._required_inputs = [
-            "gas for CO2 compressor",   # might be multiple
+            "gas for CO2 compressor",  # might be multiple
         ]
 
         self._required_outputs = [
@@ -77,12 +78,9 @@ class CO2ReinjectionCompressor(Process):
         input_streams = self.find_input_streams("gas for CO2 compressor")
         for _, input_stream in input_streams.items():
             overall_compression_ratio = discharge_press / input_stream.tp.P
-            energy_consumption, out_temp, _ = \
-                Compressor.get_compressor_energy_consumption(field,
-                                                             self.prime_mover_type,
-                                                             self.eta_compressor,
-                                                             overall_compression_ratio,
-                                                             input_stream)
+            energy_consumption, out_temp, _ = Compressor.get_compressor_energy_consumption(
+                field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input_stream
+            )
             total_energy_consumption += energy_consumption
 
         # Set output stream and iteration value

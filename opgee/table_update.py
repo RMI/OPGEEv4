@@ -13,6 +13,7 @@ class Cell(OpgeeObject):
     """
     Defines a replacement for a value provided in a built-in CSV file.
     """
+
     def __init__(self, row, col, value):
         super().__init__()
 
@@ -32,6 +33,6 @@ class TableUpdate(XmlInstantiable):
 
     @classmethod
     def from_xml(cls, elt, parent=None):
-        sub_elts = elt.findall('Cell')
-        cells = [Cell(e.attrib['row'], e.attrib['col'], e.text) for e in sub_elts]
+        sub_elts = elt.findall("Cell")
+        cells = [Cell(e.attrib["row"], e.attrib["col"], e.text) for e in sub_elts]
         return TableUpdate(elt_name(elt), cells)

@@ -20,7 +20,7 @@ _logger = getLogger(__name__)
 
 class Group(OpgeeObject):
     def __init__(self, elt):
-        self.is_regex = getBooleanXML(elt.attrib.get('regex', 0))
+        self.is_regex = getBooleanXML(elt.attrib.get("regex", 0))
         self.text = elt.text
 
 
@@ -39,6 +39,7 @@ class Analysis(Container):
 
     See also :doc:`OPGEE XML documentation <opgee-xml>`
     """
+
     def __init__(self, name, parent=None, attr_dict=None, field_names=None, groups=None):
         super().__init__(name, attr_dict=attr_dict, parent=parent)
         self.check_attr_constraints(self.attr_dict)
@@ -49,22 +50,22 @@ class Analysis(Container):
         self.model = model = parent
 
         # self.field_dict = None
-        self._field_names = field_names     # may be extended in add_children()
+        self._field_names = field_names  # may be extended in add_children()
         self.groups = [] if groups is None else groups
 
         self.fn_unit = self.attr("functional_unit")
         self.boundary = self.attr("boundary")
 
         # Create validation sets from system.cfg to avoid hard-coding these
-        self.functional_units = set(getParamAsList('OPGEE.FunctionalUnits'))
+        self.functional_units = set(getParamAsList("OPGEE.FunctionalUnits"))
 
         # This is set in use_GWP() below to a pandas Series holding the current
         # values in use, indexed by gas name.
         self.gwp = None
 
         # Use the GWP years and version specified in XML
-        gwp_horizon = self.attr('GWP_horizon')
-        gwp_version = self.attr('GWP_version')
+        gwp_horizon = self.attr("GWP_horizon")
+        gwp_version = self.attr("GWP_version")
 
         self.use_GWP(gwp_horizon, gwp_version)
 
@@ -75,8 +76,7 @@ class Analysis(Container):
             text = group.text
             if group.is_regex:
                 prog = re.compile(text)
-                matches = [field for field in model.fields() for
-                           name in field.group_names if prog.match(name)]
+                matches = [field for field in model.fields() for name in field.group_names if prog.match(name)]
             else:
                 matches = [field for field in model.fields() if text in field.group_names]
 
@@ -96,7 +96,6 @@ class Analysis(Container):
         names = set(field_names)
         # Use list comprehension rather than set.intersection to maintain original order
         self._field_names = [name for name in self._field_names if name in names]
-
 
     def get_field(self, name, raiseError=True) -> Field:
         """
@@ -227,8 +226,8 @@ class Analysis(Container):
         """
         name = elt_name(elt)
         attr_dict = cls.instantiate_attrs(elt)
-        field_names = field_names or [elt_name(node) for node in elt.findall('FieldRef')]
-        groups = [Group(node) for node in elt.findall('Group')]
+        field_names = field_names or [elt_name(node) for node in elt.findall("FieldRef")]
+        groups = [Group(node) for node in elt.findall("Group")]
 
         obj = Analysis(name, attr_dict=attr_dict, parent=parent, field_names=field_names, groups=groups)
         return obj

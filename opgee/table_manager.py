@@ -39,31 +39,32 @@ class TableManager(OpgeeObject):
 
     Users can add external tables using the ``add_table`` method.
     """
+
     table_defs = [
-        TableDef('constants', index_col='name'),
-        TableDef('GWP', index_col=False),
-        TableDef('bitumen-mining-energy-intensity', index_col=0),
+        TableDef("constants", index_col="name"),
+        TableDef("GWP", index_col=False),
+        TableDef("bitumen-mining-energy-intensity", index_col=0),
         TableDef("process-specific-EF", index_col=0, has_units=True),
         TableDef("water-treatment", index_col=0, has_units=True),
-        TableDef('heavy-oil-upgrading'),
+        TableDef("heavy-oil-upgrading"),
         TableDef("transport-parameter", index_col=0),
-        TableDef("transport-share-fuel", index_col=[0,1], has_units=True),
-        TableDef("transport-by-mode", index_col=[0,1], has_units=True),
+        TableDef("transport-share-fuel", index_col=[0, 1], has_units=True),
+        TableDef("transport-by-mode", index_col=[0, 1], has_units=True),
         TableDef("reaction-combustion-coeff", index_col=0, has_units=True),
         TableDef("product-combustion-coeff", index_col=0, has_units=True),
         TableDef("gas-turbine-specs", index_col=0, has_units=True),
         TableDef("gas-dehydration", index_col=0),
-        TableDef("acid-gas-removal", index_col=0, index_row=[0,1]),
+        TableDef("acid-gas-removal", index_col=0, index_row=[0, 1]),
         TableDef("ryan-holmes-process", index_col=0, has_units=True),
         TableDef("imported-gas-comp", index_col=0, has_units=True),
         TableDef("upstream-CI", index_col=0, has_units=True),
-        TableDef("vertical-drilling-energy-intensity", index_col=[0,1], has_units=True),
-        TableDef("horizontal-drilling-energy-intensity", index_col=[0,1], has_units=True),
+        TableDef("vertical-drilling-energy-intensity", index_col=[0, 1], has_units=True),
+        TableDef("horizontal-drilling-energy-intensity", index_col=[0, 1], has_units=True),
         TableDef("fracture-consumption-table", index_col=0),
-        TableDef("land-use-EF", index_col=[0,1], has_units=True),
+        TableDef("land-use-EF", index_col=[0, 1], has_units=True),
         TableDef("pubchem-cid", index_col=0),
-        TableDef("ASPEN_input_boundary", index_col=[0,1]),
-        TableDef("demethanizer", index_col=0, index_row=[0,1]),
+        TableDef("ASPEN_input_boundary", index_col=[0, 1]),
+        TableDef("demethanizer", index_col=0, index_row=[0, 1]),
         TableDef("loss-matrix-oil", index_col=0),
         TableDef("loss-matrix-gas", index_col=0),
         TableDef("productivity-gas", index_col=0),
@@ -71,7 +72,7 @@ class TableManager(OpgeeObject):
         TableDef("site-fugitive-processing-unit-breakdown", index_col=0, has_units=True),
         TableDef("well-completion-and-workover-C1-rate", has_units=True),
         TableDef("grid_mix_EF", index_col=0, has_units=True),
-        TableDef("grid_mix_feed", index_col=0, has_units=True)
+        TableDef("grid_mix_feed", index_col=0, has_units=True),
     ]
 
     _table_def_dict = {tbl_def.basename: tbl_def for tbl_def in table_defs}
@@ -102,20 +103,23 @@ class TableManager(OpgeeObject):
                     return None
 
             relpath = f"tables/{name}.csv"
-            s = resourceStream(relpath, stream_type='text')
+            s = resourceStream(relpath, stream_type="text")
             if tbl_def.has_units:
                 df = pd.read_csv(s, index_col=tbl_def.index_col, header=[0, 1])
 
-                unitful_cols = [name for name, unit in df.columns if unit != '_']
+                unitful_cols = [name for name, unit in df.columns if unit != "_"]
                 for col in unitful_cols:
-                    df[col] = df[col].astype(float) # force numeric values to float to avoid complaints from pint
+                    df[col] = df[col].astype(float)  # force numeric values to float to avoid complaints from pint
 
                 df_units = df[unitful_cols].pint.quantify(level=-1)
                 df[unitful_cols] = df_units[unitful_cols]
-                df.columns = df.columns.droplevel(1)        # drop the units from the column index
+                df.columns = df.columns.droplevel(1)  # drop the units from the column index
             else:
-                df = pd.read_csv(s, index_col=tbl_def.index_col) if tbl_def.index_row is None \
+                df = (
+                    pd.read_csv(s, index_col=tbl_def.index_col)
+                    if tbl_def.index_row is None
                     else pd.read_csv(s, index_col=tbl_def.index_col, header=tbl_def.index_row)
+                )
 
             if tbl_def.fillna is not None:
                 df.fillna(tbl_def.fillna, inplace=True)

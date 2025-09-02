@@ -56,8 +56,9 @@ class PreMembraneChiller(Process):
         self.set_iteration_value(gas_to_compressor.total_flow_rate())
 
         delta_temp = input.tp.T - self.outlet_temp
-        energy_consumption = (self.compressor_load * input.total_gas_rate() /
-                              self.feed_stream_mass_rate * delta_temp / self.pressure_drop)
+        energy_consumption = (
+            self.compressor_load * input.total_gas_rate() / self.feed_stream_mass_rate * delta_temp / self.pressure_drop
+        )
 
         # energy-use
         energy_use = self.energy

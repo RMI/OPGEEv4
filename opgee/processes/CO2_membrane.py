@@ -28,6 +28,7 @@ class CO2Membrane(Process):
         - gas for CO2 compressor
 
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -80,11 +81,9 @@ class CO2Membrane(Process):
         inlet_pressure_after_membrane = max(std_pressure, input.tp.P - self.press_drop)
         discharge_press = input.tp.P
         overall_compression_ratio = discharge_press / inlet_pressure_after_membrane
-        energy_consumption, temp, _ = Compressor.get_compressor_energy_consumption(field,
-                                                                                   self.prime_mover_type,
-                                                                                   self.eta_compressor,
-                                                                                   overall_compression_ratio,
-                                                                                   input)
+        energy_consumption, temp, _ = Compressor.get_compressor_energy_consumption(
+            field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
         # energy-use
         energy_use = self.energy
         energy_carrier = get_energy_carrier(self.prime_mover_type)

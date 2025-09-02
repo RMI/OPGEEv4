@@ -18,6 +18,7 @@ from .utils import coercible
 
 _logger = getLogger(__name__)
 
+
 class Options(XmlInstantiable):
     def __init__(self, name, default, options):
         super().__init__(name)
@@ -26,24 +27,35 @@ class Options(XmlInstantiable):
 
     @classmethod
     def from_xml(cls, elt, parent=None):
-        option_elts = elt.findall('Option')
-        options = [(elt.text, elt.attrib.get('label', elt.text), elt.attrib.get('desc')) for elt in option_elts]
-        obj = Options(elt_name(elt), elt.attrib.get('default'), options)
+        option_elts = elt.findall("Option")
+        options = [(elt.text, elt.attrib.get("label", elt.text), elt.attrib.get("desc")) for elt in option_elts]
+        obj = Options(elt_name(elt), elt.attrib.get("default"), options)
         return obj
 
+
 class AttrDef(XmlInstantiable):
-    def __init__(self, name, parent=None, value=None, pytype=None, option_set=None, unit=None,
-                 constraints=None, exclusive=None, synchronized=None):
+    def __init__(
+        self,
+        name,
+        parent=None,
+        value=None,
+        pytype=None,
+        option_set=None,
+        unit=None,
+        constraints=None,
+        exclusive=None,
+        synchronized=None,
+    ):
         super().__init__(name, parent=parent)
         self.default = None
-        self.option_set = option_set        # the name of the option set, if any
+        self.option_set = option_set  # the name of the option set, if any
         self.unit = unit
         self.pytype = pytype
-        self.constraints = constraints      # range constraints
-        self.synchronized = synchronized    # the name of a "synchronization group" to link attributes
-        self.exclusive = exclusive          # the name of an "exclusive group" to link attributes
+        self.constraints = constraints  # range constraints
+        self.synchronized = synchronized  # the name of a "synchronization group" to link attributes
+        self.exclusive = exclusive  # the name of an "exclusive group" to link attributes
 
-        if value is not None:               # if value is None, we set default later
+        if value is not None:  # if value is None, we set default later
             self.set_default(value)
 
     def set_default(self, value):
@@ -78,18 +90,20 @@ class AttrDef(XmlInstantiable):
         """
         a = elt.attrib
 
-        ops = ('GT', 'GE', 'LT', 'LE')
+        ops = ("GT", "GE", "LT", "LE")
         constraints = [(op, coercible(a[op], float)) for op in ops if a.get(op)]
 
         # if elt.text is None, we supply the default later in __init__()
-        obj = AttrDef(a['name'],
-                      value=elt.text,
-                      pytype=a.get('type'),
-                      unit=a.get('unit'),
-                      option_set=a.get('options'),
-                      constraints=constraints,
-                      exclusive=a.get('exclusive'),
-                      synchronized=a.get('synchronized'))
+        obj = AttrDef(
+            a["name"],
+            value=elt.text,
+            pytype=a.get("type"),
+            unit=a.get("unit"),
+            option_set=a.get("options"),
+            constraints=constraints,
+            exclusive=a.get("exclusive"),
+            synchronized=a.get("synchronized"),
+        )
         return obj
 
 
@@ -97,6 +111,7 @@ class ClassAttrs(XmlInstantiable):
     """
     Support for parsing attributes.xml metadata
     """
+
     def __init__(self, name, attr_dict, option_dict):
         super().__init__(name)
         self.attr_dict = attr_dict
@@ -110,7 +125,7 @@ class ClassAttrs(XmlInstantiable):
             set_name = attr.option_set
             if attr.default is None and set_name:
                 option_set = option_dict[set_name]
-                attr.set_default(option_set.default) # handles type coercion
+                attr.set_default(option_set.default)  # handles type coercion
 
             if attr.synchronized:
                 syncs[attr.synchronized].append(attr.name)
@@ -136,7 +151,6 @@ class ClassAttrs(XmlInstantiable):
         obj = cls(elt_name(elt), attr_dict, option_dict)
         return obj
 
-
     @staticmethod
     def _lookup(obj, dict_name, key, raiseError=True):
         """
@@ -156,7 +170,7 @@ class ClassAttrs(XmlInstantiable):
         return value
 
     def attribute(self, name, raiseError=True):
-        return self._lookup(self.attr_dict, 'definition', name, raiseError=raiseError)
+        return self._lookup(self.attr_dict, "definition", name, raiseError=raiseError)
 
 
 class AttrDefs(OpgeeObject):
@@ -165,6 +179,7 @@ class AttrDefs(OpgeeObject):
     This is a singleton class: use ``AttrDefs.get_instance()`` rather
     than calling ``AttrDefs()`` directly.
     """
+
     instance = None
 
     def __init__(self, root):
@@ -204,7 +219,7 @@ class AttrDefs(OpgeeObject):
         return attrs
 
 
-class AttributeMixin():
+class AttributeMixin:
     """
     Consolidates attribute-related code shared by ``Container`` and ``Process`` classes.
     Note: must be mixed into classes that have both ``self.attr_dict`` and
@@ -250,7 +265,7 @@ class AttributeMixin():
         unit = attr_dict[names[0]].unit
         dtype = f"pint[{unit}]" if unit else None
 
-        d = {name[prefix_len:] : attr_dict[name].value for name in names}
+        d = {name[prefix_len:]: attr_dict[name].value for name in names}
         s = pd.Series(d, dtype=dtype)
         return s
 
@@ -279,14 +294,14 @@ class AttributeMixin():
         """
         attr_dict = {}
         attr_defs = AttrDefs.get_instance()
-        process_attrs = attr_defs.classes.get('Process') if is_process else None
+        process_attrs = attr_defs.classes.get("Process") if is_process else None
 
         classname = cls.__name__
         class_attrs = attr_defs.class_attrs(classname, raiseError=False)
 
         if class_attrs or process_attrs:
             # Create a dict of explicit values to set attribute values below.
-            user_values = {elt_name(a) : a.text for a in elt.findall('A')}
+            user_values = {elt_name(a): a.text for a in elt.findall("A")}
 
             # first copy Process attributes, if relevant. Then overwrite with subprocess attributes
             combined_dict = process_attrs.attr_dict.copy() if process_attrs else {}
@@ -315,25 +330,27 @@ class AttributeMixin():
             return  # nothing to check
 
         funcs = {
-            'LT': (lambda value, limit: value <  limit, "<"),
-            'LE': (lambda value, limit: value <= limit, "<="),
-            'GT': (lambda value, limit: value >  limit, ">"),
-            'GE': (lambda value, limit: value >= limit, ">="),
+            "LT": (lambda value, limit: value < limit, "<"),
+            "LE": (lambda value, limit: value <= limit, "<="),
+            "GT": (lambda value, limit: value > limit, ">"),
+            "GE": (lambda value, limit: value >= limit, ">="),
         }
 
         def is_a_process(cls):
             for superclass in cls.__mro__:
-                if superclass.__name__ == 'Process':
+                if superclass.__name__ == "Process":
                     return True
 
             return False
 
-        process_attr_dict = attr_defs.class_attrs('Process').attr_dict
+        process_attr_dict = attr_defs.class_attrs("Process").attr_dict
 
         # Check numeric constraints
         for attr_name, attr in attr_dict.items():
             # If the definition of an attribute of a subprocess is not known, look at Process's attributes
-            attr_def = class_attrs.attr_dict.get(attr_name) or (process_attr_dict.get(attr_name) if is_a_process(cls) else None)
+            attr_def = class_attrs.attr_dict.get(attr_name) or (
+                process_attr_dict.get(attr_name) if is_a_process(cls) else None
+            )
             if not attr_def:
                 raise ModelValidationError(f"Attribute '{attr_name}' not found for class '{cls.__name__}'")
 
@@ -345,7 +362,9 @@ class AttributeMixin():
                     # print(f"Testing ({value} {op} {limit}) for attr {attr_name}")
                     func, symbol = funcs[op]
                     if not func(value, limit):
-                        raise ModelValidationError(f"Attribute '{attr_name}': constraint failed: value {value} is not {symbol} {limit}")
+                        raise ModelValidationError(
+                            f"Attribute '{attr_name}': constraint failed: value {value} is not {symbol} {limit}"
+                        )
 
         # Check exclusive groups
         for group, attr_names in class_attrs.excludes.items():
@@ -356,7 +375,10 @@ class AttributeMixin():
                 raise ModelValidationError(f"Exclusive attribute group '{group}' has multiple items selected: {items}")
 
         # Check synchronized groups
-        for group, attr_names, in class_attrs.syncs.items():
+        for (
+            group,
+            attr_names,
+        ) in class_attrs.syncs.items():
             values = [attr_dict[attr_name].value for attr_name in attr_names]
             if sum(values[1:]) != values[0]:
                 raise ModelValidationError(f"Attributes in synchronized group '{group}' have differing values")

@@ -7,58 +7,59 @@ from opgee.subcommand import SubcommandABC
 
 # Convert OPGEEv3 (Excel) process names to OPGEEv4 names
 process_translator = {
-    'Acid gas removal' : 'AcidGasRemoval',
-    'CO2 gas reinjection compressor' : 'GasReinjectionCompressor',
-    'CO2 membrane' : 'CO2Membrane',
-    'Chiller' : 'PreMembraneChiller',
-    'Crude oil dewatering' : 'CrudeOilDewatering',
-    'Crude oil stabilization' : 'CrudeOilStabilization',
-    'Crude oil storage' : 'CrudeOilStorage',
-    'Crude oil transport' : 'CrudeOilTransport',
-    'Demethanizer' : 'Demethanizer',
-    'Downhole pump (Lifting)' : 'DownholePump',
-    'Drilling & Development' : 'Drilling',
-    'Exploration' : 'Exploration',
-    'Flaring' : 'Flaring',
-    'Gas dehydration' : 'GasDehydration',
-    'Gas distribution' : 'GasDistribution',
-    'Gas flooding compressor' : 'GasReinjectionCompressor',
-    'Gas gathering' : 'GasGathering',
-    'Gas lifting compressor' : 'GasLiftingCompressor',
-    'Gas storage wells' : 'StorageWell',
-    'Gas transmission' : 'TransmissionCompressor',
-    'HC gas reinjection compressor' : 'GasReinjectionCompressor',
-    'Heavy oil dilution' : 'HeavyOilDilution',
-    'Heavy oil upgrading' : 'HeavyOilUpgrading',
-    'Liquefaction' : 'LNGLiquefaction',
+    "Acid gas removal": "AcidGasRemoval",
+    "CO2 gas reinjection compressor": "GasReinjectionCompressor",
+    "CO2 membrane": "CO2Membrane",
+    "Chiller": "PreMembraneChiller",
+    "Crude oil dewatering": "CrudeOilDewatering",
+    "Crude oil stabilization": "CrudeOilStabilization",
+    "Crude oil storage": "CrudeOilStorage",
+    "Crude oil transport": "CrudeOilTransport",
+    "Demethanizer": "Demethanizer",
+    "Downhole pump (Lifting)": "DownholePump",
+    "Drilling & Development": "Drilling",
+    "Exploration": "Exploration",
+    "Flaring": "Flaring",
+    "Gas dehydration": "GasDehydration",
+    "Gas distribution": "GasDistribution",
+    "Gas flooding compressor": "GasReinjectionCompressor",
+    "Gas gathering": "GasGathering",
+    "Gas lifting compressor": "GasLiftingCompressor",
+    "Gas storage wells": "StorageWell",
+    "Gas transmission": "TransmissionCompressor",
+    "HC gas reinjection compressor": "GasReinjectionCompressor",
+    "Heavy oil dilution": "HeavyOilDilution",
+    "Heavy oil upgrading": "HeavyOilUpgrading",
+    "Liquefaction": "LNGLiquefaction",
     # 'Makeup water treatment' : '',
     # 'Makeup watter treatment' : '', # SPELLING ERROR
-    'Mining' : 'BitumenMining',
-    'Petcoke handling and storage' : 'PetrocokeTransport',
-    'Post-storage compressor' : 'PostStorageCompressor',
-    'Pre-membrane compressor' : 'PreMembraneCompressor',
-    'Regasification' : 'LNGRegasification',
-    'Ryan-Holmes unit' : 'RyanHolmes',
-    'Separation' : 'Separation',
-    'Sour gas reinjection compressor' : 'SourGasCompressor',
-    'Steam generation' : 'SteamGeneration',
-    'Storage compressor' : 'StorageCompressor',
-    'Storage separator' : 'StorageSeparator',
-    'Transport' : 'LNGTransport',
-    'VRU compressor' : 'VRUCompressor',
-    'Venting' : 'Venting',
-    'Water injection' : 'WaterInjection',
-    'Water treatment' : 'WaterTreatment',
+    "Mining": "BitumenMining",
+    "Petcoke handling and storage": "PetrocokeTransport",
+    "Post-storage compressor": "PostStorageCompressor",
+    "Pre-membrane compressor": "PreMembraneCompressor",
+    "Regasification": "LNGRegasification",
+    "Ryan-Holmes unit": "RyanHolmes",
+    "Separation": "Separation",
+    "Sour gas reinjection compressor": "SourGasCompressor",
+    "Steam generation": "SteamGeneration",
+    "Storage compressor": "StorageCompressor",
+    "Storage separator": "StorageSeparator",
+    "Transport": "LNGTransport",
+    "VRU compressor": "VRUCompressor",
+    "Venting": "Venting",
+    "Water injection": "WaterInjection",
+    "Water treatment": "WaterTreatment",
 }
 
 
 DefaultCount = 0
 DefaultFractionalDiff = 0.01
 
+
 class ComparisonStatus(Enum):
-    GOOD = 0,
-    PROCESS_MISMATCH = 1,
-    FIELD_MISMATCH = 2,
+    GOOD = (0,)
+    PROCESS_MISMATCH = (1,)
+    FIELD_MISMATCH = (2,)
     VALUE_MISMATCH = 3
 
 
@@ -67,8 +68,8 @@ def compare(file1, file2, count=DefaultCount, max_diff=DefaultFractionalDiff, ve
     import pandas as pd
 
     def read_results(filename):
-        df = pd.read_csv(filename, index_col='process')
-        df = df.rename(index=process_translator).sort_index(axis='rows')
+        df = pd.read_csv(filename, index_col="process")
+        df = df.rename(index=process_translator).sort_index(axis="rows")
         return df
 
     df1 = read_results(file1)
@@ -124,7 +125,7 @@ def compare(file1, file2, count=DefaultCount, max_diff=DefaultFractionalDiff, ve
 
         na1 = values1.isna()
         na2 = values2.isna()
-        comp = (na1 == na2)
+        comp = na1 == na2
         if not comp.all():
             status = ComparisonStatus.VALUE_MISMATCH
             print(f"Field '{field}' has NA values in different locations in the two files")
@@ -149,40 +150,55 @@ def compare(file1, file2, count=DefaultCount, max_diff=DefaultFractionalDiff, ve
 
     return status
 
+
 class CompareCommand(SubcommandABC):
     def __init__(self, subparsers):
-        kwargs = {'help' : '''Compare result CSV files''',
-                  'description' : '''Compare CSV files with fields in columns and processes in row,
+        kwargs = {
+            "help": """Compare result CSV files""",
+            "description": """Compare CSV files with fields in columns and processes in row,
                       with the value either blank for disabled processes, or the total energy use per
                       day by process, after running the model. Mainly used for testing against OPGEEv3.
                       Note that CSV files for comparison can be generated using
-                      "opg run --comparisonCSV filename".'''}
+                      "opg run --comparisonCSV filename".""",
+        }
 
-        super().__init__('compare', subparsers, kwargs)
+        super().__init__("compare", subparsers, kwargs)
 
     def addArgs(self, parser):
-        '''
+        """
         Process the command-line arguments for this sub-command
-        '''
-        parser.add_argument('file1',
-                            help='''A CSV file containing results for comparison against "file2"''')
+        """
+        parser.add_argument("file1", help='''A CSV file containing results for comparison against "file2"''')
 
-        parser.add_argument('file2',
-                            help='''A CSV file containing results for comparison against "file1"''')
+        parser.add_argument("file2", help='''A CSV file containing results for comparison against "file1"''')
 
-        parser.add_argument('-n', '--count', type=int, default=DefaultCount,
-                            help=f'''The number of fields to compare. Default is {DefaultCount}, which 
-                                means compare all fields.''')
+        parser.add_argument(
+            "-n",
+            "--count",
+            type=int,
+            default=DefaultCount,
+            help=f"""The number of fields to compare. Default is {DefaultCount}, which 
+                                means compare all fields.""",
+        )
 
-        parser.add_argument('-m', '--max-diff', type=float, default=DefaultFractionalDiff,
-                            help=f'''The maximum (fractional) difference in values for "file2" 
+        parser.add_argument(
+            "-m",
+            "--max-diff",
+            type=float,
+            default=DefaultFractionalDiff,
+            help=f"""The maximum (fractional) difference in values for "file2" 
                                 relative to "file1" that are deemed "approximately the same". 
                                 Default is {DefaultFractionalDiff}, 
-                                i.e., (file2_value - file1_value) / file1_value <= {DefaultFractionalDiff}''')
+                                i.e., (file2_value - file1_value) / file1_value <= {DefaultFractionalDiff}""",
+        )
 
-        parser.add_argument('-v', '--verbose', action='store_true',
-                            help='''Report all value differences. By default, only field differences 
-                                are reported.''')
+        parser.add_argument(
+            "-v",
+            "--verbose",
+            action="store_true",
+            help="""Report all value differences. By default, only field differences 
+                                are reported.""",
+        )
 
         return parser
 

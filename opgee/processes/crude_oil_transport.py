@@ -13,21 +13,18 @@ from .shared import get_energy_carrier
 
 _logger = getLogger(__name__)
 
+
 class CrudeOilTransport(Process):
     """
     Crude oil transport calculate emissions from crude oil to the market
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
-        self._required_inputs = [
-            "oil"
-        ]
+        self._required_inputs = ["oil"]
 
-        self._required_outputs = [
-            "oil"
-        ]
-
+        self._required_outputs = ["oil"]
 
         self.transport_share_fuel = self.model.transport_share_fuel.loc["Crude"]
         self.transport_parameter = self.model.transport_parameter[["Crude", "Units"]]
@@ -64,12 +61,14 @@ class CrudeOilTransport(Process):
         output.copy_flow_rates_from(input_oil)
 
         # energy use
-        fuel_consumption = field.transport_energy.get_transport_energy_dict(self.field,
-                                                                            self.transport_parameter,
-                                                                            self.transport_share_fuel,
-                                                                            self.transport_by_mode,
-                                                                            oil_LHV_rate,
-                                                                            "Crude")
+        fuel_consumption = field.transport_energy.get_transport_energy_dict(
+            self.field,
+            self.transport_parameter,
+            self.transport_share_fuel,
+            self.transport_by_mode,
+            oil_LHV_rate,
+            "Crude",
+        )
         energy_use = self.energy
         for name, value in fuel_consumption.items():
             energy_use.set_rate(get_energy_carrier(name), value.to("mmBtu/day"))

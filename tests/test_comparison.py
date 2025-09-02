@@ -61,23 +61,26 @@ def test_comparison1():
     status = compare(StringIO(results1), StringIO(results2))
     assert status == ComparisonStatus.PROCESS_MISMATCH
 
+
 def test_comparison2():
     # Test matching files
     status = compare(StringIO(results1), StringIO(results3))
     assert status == ComparisonStatus.GOOD
+
 
 def test_comparison3():
     # Test divergent values
     status = compare(StringIO(results1), StringIO(results4))
     assert status == ComparisonStatus.VALUE_MISMATCH
 
+
 def test_comparison4():
     # Test NA in one file not in the other
     status = compare(StringIO(results1), StringIO(results5))
     assert status == ComparisonStatus.VALUE_MISMATCH
 
+
 def test_comparison5():
     # Test mismatched fields
     status = compare(StringIO(results1), StringIO(results6))
     assert status == ComparisonStatus.FIELD_MISMATCH
-

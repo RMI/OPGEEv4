@@ -1,18 +1,19 @@
 from opgee.units import ureg
-from opgee.energy import (Energy, EN_DIESEL, EN_NATURAL_GAS, EN_RESID,
-                          EN_PETCOKE, EN_CRUDE_OIL, EN_ELECTRICITY)
+from opgee.energy import Energy, EN_DIESEL, EN_NATURAL_GAS, EN_RESID, EN_PETCOKE, EN_CRUDE_OIL, EN_ELECTRICITY
 from opgee.error import OpgeeException
 import pytest
 
+
 def test_set_rate():
     e = Energy()
-    rate = ureg.Quantity(123.45, 'mmbtu/day')
+    rate = ureg.Quantity(123.45, "mmbtu/day")
     e.set_rate(EN_DIESEL, rate)
     assert e.data[EN_DIESEL] == rate
 
+
 def test_set_electricity():
     e = Energy()
-    rate = ureg.Quantity(123.45, 'kWh/day')
+    rate = ureg.Quantity(123.45, "kWh/day")
     e.set_rate(EN_ELECTRICITY, rate)
 
     # Though set as "kWh/day", value is stored as "mmBtu/day", after conversion
@@ -21,26 +22,30 @@ def test_set_electricity():
 
     assert e.data[EN_ELECTRICITY] == rate
 
+
 def test_set_rates_error():
     """Test that an unknown carrier name throws an OpgeeException"""
     e = Energy()
 
     with pytest.raises(OpgeeException, match=r".*Unrecognized carrier*"):
-        e.set_rate('Uranium', 4321)
+        e.set_rate("Uranium", 4321)
+
 
 def test_add_rate():
     e = Energy()
-    rate = ureg.Quantity(40.0, 'mmbtu/day')
+    rate = ureg.Quantity(40.0, "mmbtu/day")
     e.set_rate(EN_DIESEL, rate)
     e.add_rate(EN_DIESEL, rate)
-    assert e.data[EN_DIESEL] == ureg.Quantity(80.0, 'mmbtu/day')
+    assert e.data[EN_DIESEL] == ureg.Quantity(80.0, "mmbtu/day")
+
 
 def test_add_rate_error():
     """Test that an unknown carrier name throws an OpgeeException"""
     e = Energy()
 
     with pytest.raises(OpgeeException, match=r".*Unrecognized carrier*"):
-        e.add_rates({'Uranium': 4321})
+        e.add_rates({"Uranium": 4321})
+
 
 @pytest.fixture
 def two_carriers():
@@ -48,12 +53,13 @@ def two_carriers():
     e.set_rates({EN_NATURAL_GAS: 123.45, EN_DIESEL: 45.6})
     return e.data
 
+
 @pytest.mark.parametrize(
-    "carrier, rate", [(EN_NATURAL_GAS, 123.45), (EN_DIESEL, 45.6), (EN_CRUDE_OIL, 0.0),
-                      (EN_PETCOKE, 0.0), (EN_RESID, 0.0)]
+    "carrier, rate",
+    [(EN_NATURAL_GAS, 123.45), (EN_DIESEL, 45.6), (EN_CRUDE_OIL, 0.0), (EN_PETCOKE, 0.0), (EN_RESID, 0.0)],
 )
 def test_set_rates(two_carriers, carrier, rate):
-    assert two_carriers[carrier] == ureg.Quantity(rate, 'mmbtu/day')
+    assert two_carriers[carrier] == ureg.Quantity(rate, "mmbtu/day")
 
 
 def test_set_rates_error():
@@ -61,4 +67,4 @@ def test_set_rates_error():
     e = Energy()
 
     with pytest.raises(OpgeeException, match=r".*Unrecognized carrier*"):
-        e.set_rates({EN_NATURAL_GAS: 123.45, 'Random': 4321})
+        e.set_rates({EN_NATURAL_GAS: 123.45, "Random": 4321})

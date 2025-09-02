@@ -29,20 +29,22 @@ template = """<?xml version='1.0' encoding='UTF-8'?>
 
 """
 
+
 def model_for_country(country):
     xml = template.format(country=country)
-    model = load_model_from_str(xml,  use_default_model=True)
+    model = load_model_from_str(xml, use_default_model=True)
     return model
 
+
 def test_model_1(configure_logging_for_tests):
-    model = model_for_country('USA')
-    field = model.get_field('test')
-    T = field.attr('prod_water_inlet_temp')
-    assert T == ureg.Quantity(140, 'degF')
+    model = model_for_country("USA")
+    field = model.get_field("test")
+    T = field.attr("prod_water_inlet_temp")
+    assert T == ureg.Quantity(140, "degF")
 
 
 def test_model_2(configure_logging_for_tests):
-    model = model_for_country('Canada')
-    field = model.get_field('test')
-    T = field.attr('prod_water_inlet_temp')
-    assert T == ureg.Quantity(340, 'degF')
+    model = model_for_country("Canada")
+    field = model.get_field("test")
+    T = field.attr("prod_water_inlet_temp")
+    assert T == ureg.Quantity(340, "degF")

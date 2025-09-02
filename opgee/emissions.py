@@ -14,20 +14,21 @@ from .core import OpgeeObject
 from .error import OpgeeException
 from .stream import Stream
 
-EM_COMBUSTION = 'Combustion'
-EM_LAND_USE = 'Land-use'
-EM_VENTING = 'Venting'
-EM_FLARING = 'Flaring'
-EM_FUGITIVES = 'Fugitives'
-EM_OTHER = 'Other'
+EM_COMBUSTION = "Combustion"
+EM_LAND_USE = "Land-use"
+EM_VENTING = "Venting"
+EM_FLARING = "Flaring"
+EM_FUGITIVES = "Fugitives"
+EM_OTHER = "Other"
 
 EM_VOC = "VOC"
-EM_CO  = "CO"
+EM_CO = "CO"
 EM_CH4 = "CH4"
-EM_C1  = "C1"   # refers to CH4 in some contexts
+EM_C1 = "C1"  # refers to CH4 in some contexts
 EM_N2O = "N2O"
 EM_CO2 = "CO2"
 EM_GHG = "GHG"
+
 
 class EmissionsError(OpgeeException):
     def __init__(self, func_name, category, gas):
@@ -111,7 +112,7 @@ class Emissions(OpgeeObject):
         :return: none
         """
         product = self.data.T[self.emissions] * gwp
-        self.data.loc[EM_GHG] = product.sum(axis='columns')
+        self.data.loc[EM_GHG] = product.sum(axis="columns")
 
     def reset_GHG(self):
         """
@@ -135,7 +136,7 @@ class Emissions(OpgeeObject):
         :return: none
         """
         rate = rate.to("tonne/day") if isinstance(rate, pint.Quantity) else rate
-        self._check_loc('set_rate', gas, category)
+        self._check_loc("set_rate", gas, category)
         self.data.loc[gas, category] = magnitude(rate, units="tonne/day")
 
     def set_rates(self, category, **kwargs):
@@ -159,7 +160,7 @@ class Emissions(OpgeeObject):
         :param rate: (float) the increment in rate in the Process' flow units (e.g., mmbtu (LHV) of fuel burned)
         :return: none
         """
-        self._check_loc('add_rate', gas, category)
+        self._check_loc("add_rate", gas, category)
         sum = self.data.loc[gas, category] + rate
         self.data.loc[gas, category] = magnitude(sum, units="tonne/day")
 
@@ -192,7 +193,7 @@ class Emissions(OpgeeObject):
 
         # All gas-phase hydrocarbons heavier than methane are considered VOCs
         voc_rate = stream.voc_flow_rates().sum()
-        self.add_rate(category, 'VOC', voc_rate)
+        self.add_rate(category, "VOC", voc_rate)
 
     def set_from_stream(self, category, stream):
         """
