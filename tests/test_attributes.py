@@ -1,11 +1,12 @@
 import pytest
 from lxml import etree as ET
-from opgee.units import ureg
+
 from opgee.analysis import Analysis
-from opgee.attributes import ClassAttrs, AttributeMixin, AttrDefs
+from opgee.attributes import AttrDefs, AttributeMixin, ClassAttrs
 from opgee.core import instantiate_subelts
-from opgee.error import OpgeeException, AttributeError
+from opgee.error import AttributeError, OpgeeException
 from opgee.model import Model
+from opgee.units import ureg
 
 
 @pytest.fixture
@@ -70,19 +71,23 @@ def attr_dict_2(attr_classes):
 
 
 @pytest.mark.parametrize(
-    "attr_name, value", [("maximum_iterations", 20),  # test numerical value override
-                         ("maximum_change", 0.001),  # test numerical default adopted
-                         ]
+    "attr_name, value",
+    [
+        ("maximum_iterations", 20),  # test numerical value override
+        ("maximum_change", 0.001),  # test numerical default adopted
+    ],
 )
 def test_model_defaults(attr_classes, attr_dict_1, attr_name, value):
     assert attr_dict_1[attr_name].value == value
 
 
 @pytest.mark.parametrize(
-    "attr_name, value", [("GWP_horizon", ureg.Quantity(20.0, 'year')),  # test units and numerical override
-                         ("GWP_version", "AR4"),  # test character value override
-                         ("functional_unit", "oil"),  # test character default adopted
-                         ]
+    "attr_name, value",
+    [
+        ("GWP_horizon", ureg.Quantity(20.0, "year")),  # test units and numerical override
+        ("GWP_version", "AR4"),  # test character value override
+        ("functional_unit", "oil"),  # test character default adopted
+    ],
 )
 def test_analysis_defaults(attr_classes, attr_dict_2, attr_name, value):
     assert attr_dict_2[attr_name].value == value
@@ -95,19 +100,19 @@ class AttributeHolder(AttributeMixin):
 
 def test_exceptions(attr_classes, attr_dict_1):
     obj = AttributeHolder(attr_dict_1)
-    name = 'unknown'
+    name = "unknown"
     with pytest.raises(OpgeeException, match=f".*Attribute '{name}' not found in*"):
         obj.attr(name)
 
 
 def test_string_rep(attr_classes):
-    name = 'functional_unit'
-    adef = attr_classes['Analysis'].attribute(name)
+    name = "functional_unit"
+    adef = attr_classes["Analysis"].attribute(name)
     s = str(adef)
     assert s == f"<AttrDef name='{name}' type='{adef.pytype}' default='{adef.default}' options='{adef.option_set}'>"
 
 
 def test_unknown_attribute(attr_classes):
-    name = 'unknown-attribute'
+    name = "unknown-attribute"
     with pytest.raises(AttributeError, match=f"Attribute definition for '{name}' was not found"):
-        attr_classes['Model'].attribute(name)
+        attr_classes["Model"].attribute(name)

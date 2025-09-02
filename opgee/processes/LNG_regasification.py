@@ -6,9 +6,9 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from .shared import get_energy_carrier, get_energy_consumption
 from ..log import getLogger
 from ..process import Process
+from .shared import get_energy_carrier, get_energy_consumption
 
 _logger = getLogger(__name__)
 
@@ -17,6 +17,7 @@ class LNGRegasification(Process):
     """
     LNG liquefaction calculate emission of transported gas to regasification
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -63,10 +64,3 @@ class LNGRegasification(Process):
 
         # emissions
         self.set_combustion_emissions()
-
-
-
-
-
-
-

@@ -6,7 +6,7 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from typing import Optional, Sequence, Tuple
+from collections.abc import Sequence
 
 from pint.facets.plain import PlainQuantity as Quantity
 
@@ -17,19 +17,25 @@ from opgee.units import ureg
 
 # type aliases
 Q_Float = Quantity[float]
-Q_IntTuple = Tuple[Q_Float, int]
-
+Q_IntTuple = tuple[Q_Float, int]
 
 
 _power = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5]
+
 
 class Compressor(OpgeeObject):
     def __init__(self, field):
         self.field = field
 
     @staticmethod
-    def get_compressor_work_temp(field, inlet_temp, inlet_press, gas_stream, compression_ratio, num_of_compression,
-    ) -> Tuple[Q_Float, Q_Float, Q_Float]:
+    def get_compressor_work_temp(
+        field,
+        inlet_temp,
+        inlet_press,
+        gas_stream,
+        compression_ratio,
+        num_of_compression,
+    ) -> tuple[Q_Float, Q_Float, Q_Float]:
         """
 
         :param field:
@@ -52,7 +58,7 @@ class Compressor(OpgeeObject):
             inlet_reduced_press = inlet_press / corrected_press
             z_factor = gas.Z_factor(inlet_reduced_temp, inlet_reduced_press)
 
-            work_temp2 = (compression_ratio ** z_factor) ** ratio - 1
+            work_temp2 = (compression_ratio**z_factor) ** ratio - 1
             work += work_temp1 * work_temp2 * inlet_temp.to("rankine")
 
             delta_temp = (inlet_temp.to("rankine") * compression_ratio ** (z_factor * ratio) - inlet_temp) * 0.2
@@ -63,20 +69,18 @@ class Compressor(OpgeeObject):
         return work_sum, inlet_temp, inlet_press
 
     @staticmethod
-    def get_compression_ratio_stages(
-        overall_compression_ratio_stages: Sequence[Q_Float]
-    ) -> Sequence[Q_IntTuple]:
-        compression_ratios: map[Optional[Q_IntTuple]] = map(
+    def get_compression_ratio_stages(overall_compression_ratio_stages: Sequence[Q_Float]) -> Sequence[Q_IntTuple]:
+        compression_ratios: map[Q_IntTuple | None] = map(
             Compressor.get_compression_ratio_and_stage, overall_compression_ratio_stages
         )
         return [ratio for ratio in compression_ratios if ratio is not None]
 
     @staticmethod
     @ureg.wraps(("frac", None), "frac", strict=False)
-    def get_compression_ratio_and_stage(overall_compression_ratio: float) -> Optional[Q_IntTuple]:
+    def get_compression_ratio_and_stage(overall_compression_ratio: float) -> Q_IntTuple | None:
         max_stages = len(_power)
         for pow in _power:
-            comp_raised = overall_compression_ratio ** pow
+            comp_raised = overall_compression_ratio**pow
             if comp_raised < max_stages:
                 return comp_raised, int(1 / pow)
 
@@ -88,7 +92,7 @@ class Compressor(OpgeeObject):
         eta_compressor,
         overall_compression_ratio,
         inlet_stream: Stream,
-        inlet_tp: Optional[TemperaturePressure] = None,
+        inlet_tp: TemperaturePressure | None = None,
     ):
         """
         Calculate compressor energy consumption
@@ -110,12 +114,9 @@ class Compressor(OpgeeObject):
             return energy_consumption, inlet_temp, inlet_press
 
         compression_ratio, num_stages = Compressor.get_compression_ratio_and_stage(overall_compression_ratio)
-        total_work, outlet_temp, outlet_press = Compressor.get_compressor_work_temp(field,
-                                                                                    inlet_temp,
-                                                                                    inlet_press,
-                                                                                    inlet_stream,
-                                                                                    compression_ratio,
-                                                                                    num_stages)
+        total_work, outlet_temp, outlet_press = Compressor.get_compressor_work_temp(
+            field, inlet_temp, inlet_press, inlet_stream, compression_ratio, num_stages
+        )
         volume_flow_rate_STP = field.gas.volume_flow_rate_STP(inlet_stream)
         total_energy = total_work * volume_flow_rate_STP
         brake_horse_power = total_energy / eta_compressor

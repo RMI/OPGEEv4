@@ -18,13 +18,12 @@ class GasDistribution(Process):
     """
     Gas distribution calculates emission of gas to distribution
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "gas for distribution"
-        ]
+        self._required_inputs = ["gas for distribution"]
 
         self._required_outputs = [
             "gas",
@@ -33,9 +32,9 @@ class GasDistribution(Process):
         self.cache_attributes()
 
     def cache_attributes(self):
-        self.frac_loss = (self.attr("frac_loss_distribution") +
-                          self.attr("frac_loss_meter") +
-                          self.attr("frac_loss_enduse"))
+        self.frac_loss = (
+            self.attr("frac_loss_distribution") + self.attr("frac_loss_meter") + self.attr("frac_loss_enduse")
+        )
 
     def run(self, analysis):
         self.print_running_msg()
@@ -61,8 +60,3 @@ class GasDistribution(Process):
         # emissions
         emissions = self.emissions
         emissions.set_from_stream(EM_FUGITIVES, gas_fugitives)
-
-
-
-
-

@@ -6,23 +6,22 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from typing import Union, Optional
 
 import pandas as pd
 import pint
 
-from .units import ureg, magnitude
 from .attributes import AttrDefs, AttributeMixin
 from .combine_streams import combine_streams
 from .config import getParamAsBoolean
 from .container import Container
 from .core import OpgeeObject, XmlInstantiable, elt_name, instantiate_subelts
-from .emissions import Emissions, EM_COMBUSTION
+from .emissions import EM_COMBUSTION, Emissions
 from .energy import EN_ELECTRICITY, Energy
-from .error import OpgeeException, AbstractMethodError, OpgeeIterationConverged, ModelValidationError
+from .error import AbstractMethodError, ModelValidationError, OpgeeException, OpgeeIterationConverged
 from .import_export import ImportExport
 from .log import getLogger
 from .stream import Stream
+from .units import magnitude, ureg
 from .utils import getBooleanXML
 
 _logger = getLogger(__name__)
@@ -41,7 +40,7 @@ def _subclass_dict(superclass):
 
     :return: (dict) subclasses keyed by name
     """
-    allow_redef = getParamAsBoolean('OPGEE.AllowProcessRedefinition')       # DOCUMENT this feature
+    allow_redef = getParamAsBoolean("OPGEE.AllowProcessRedefinition")  # DOCUMENT this feature
 
     d = {}
 
@@ -51,13 +50,12 @@ def _subclass_dict(superclass):
 
         if prior is None:
             d[name] = cls
-        else:
-            if prior != cls:
-                msg = f"Class '{name}' is defined by both {cls} and {prior}"
-                if allow_redef:
-                    print(msg)
-                else:
-                    raise OpgeeException(msg)
+        elif prior != cls:
+            msg = f"Class '{name}' is defined by both {cls} and {prior}"
+            if allow_redef:
+                print(msg)
+            else:
+                raise OpgeeException(msg)
 
     return d
 
@@ -65,11 +63,13 @@ def _subclass_dict(superclass):
 #
 # Cache of known subclasses of Aggregator and Process
 #
-_Subclass_dict: Optional[dict] = None
+_Subclass_dict: dict | None = None
+
 
 def decache_subclasses():
     global _Subclass_dict
     _Subclass_dict = None
+
 
 def _get_subclass(cls, subclass_name, reload=False):
     """
@@ -103,7 +103,7 @@ class IntermediateValues(OpgeeObject):
     """
 
     def __init__(self):
-        self.data = pd.DataFrame(columns=('value', 'unit', 'desc'))
+        self.data = pd.DataFrame(columns=("value", "unit", "desc"))
 
     def store(self, name, value, unit=None, desc=None):
         # Strip magnitude and unit from Quantity objects
@@ -111,7 +111,7 @@ class IntermediateValues(OpgeeObject):
             unit = str(value.u)
             value = value.m
 
-        self.data.loc[name, ('value', 'unit', 'desc')] = (value, unit or '', desc or '')
+        self.data.loc[name, ("value", "unit", "desc")] = (value, unit or "", desc or "")
 
     def get(self, name):
         """
@@ -134,13 +134,36 @@ def run_corr_eqns(x1, x2, x3, x4, x5, coef_df):
     :param coef_df: (pandas.DataFrame) data values
     :return: pandas.Series
     """
-
     x = pd.Series(
-        data=[1, x1, x2, x3, x4, x5, x1 * x2, x1 * x3, x1 * x4, x1 * x5, x2 * x3, x2 * x4, x2 * x5, x3 * x4,
-              x3 * x5, x4 * x5, x1 ** 2, x2 ** 2, x3 ** 2, x4 ** 2, x5 ** 2], index=coef_df.index)
+        data=[
+            1,
+            x1,
+            x2,
+            x3,
+            x4,
+            x5,
+            x1 * x2,
+            x1 * x3,
+            x1 * x4,
+            x1 * x5,
+            x2 * x3,
+            x2 * x4,
+            x2 * x5,
+            x3 * x4,
+            x3 * x5,
+            x4 * x5,
+            x1**2,
+            x2**2,
+            x3**2,
+            x4**2,
+            x5**2,
+        ],
+        index=coef_df.index,
+    )
     df = coef_df.mul(x, axis=0)
     result = df.sum(axis="rows")
     return result
+
 
 class Process(AttributeMixin, XmlInstantiable):
     """
@@ -165,8 +188,8 @@ class Process(AttributeMixin, XmlInstantiable):
     """
 
     # Constants to support stream "finding" methods
-    INPUT = 'input'
-    OUTPUT = 'output'
+    INPUT = "input"
+    OUTPUT = "output"
 
     # the processes that have set iteration values
     iterating_processes = []
@@ -177,15 +200,16 @@ class Process(AttributeMixin, XmlInstantiable):
     _required_inputs = []
     _required_outputs = []
 
-    def __init__(self, name, attr_dict=None, parent=None, desc=None,
-                 cycle_start=False, impute_start=False, boundary=None):
+    def __init__(
+        self, name, attr_dict=None, parent=None, desc=None, cycle_start=False, impute_start=False, boundary=None
+    ):
         name = name or self.__class__.__name__
 
         AttributeMixin.__init__(self, attr_dict=attr_dict)
         XmlInstantiable.__init__(self, name, parent=parent)
 
-        self.model = self.find_container('Model')
-        self.field = field = self.find_container('Field')
+        self.model = self.find_container("Model")
+        self.field = field = self.find_container("Field")
 
         # One or more of these are used by most processes
         self.gas = field.gas
@@ -196,7 +220,7 @@ class Process(AttributeMixin, XmlInstantiable):
 
         self.check_attr_constraints(self.attr_dict)
 
-        self.boundary = boundary    # the name of the boundary this Process defines, or None
+        self.boundary = boundary  # the name of the boundary this Process defines, or None
 
         self.process_EF = self.get_process_EF()
 
@@ -218,13 +242,12 @@ class Process(AttributeMixin, XmlInstantiable):
         self.intermediate_results = None
 
         # Support for cycles
-        self.visit_count = 0        # increment when the Process has been run
+        self.visit_count = 0  # increment when the Process has been run
         self.iteration_count = 0
         self.iteration_value = None
         self.iteration_converged = False
         self.iteration_registered = False
         self.in_cycle = False
-
 
     def check_enabled(self):
         return
@@ -234,9 +257,9 @@ class Process(AttributeMixin, XmlInstantiable):
         if type_str == self.name:
             name_str = ""
         else:
-            name_str = f' name="{self.name}"' if self.name else ''
+            name_str = f' name="{self.name}"' if self.name else ""
 
-        return f'<{type_str}{name_str} enabled={self.enabled} @{id(self)}>'
+        return f"<{type_str}{name_str} enabled={self.enabled} @{id(self)}>"
 
     @classmethod
     def clear_iterating_process_list(cls):
@@ -300,10 +323,10 @@ class Process(AttributeMixin, XmlInstantiable):
 
         # helper func consolidates input/output stream validation methods
         def _validate(direction):
-            if direction == 'input':
+            if direction == "input":
                 required = self._required_inputs
                 find_func = self.find_input_streams
-            elif direction == 'output':
+            elif direction == "output":
                 find_func = self.find_output_streams
                 required = self._required_outputs
             else:
@@ -312,16 +335,15 @@ class Process(AttributeMixin, XmlInstantiable):
             for contents in required:
                 if isinstance(contents, tuple):
                     # tuples indicate sets from which at least one must be present
-                    found = [bool(find_func(c, as_list=True, regex=True, raiseError=False))
-                             for c in contents]
+                    found = [bool(find_func(c, as_list=True, regex=True, raiseError=False)) for c in contents]
                     if not any(found):
                         msgs.append(f"{self} has no {direction} streams containing any of '{contents}'")
 
                 elif isinstance(contents, dict):
-                # dicts are used to indicate max/min allowable occurrences of the given content pattern
-                    pattern = contents['pattern']
-                    mn = contents['min']
-                    mx = contents['max']
+                    # dicts are used to indicate max/min allowable occurrences of the given content pattern
+                    pattern = contents["pattern"]
+                    mn = contents["min"]
+                    mx = contents["max"]
                     found = find_func(pattern, as_list=True, regex=True, raiseError=False)
                     count = len(found)
                     if not (mn <= count <= mx):
@@ -330,11 +352,11 @@ class Process(AttributeMixin, XmlInstantiable):
                 elif not find_func(contents, as_list=True, regex=True, raiseError=False):
                     msgs.append(f"{self} is missing a required {direction} stream containing '{contents}'")
 
-        _validate('input')
-        _validate('output')
+        _validate("input")
+        _validate("output")
 
         if msgs:
-            msg = f"Field {self.field}:\n" + '\n'.join(msgs)
+            msg = f"Field {self.field}:\n" + "\n".join(msgs)
             raise ModelValidationError(msg)
 
     def reset(self):
@@ -356,7 +378,7 @@ class Process(AttributeMixin, XmlInstantiable):
         visited = dict()
 
         def _visit(proc):
-            if proc is None or visited.get(id(proc), False):
+            if proc is None or visited.get(id(proc)):
                 return
 
             visited[id(proc)] = proc
@@ -378,7 +400,7 @@ class Process(AttributeMixin, XmlInstantiable):
         visited = dict()
 
         def _visit(proc):
-            if proc is None or visited.get(id(proc), False):
+            if proc is None or visited.get(id(proc)):
                 return
 
             visited[id(proc)] = proc
@@ -446,7 +468,6 @@ class Process(AttributeMixin, XmlInstantiable):
         emissions = self.compute_emission_combustion()
         self.emissions.set_rate(EM_COMBUSTION, "CO2", emissions)
 
-
     def add_energy_rate(self, carrier, rate):
         """
         Set the rate of energy use for a single carrier.
@@ -493,7 +514,7 @@ class Process(AttributeMixin, XmlInstantiable):
     def set_gas_fugitives(self, stream, loss_rate) -> Stream:
         # TODO: complete this using Jeff's code
         """
-        initialize the gas fugitives stream, get loss rate, copy..
+        Initialize the gas fugitives stream, get loss rate, copy..
 
         :param loss_rate:
         :param stream:
@@ -512,7 +533,8 @@ class Process(AttributeMixin, XmlInstantiable):
         Args:
             inlet_stream: A Stream object representing the inlet stream to the system.
 
-        Returns:
+        Returns
+        -------
             A Quantity object representing the compressor and well loss rate for the given inlet stream.
 
 
@@ -523,7 +545,6 @@ class Process(AttributeMixin, XmlInstantiable):
         compressor, the compressor loss rate is returned, otherwise the well loss rate is returned. The
         result is returned as a Quantity object with units of "frac".
         """
-
         if inlet_stream.total_flow_rate() == 0:
             return ureg.Quantity(0, "frac")
 
@@ -560,12 +581,9 @@ class Process(AttributeMixin, XmlInstantiable):
         """
         return self.field.find_stream(name, raiseError=raiseError)
 
-    def _find_streams_by_type(self, direction, stream_type,
-                              combine=False,
-                              as_list=False,
-                              regex=False,
-                              raiseError=True) -> Union[
-        Stream, list, dict]:
+    def _find_streams_by_type(
+        self, direction, stream_type, combine=False, as_list=False, regex=False, raiseError=True
+    ) -> Stream | list | dict:
         """
         Find the input or output streams (indicated by `direction`) that contain the indicated
         `stream_type`, e.g., 'oil', 'water' and so on.
@@ -580,25 +598,20 @@ class Process(AttributeMixin, XmlInstantiable):
         :raises: OpgeeException if no processes handling `stream_type` are found and `raiseError` is True
         """
         if combine and as_list:
-            raise OpgeeException(f"_find_streams_by_type: both 'combine' and 'as_list' cannot be True")
+            raise OpgeeException("_find_streams_by_type: both 'combine' and 'as_list' cannot be True")
 
         assert direction in {self.INPUT, self.OUTPUT}
         stream_list = self.inputs if direction == self.INPUT else self.outputs
-        streams = [stream for stream in stream_list if
-                   stream.enabled and stream.contains(stream_type, regex=regex)]
+        streams = [stream for stream in stream_list if stream.enabled and stream.contains(stream_type, regex=regex)]
 
         if not streams and raiseError:
             raise OpgeeException(f"{self}: no {direction} streams contain '{stream_type}'")
 
-        return combine_streams(streams) if combine else (
-            streams if as_list else {s.name: s for s in streams})
+        return combine_streams(streams) if combine else (streams if as_list else {s.name: s for s in streams})
 
-    def find_input_streams(self, stream_type,
-                           combine=False,
-                           as_list=False,
-                           regex=False,
-                           raiseError=True) -> Union[
-        Stream, list, dict]:
+    def find_input_streams(
+        self, stream_type, combine=False, as_list=False, regex=False, raiseError=True
+    ) -> Stream | list | dict:
         """
         Convenience method to call `_find_streams_by_type` with direction "input"
 
@@ -610,15 +623,13 @@ class Process(AttributeMixin, XmlInstantiable):
         :return: (Stream, list or dict of Streams) depends on various keyword args
         :raises: OpgeeException if no processes handling `stream_type` are found and `raiseError` is True
         """
-        return self._find_streams_by_type(self.INPUT, stream_type, combine=combine,
-                                          as_list=as_list, regex=regex, raiseError=raiseError)
+        return self._find_streams_by_type(
+            self.INPUT, stream_type, combine=combine, as_list=as_list, regex=regex, raiseError=raiseError
+        )
 
-    def find_output_streams(self, stream_type,
-                            combine=False,
-                            as_list=False,
-                            regex=False,
-                            raiseError=True) -> Union[
-        Stream, list, dict]:
+    def find_output_streams(
+        self, stream_type, combine=False, as_list=False, regex=False, raiseError=True
+    ) -> Stream | list | dict:
         """
         Convenience method to call `_find_streams_by_type` with direction "output"
 
@@ -630,10 +641,11 @@ class Process(AttributeMixin, XmlInstantiable):
         :return: (Stream, list or dict of Streams) depends on various keyword args
         :raises: OpgeeException if no processes handling `stream_type` are found and `raiseError` is True
         """
-        return self._find_streams_by_type(self.OUTPUT, stream_type, regex=regex, combine=combine, as_list=as_list,
-                                          raiseError=raiseError)
+        return self._find_streams_by_type(
+            self.OUTPUT, stream_type, regex=regex, combine=combine, as_list=as_list, raiseError=raiseError
+        )
 
-    def find_input_stream(self, stream_type, regex=False, raiseError=True) -> Union[Stream, None]:
+    def find_input_stream(self, stream_type, regex=False, raiseError=True) -> Stream | None:
         """
         Find exactly one input stream connected to a downstream Process that produces the indicated
         `stream_type`, e.g., 'oil', 'water' and so on.
@@ -652,7 +664,7 @@ class Process(AttributeMixin, XmlInstantiable):
 
         return streams[0]
 
-    def find_output_stream(self, stream_type, regex=False, raiseError=True) -> Union[Stream, None]:
+    def find_output_stream(self, stream_type, regex=False, raiseError=True) -> Stream | None:
         """
         Find exactly one output stream connected to a downstream Process that consumes the indicated
         `stream_type`, e.g., 'oil', 'water' and so on.
@@ -761,8 +773,11 @@ class Process(AttributeMixin, XmlInstantiable):
                     _logger.debug(f"current value is {value}")
                     _logger.debug(f"prior value is {prior_value}")
             else:
-                pairs = zip(prior_value, value) if isinstance(value, (tuple, list)) \
-                    else [(prior_value, value)]  # make a list of the one pair
+                pairs = (
+                    zip(prior_value, value, strict=False)
+                    if isinstance(value, (tuple, list))
+                    else [(prior_value, value)]
+                )  # make a list of the one pair
 
                 if all([converged(old, new) for old, new in pairs]):
                     self.iteration_converged = True
@@ -787,7 +802,7 @@ class Process(AttributeMixin, XmlInstantiable):
         :raises OpgeeIterationConverged: if all processes have converged.
         """
         if all([proc.iteration_converged for proc in cls.iterating_processes]):
-            raise OpgeeIterationConverged(f"Change <= maximum_change in all iterating processes")
+            raise OpgeeIterationConverged("Change <= maximum_change in all iterating processes")
 
     @classmethod
     def reset_all_iteration(cls):
@@ -822,7 +837,7 @@ class Process(AttributeMixin, XmlInstantiable):
         :param analysis: (Analysis) the `Analysis` used to retrieve global settings
         :return: None
         """
-        raise AbstractMethodError(self.__class__, 'Process.run')
+        raise AbstractMethodError(self.__class__, "Process.run")
 
     # TODO: implement mass balance check
     def check_balances(self):
@@ -857,17 +872,15 @@ class Process(AttributeMixin, XmlInstantiable):
     def run_children(self, **kwargs):
         pass
 
-
     def print_running_msg(self):
         _logger.debug(f"Running {type(self)} name='{self.name}'")
 
     def venting_fugitive_rate(self):
-
         loss_rate = self.field.component_fugitive_table
         # Get loss rate for downhole pump
         # if self.name == "DownholePump":
 
-        return self.attr('leak_rate')
+        return self.attr("leak_rate")
 
     def init_intermediate_results(self, names):
         """
@@ -883,7 +896,6 @@ class Process(AttributeMixin, XmlInstantiable):
 
         :return: A dictionary of energy and emission instances or None
         """
-
         return self.intermediate_results
 
     def sum_intermediate_results(self):
@@ -892,7 +904,6 @@ class Process(AttributeMixin, XmlInstantiable):
 
         :return:
         """
-
         if self.intermediate_results is None:
             return
 
@@ -959,26 +970,32 @@ class Process(AttributeMixin, XmlInstantiable):
         """
         name = elt_name(elt)
 
-        if name == 'test_proc':
+        if name == "test_proc":
             pass
 
         a = elt.attrib
-        desc = a.get('desc')
-        impute_start = a.get('impute-start')
-        cycle_start = a.get('cycle-start')
-        boundary = a.get('boundary')  # optional
+        desc = a.get("desc")
+        impute_start = a.get("impute-start")
+        cycle_start = a.get("cycle-start")
+        boundary = a.get("boundary")  # optional
 
-        classname = a['class']  # required by XML schema
+        classname = a["class"]  # required by XML schema
         subclass = _get_subclass(Process, classname)
         attr_dict = subclass.instantiate_attrs(elt, is_process=True)
 
-        proc = subclass(name, attr_dict=attr_dict, parent=parent, desc=desc,
-                        cycle_start=cycle_start, impute_start=impute_start,
-                        boundary=boundary)
+        proc = subclass(
+            name,
+            attr_dict=attr_dict,
+            parent=parent,
+            desc=desc,
+            cycle_start=cycle_start,
+            impute_start=impute_start,
+            boundary=boundary,
+        )
 
-        proc.set_enabled(a.get('enabled', '1'))
-        proc.set_extend(a.get('extend', '0'))
-        proc.set_run_after(getBooleanXML(a.get('after', '0')))
+        proc.set_enabled(a.get("enabled", "1"))
+        proc.set_extend(a.get("extend", "0"))
+        proc.set_run_after(getBooleanXML(a.get("after", "0")))
 
         return proc
 
@@ -987,12 +1004,13 @@ class Boundary(Process):
     """
     Used to define system boundaries in XML, e.g., <Process class="Boundary" name="Production">
     """
+
     def __init__(self, *args, **kwargs):
         boundary = kwargs.get("boundary")
         if not boundary:
-            raise OpgeeException(f"XML elements of class 'Boundary' must define a 'boundary' attribute")
+            raise OpgeeException("XML elements of class 'Boundary' must define a 'boundary' attribute")
 
-        name = f"{boundary}Boundary"        # e.g., "ProductionBoundary"
+        name = f"{boundary}Boundary"  # e.g., "ProductionBoundary"
         super().__init__(name, **kwargs)
 
     def is_chosen_boundary(self, analysis):
@@ -1009,23 +1027,22 @@ class Boundary(Process):
             for s in self.outputs:
                 s.set_enabled(False)
 
-
     def run(self, analysis):
         is_chosen_boundary = self.is_chosen_boundary(analysis)
         # TODO:
         # There's a bug in the handling of the streams at boundaries. Basically, if we select the Distribution Boundary, there's no stream
         # containing PC or oil connected (those are only inputs to the ProductionBoundry). Thus the exports are off
         # and can lead to divide by 0 errors.
-        # 
+        #
         # How would we allow for accurate analysis at the various boundaries?
         # Option 1: remove "Boundary" processes from the graph. The idea of a boundary would instead be a partition of the underlying
-        # graph. This might present better accuracy and a simpler interface/xml structure. 
-        # 
+        # graph. This might present better accuracy and a simpler interface/xml structure.
+        #
         # Option 2: ensure that all output from intermediate boundaries is carried to the selected boundary. I don't know how we would
         # achieve this without double counting a lot of stream contents. Perhaps we could add a "remaining" output stream to all boundaries.
         # If an input stream doesn't have a commensurate output, we'd add its flow rates to the "remaining" stream. All boundaries would be
         # connected to each other by the "remaining" stream, ensuring that material flows are represented at any/all boundaries.
-        
+
         # Process boundary if only if the chosen boundary has not been processed
         if self.field.get_process_data("is_chosen_boundary_processed") is None:
             # If we're an intermediate boundary, copy all inputs to outputs based on contents
@@ -1035,8 +1052,10 @@ class Boundary(Process):
                         break
                     contents = in_stream.contents
                     if len(contents) != 1:
-                        raise ModelValidationError(f"Streams to and from boundaries must have only a "
-                                                   f"single Content declaration; {self} inputs are {contents}")
+                        raise ModelValidationError(
+                            f"Streams to and from boundaries must have only a "
+                            f"single Content declaration; {self} inputs are {contents}"
+                        )
 
                     # If not exactly one stream that declares the same contents, raises error
                     out_stream = self.find_output_stream(contents[0], raiseError=False)
@@ -1059,7 +1078,7 @@ class Boundary(Process):
                 exported_oil_LHV = combined_streams.liquid_flow_rate("oil") * self.field.oil.mass_energy_density()
 
                 # calculate PC energy flow rate
-                exported_PC_LHV = combined_streams.liquid_flow_rate("PC") * self.model.const('petrocoke-heating-value')
+                exported_PC_LHV = combined_streams.liquid_flow_rate("PC") * self.model.const("petrocoke-heating-value")
 
                 exported_prod_LHV = exported_gas_LPG_LHV + exported_oil_LHV + exported_PC_LHV
 
@@ -1069,16 +1088,19 @@ class Boundary(Process):
                 if exported_prod_LHV.m != 0:
                     self.field.save_process_data(is_chosen_boundary_processed=True)
 
+
 class Reservoir(Process):
     """
     Reservoir represents natural resources such as oil and gas reservoirs, and water sources
     in the subsurface. Each Field object holds a single Reservoir instance.
     """
+
     def __init__(self, parent=None):
-        super().__init__("Reservoir", parent=parent, desc='The Reservoir')
+        super().__init__("Reservoir", parent=parent, desc="The Reservoir")
 
     def run(self, analysis):
         self.print_running_msg()
+
 
 #
 # This class is defined here rather than in container.py to avoid import loops and to
@@ -1116,10 +1138,8 @@ class Aggregator(Container):
 
         return obj
 
+
 def reload_subclass_dict():
     global _Subclass_dict
 
-    _Subclass_dict = {
-        Aggregator: _subclass_dict(Aggregator),
-        Process: _subclass_dict(Process)
-    }
+    _Subclass_dict = {Aggregator: _subclass_dict(Aggregator), Process: _subclass_dict(Process)}

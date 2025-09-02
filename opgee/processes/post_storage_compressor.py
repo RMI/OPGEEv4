@@ -6,18 +6,20 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from .compressor import Compressor
-from .shared import get_energy_carrier
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
+from .compressor import Compressor
+from .shared import get_energy_carrier
 
 _logger = getLogger(__name__)
+
 
 class PostStorageCompressor(Process):
     """
     Storage compressor calculate emission from compressing produced gas for long-term (i.e., seasonal) storage.
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -29,7 +31,6 @@ class PostStorageCompressor(Process):
         self._required_outputs = [
             "gas for distribution",
         ]
-
 
         self.discharge_press = None
         self.eta_compressor = None
@@ -56,13 +57,9 @@ class PostStorageCompressor(Process):
         input_energy_flow_rate = self.field.gas.energy_flow_rate(input)
 
         overall_compression_ratio = self.discharge_press / input.tp.P
-        energy_consumption, output_temp, output_press = \
-            Compressor.get_compressor_energy_consumption(
-                self.field,
-                self.prime_mover_type,
-                self.eta_compressor,
-                overall_compression_ratio,
-                input)
+        energy_consumption, output_temp, output_press = Compressor.get_compressor_energy_consumption(
+            self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         # energy-use
         energy_use = self.energy

@@ -6,21 +6,17 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..emissions import EM_FUGITIVES
 from ..energy import EN_ELECTRICITY
 from ..log import getLogger
 from ..process import Process, run_corr_eqns
+from ..units import ureg
 from .compressor import Compressor
-from .shared import get_energy_carrier, predict_blower_energy_use, get_bounded_value, get_energy_consumption
+from .shared import get_bounded_value, get_energy_carrier, get_energy_consumption, predict_blower_energy_use
 
 _logger = getLogger(__name__)
 
-amine_solution_K_value_dict = { "conv DEA" : 1.45,
-                                "high DEA": 0.95,
-                                "MEA" : 2.05,
-                                "DGA" : 1.28,
-                                "MDEA" : 1.25}
+amine_solution_K_value_dict = {"conv DEA": 1.45, "high DEA": 0.95, "MEA": 2.05, "DGA": 1.28, "MDEA": 1.25}
 
 
 class AcidGasRemoval(Process):
@@ -34,7 +30,8 @@ class AcidGasRemoval(Process):
        - gas for demethanizer: Gas stream with CO2 and H2S removed, and fed to the demethanizer.
        - gas for CO2 compressor: Gas stream containing CO2 to be compressed and injected back into the reservoir.
 
-    Attributes:
+    Attributes
+    ----------
        - type_amine: The type of amine solution used for CO2 and H2S removal.
        - ratio_reflux_reboiler: The reflux-to-reboil ratio used in the process.
        - AGR_feedin_press: The feed-in pressure of the gas stream.
@@ -52,26 +49,30 @@ class AcidGasRemoval(Process):
        - prime_mover_type: The type of prime mover used in the process.
        - amine_solution_K_value: The K value of the amine solution used for CO2 and H2S removal.
 
-    Methods:
+    Methods
+    -------
        - run(analysis): Runs the acid gas removal process.
        - calculate_energy_consumption_from_Aspen(input_stream, output_stream, mol_frac_CO2, mol_frac_H2S): Calculates energy
          consumption for the acid gas removal process using Aspen HYSYS simulation.
        - calculate_energy_consumption_from_textbook(input_stream, mol_frac_CO2, mol_frac_H2S): Calculates energy consumption
          for the acid gas removal process using a textbook method.
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
         self._required_inputs = [
-            "gas for AGR",          # TODO: avoid process names in contents. Should be "acidic gas"?
+            "gas for AGR",  # TODO: avoid process names in contents. Should be "acidic gas"?
         ]
 
         self._required_outputs = [
             # TODO: If the process name were avoided, we could have just one output stream
             #  with, say, "deacidified gas". Should describe the contents, not the destination.
             # One of these must exist.
-            ("gas for demethanizer",  # TODO: avoid process names in contents
-             "gas for gas partition") # TODO: avoid process names in contents
+            (
+                "gas for demethanizer",  # TODO: avoid process names in contents
+                "gas for gas partition",
+            )  # TODO: avoid process names in contents
         ]
 
         # Optional streams include:
@@ -121,8 +122,7 @@ class AcidGasRemoval(Process):
         self.air_cooler_press_drop = self.attr("air_cooler_press_drop")
         self.air_elevation_const = m.const("air-elevation-corr")
         self.air_density_ratio = m.const("air-density-ratio")
-        self.water_press = (field.water.density() * self.air_cooler_press_drop *
-                            m.const("gravitational-acceleration"))
+        self.water_press = field.water.density() * self.air_cooler_press_drop * m.const("gravitational-acceleration")
         self.air_cooler_fan_eff = self.attr("air_cooler_fan_eff")
         self.air_cooler_speed_reducer_eff = self.attr("air_cooler_speed_reducer_eff")
         self.AGR_table = m.AGR_tbl
@@ -156,8 +156,9 @@ class AcidGasRemoval(Process):
         H2S_to_demethanizer = ureg.Quantity(0.0, "tonne/day")
 
         # Calculate output stream for demethanizer
-        output_gas = self.find_output_stream("gas for demethanizer", raiseError=False) or \
-                     self.find_output_stream("gas for gas partition")
+        output_gas = self.find_output_stream("gas for demethanizer", raiseError=False) or self.find_output_stream(
+            "gas for gas partition"
+        )
         output_gas.copy_flow_rates_from(gas_input_stream)
         output_gas.set_gas_flow_rate("CO2", CO2_to_demethanizer)
         if field.gas_path != "CO2-EOR Membrane":
@@ -182,22 +183,25 @@ class AcidGasRemoval(Process):
         mol_frac_CO2 = feed_gas_mol_frac["CO2"] if "CO2" in feed_gas_mol_frac else ureg.Quantity(0, "frac")
 
         if mol_frac_H2S.m == 0.0 and mol_frac_CO2 == 0.0:
-            _logger.warning(f"Feed gas does not contain H2S and CO2, please consider using non-AGR gas processing path")
+            _logger.warning("Feed gas does not contain H2S and CO2, please consider using non-AGR gas processing path")
             return
 
         if mol_frac_H2S.m <= 0.15 and mol_frac_CO2 <= 0.2:
-            compressor_energy_consumption, reboiler_fuel_use, electricity_consump =\
+            compressor_energy_consumption, reboiler_fuel_use, electricity_consump = (
                 self.calculate_energy_consumption_from_Aspen(gas_input_stream, output_gas, mol_frac_CO2, mol_frac_H2S)
+            )
         else:
-            compressor_energy_consumption, reboiler_fuel_use, electricity_consump = \
+            compressor_energy_consumption, reboiler_fuel_use, electricity_consump = (
                 self.calculate_energy_consumption_from_textbook(gas_input_stream, mol_frac_CO2, mol_frac_H2S)
+            )
 
         # energy-use
         energy_use = self.energy
         energy_carrier = get_energy_carrier(self.prime_mover_type)
         energy_use.set_rate(energy_carrier, compressor_energy_consumption + reboiler_fuel_use)
-        energy_use.add_rate(EN_ELECTRICITY, electricity_consump) \
-            if energy_carrier == EN_ELECTRICITY else energy_use.set_rate(EN_ELECTRICITY, electricity_consump)
+        energy_use.add_rate(
+            EN_ELECTRICITY, electricity_consump
+        ) if energy_carrier == EN_ELECTRICITY else energy_use.set_rate(EN_ELECTRICITY, electricity_consump)
 
         # import and export
         self.set_import_from_energy(energy_use)
@@ -206,7 +210,6 @@ class AcidGasRemoval(Process):
         self.set_combustion_emissions()
         # TODO: consider more intelligent splitting into emissions categories
         self.emissions.set_from_stream(EM_FUGITIVES, gas_fugitives)
-
 
     def calculate_energy_consumption_from_Aspen(self, input, output_gas, mol_frac_CO2, mol_frac_H2S):
         """
@@ -219,13 +222,14 @@ class AcidGasRemoval(Process):
         :return: (tuple) Compressor energy consumption (Quantity), Reboiler fuel use (Quantity), and
             Electricity consumption (Quantity)
         """
-
         # Define a dictionary of the bounds for each variable used in the calculation from HYSYS
-        variable_bound_dict = {"mol_frac_CO2": [0.0, 0.2],
-                               "mol_frac_H2S": [0.0, 0.15],
-                               "reflux_ratio": [1.5, 3.0],
-                               "regen_temp": [190.0, 220.0],  # unit in degree F
-                               "feed_gas_press": [14.7, 514.7]}  # unit in psia
+        variable_bound_dict = {
+            "mol_frac_CO2": [0.0, 0.2],
+            "mol_frac_H2S": [0.0, 0.15],
+            "reflux_ratio": [1.5, 3.0],
+            "regen_temp": [190.0, 220.0],  # unit in degree F
+            "feed_gas_press": [14.7, 514.7],
+        }  # unit in psia
 
         # Bound the values for mol_frac_CO2 and mol_frac_H2S using the defined bounds
         mol_frac_CO2 = get_bounded_value(mol_frac_CO2.to("frac").m, "mol_frac_CO2", variable_bound_dict)
@@ -264,41 +268,40 @@ class AcidGasRemoval(Process):
 
         # Calculate the reboiler fuel use
         overall_compression_ratio = ureg.Quantity(feed_gas_press, "psia") / input.tp.P
-        compressor_energy_consumption, temp, _ = \
-            Compressor.get_compressor_energy_consumption(self.field,
-                                                         self.prime_mover_type,
-                                                         self.eta_compressor,
-                                                         overall_compression_ratio,
-                                                         output_gas,
-                                                         inlet_tp=input.tp)
+        compressor_energy_consumption, temp, _ = Compressor.get_compressor_energy_consumption(
+            self.field,
+            self.prime_mover_type,
+            self.eta_compressor,
+            overall_compression_ratio,
+            output_gas,
+            inlet_tp=input.tp,
+        )
 
         electricity_consump = pump_duty_elec + condenser_elec_consumption + amine_cooler_elec_consumption
         return compressor_energy_consumption, reboiler_fuel_use, electricity_consump
 
     def calculate_energy_consumption_from_textbook(self, input, mol_frac_CO2, mol_frac_H2S):
         """
-            Calculate energy consumption for the amine unit using the textbook method.
+        Calculate energy consumption for the amine unit using the textbook method.
 
-            :param input: Stream object, input stream to the amine unit.
-            :param mol_frac_CO2: (Quantity) Molar fraction of CO2 in the input gas stream
-            :param mol_frac_H2S: (Quantity) Molar fraction of H2S in the input gas stream
-            :return: (tuple) Compressor energy consumption (Quantity) == 0, Reboiler fuel use (Quantity), and
-                        Electricity consumption (Quantity)
+        :param input: Stream object, input stream to the amine unit.
+        :param mol_frac_CO2: (Quantity) Molar fraction of CO2 in the input gas stream
+        :param mol_frac_H2S: (Quantity) Molar fraction of H2S in the input gas stream
+        :return: (tuple) Compressor energy consumption (Quantity) == 0, Reboiler fuel use (Quantity), and
+                    Electricity consumption (Quantity)
         """
-
         # Calculate feed gas volume rate at STP
         feedin_gas_volume_rate_STP = self.gas.volume_flow_rates_STP(input)
 
         # Calculate CO2 and H2S volume rate, if not present set it to 0
-        CO2_volume_rate =\
-            feedin_gas_volume_rate_STP["CO2"] if mol_frac_CO2.m != 0 else ureg.Quantity(0, "mmscf/day")
-        H2S_volume_rate =\
-            feedin_gas_volume_rate_STP["H2S"] if mol_frac_H2S.m != 0 else ureg.Quantity(0, "mmscf/day")
+        CO2_volume_rate = feedin_gas_volume_rate_STP["CO2"] if mol_frac_CO2.m != 0 else ureg.Quantity(0, "mmscf/day")
+        H2S_volume_rate = feedin_gas_volume_rate_STP["H2S"] if mol_frac_H2S.m != 0 else ureg.Quantity(0, "mmscf/day")
         amine_circulation_rate = self.amine_solution_K_value * (CO2_volume_rate + H2S_volume_rate)
 
         # Pumps energy consumption
-        circulation_pump_HP =\
-            ureg.Quantity(amine_circulation_rate.to("gallon / minute").m * (input.tp.P.m + 50) * 0.00065, "horsepower")
+        circulation_pump_HP = ureg.Quantity(
+            amine_circulation_rate.to("gallon / minute").m * (input.tp.P.m + 50) * 0.00065, "horsepower"
+        )
         booster_pump_HP = ureg.Quantity(amine_circulation_rate.to("gallon / minute").m * 0.06, "horsepower")
         reflux_pump_HP = booster_pump_HP
         total_pump_HP = circulation_pump_HP + booster_pump_HP + reflux_pump_HP
@@ -314,10 +317,8 @@ class AcidGasRemoval(Process):
         reboiler_heat_duty = amine_circulation_rate * ureg.Quantity(72000, "btu*minute/gallon/hr") * 1.15
         total_reboiler_erergy_consump = self.eta_reboiler * reboiler_heat_duty
 
-        return ureg.Quantity(0, "mmbtu/day"), total_reboiler_erergy_consump, total_coolers_energy_consump + total_pump_energy_consump
-
-
-
-
-
-
+        return (
+            ureg.Quantity(0, "mmbtu/day"),
+            total_reboiler_erergy_consump,
+            total_coolers_energy_consump + total_pump_energy_consump,
+        )

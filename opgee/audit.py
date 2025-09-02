@@ -1,7 +1,7 @@
 """Provides functionality for auditing the source of field attribute values."""
 
 from enum import Flag, auto
-from typing import Literal, TypeGuard, TypedDict
+from typing import Literal, TypedDict, TypeGuard
 
 from lxml import etree
 from pint import Quantity
@@ -26,6 +26,7 @@ class AuditRow(TypedDict):
     source: Literal["input", "static_default", "smart_default", "unknown"]
     value: str
     unit: str | None
+
 
 class AuditData(TypedDict):
     field: list[AuditRow] | None
@@ -55,8 +56,7 @@ def audit_required(audit_level: str | None):
 
     if _audit_level == "none":
         return False
-    else:
-        return True
+    return True
 
 
 def _is_audit_level_str(level: str) -> TypeGuard[AuditLevelStr]:
@@ -69,17 +69,14 @@ def _translate_audit_level(
     _level = str(level).strip().lower()
     if _level == "all":
         return AuditFlag.ALL
-    elif _level == "field":
+    if _level == "field":
         return AuditFlag.FIELD
-    elif _level == "processes":
+    if _level == "processes":
         return AuditFlag.PROCESSES
-    else:
-        return AuditFlag.NONE
+    return AuditFlag.NONE
 
 
-def _generate_field_audit_report(
-    field: Field, original_field_element: etree._Element
-) -> list[AuditRow]:
+def _generate_field_audit_report(field: Field, original_field_element: etree._Element) -> list[AuditRow]:
     """
     Generate a report detailing the source of each field-level attribute's final value.
 
@@ -89,22 +86,16 @@ def _generate_field_audit_report(
     """
     attr_defs = AttrDefs.get_instance()
     if not attr_defs:
-        _logger.warning(
-            "Attribute definitions (AttrDefs) not loaded. Source information will be incomplete."
-        )
+        _logger.warning("Attribute definitions (AttrDefs) not loaded. Source information will be incomplete.")
         return []
 
     class_attrs = attr_defs.class_attrs("Field", raiseError=False)
     if not class_attrs:
-        _logger.warning(
-            "ClassAttrs for 'Field' not found. Source information will be incomplete."
-        )
+        _logger.warning("ClassAttrs for 'Field' not found. Source information will be incomplete.")
         return []
 
     original_attrs: dict[str, str] = {
-        a.get("name"): a.text
-        for a in original_field_element.xpath("./A")
-        if a.get("name")
+        a.get("name"): a.text for a in original_field_element.xpath("./A") if a.get("name")
     }
 
     report_rows: list[AuditRow] = []
@@ -145,9 +136,7 @@ def _generate_field_audit_report(
     return report_rows
 
 
-def audit_field(
-    field: Field, mf: ModelFile, audit_level: str | None = None
-) -> AuditData | None:
+def audit_field(field: Field, mf: ModelFile, audit_level: str | None = None) -> AuditData | None:
     """
     Control field auditing based on configuration settings.
 
@@ -165,14 +154,12 @@ def audit_field(
     if audit_flag == AuditFlag.NONE:
         return None
 
-    audit_data: AuditData = { "field": None, "proc_graph": None }
+    audit_data: AuditData = {"field": None, "proc_graph": None}
     if audit_flag & AuditFlag.FIELD:
         root = mf.root
         elem_list = root.xpath(f".//Field[@name='{field.name}']")
         if not elem_list:
-            _logger.error(
-                f"Audit failed for field '{field.name}': Original field element not found in XML."
-            )
+            _logger.error(f"Audit failed for field '{field.name}': Original field element not found in XML.")
             return None
         field_elem: etree._Element = elem_list[0]
         audit_data["field"] = _generate_field_audit_report(field, field_elem)
@@ -181,4 +168,3 @@ def audit_field(
         audit_data["proc_graph"] = create_process_diagram(field)
 
     return audit_data
-

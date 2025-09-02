@@ -1,8 +1,10 @@
 import pytest
+
 from opgee.config import getConfig
-from opgee.log import setLogLevels, configureLogs
+from opgee.log import configureLogs, setLogLevels
 from opgee.model_file import ModelFile
 from opgee.tool import Opgee
+
 from .utils_for_tests import load_test_model
 
 
@@ -10,9 +12,8 @@ from .utils_for_tests import load_test_model
 def configure_logging_for_tests():
     # Don't display routine diagnostic messages during tests
     getConfig()
-    setLogLevels('ERROR')
+    setLogLevels("ERROR")
     configureLogs(force=True)
-    return None
 
 
 @pytest.fixture(scope="function")
@@ -23,7 +24,7 @@ def opgee_model(configure_logging_for_tests):
 
 @pytest.fixture(scope="module")
 def test_model(configure_logging_for_tests):
-    return load_test_model('test_model.xml')
+    return load_test_model("test_model.xml")
 
 
 @pytest.fixture(scope="function")
@@ -33,9 +34,9 @@ def test_model_with_change(configure_logging_for_tests):
     tests that alter the model, to avoid creating state changes that
     confuse tests.
     """
-    return load_test_model('test_model.xml')
+    return load_test_model("test_model.xml")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def opgee_main():
     return Opgee()

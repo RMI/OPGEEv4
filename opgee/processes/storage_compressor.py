@@ -20,6 +20,7 @@ class StorageCompressor(Process):
     """
     Storage compressor calculate emission from compressing gas for long-term (i.e., seasonal) storage.
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -55,13 +56,9 @@ class StorageCompressor(Process):
         gas_fugitives = self.set_gas_fugitives(input, loss_rate)
 
         overall_compression_ratio = self.discharge_press / input.tp.P
-        energy_consumption, output_temp, output_press = \
-            Compressor.get_compressor_energy_consumption(
-                self.field,
-                self.prime_mover_type,
-                self.eta_compressor,
-                overall_compression_ratio,
-                input)
+        energy_consumption, output_temp, output_press = Compressor.get_compressor_energy_consumption(
+            self.field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         # energy-use
         energy_use = self.energy

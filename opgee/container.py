@@ -17,11 +17,13 @@ from .units import ureg
 
 _logger = getLogger(__name__)
 
+
 class Container(AttributeMixin, XmlInstantiable):
     """
     Generic hierarchical node element, has a name and contains other Containers and/or
     Processes (and subclasses thereof).
     """
+
     def __init__(self, name, attr_dict=None, parent=None):
         AttributeMixin.__init__(self, attr_dict=attr_dict)
         XmlInstantiable.__init__(self, name, parent=parent)
@@ -38,7 +40,7 @@ class Container(AttributeMixin, XmlInstantiable):
         self.aggs = None
 
     def add_children(self, aggs=None, procs=None, **kwargs):
-        self.aggs  = self.adopt(aggs)
+        self.aggs = self.adopt(aggs)
         self.procs = self.adopt(procs)
 
     def _children(self):
@@ -77,7 +79,7 @@ class Container(AttributeMixin, XmlInstantiable):
             for obj in container.children():
                 if isinstance(obj, Container):
                     _add_children(obj, include_disabled=include_disabled)
-                elif (include_disabled or obj.is_enabled()):
+                elif include_disabled or obj.is_enabled():
                     procs.append(obj)
 
         _add_children(self)
@@ -115,8 +117,8 @@ class Container(AttributeMixin, XmlInstantiable):
         data = self.energy.data
 
         for child in self.children():
-                child_data = child.get_energy_rates()
-                data += child_data
+            child_data = child.get_energy_rates()
+            data += child_data
 
         return data
 
@@ -128,12 +130,12 @@ class Container(AttributeMixin, XmlInstantiable):
         :return: (pandas.Series) the emissions Series.
         """
         data = self.emissions.data
-        data[data.columns] = ureg.Quantity(0.0, 't/d')
+        data[data.columns] = ureg.Quantity(0.0, "t/d")
 
         for child in self.children():
             if not procs_to_exclude or child not in procs_to_exclude:
-                    child_data = child.get_emission_rates(analysis, procs_to_exclude=procs_to_exclude)
-                    data += child_data
+                child_data = child.get_emission_rates(analysis, procs_to_exclude=procs_to_exclude)
+                data += child_data
 
         # compute CO2eq using chosen GWP values
         data = self.emissions.rates(analysis.gwp)
@@ -153,5 +155,3 @@ class Container(AttributeMixin, XmlInstantiable):
             data += child_data
 
         return data
-
-

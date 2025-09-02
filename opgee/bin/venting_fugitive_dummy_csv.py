@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from opgee.process import Process, _subclass_dict
 
 N = 1000
@@ -12,4 +13,4 @@ df = pd.DataFrame(data=[], columns=columns, index=range(N))
 for name in columns:
     df[name] = np.random.uniform(0.001, 0.003, N)
 
-df.to_csv('/tmp/venting_fugitives_by_process.csv', index=None)
+df.to_csv("/tmp/venting_fugitives_by_process.csv", index=None)

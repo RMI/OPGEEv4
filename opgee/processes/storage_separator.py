@@ -18,6 +18,7 @@ class StorageSeparator(Process):
     """
     Storage well calculate fugitive emission from storage wells.
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -52,8 +53,4 @@ class StorageSeparator(Process):
         gas_to_compressor = self.find_output_stream("gas")
         gas_to_compressor.copy_gas_rates_from(input, tp=self.outlet_tp)
 
-        #TODO: Future versions of OPGEE may treat this process in more detail.
-
-
-
-
+        # TODO: Future versions of OPGEE may treat this process in more detail.

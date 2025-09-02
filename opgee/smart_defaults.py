@@ -14,7 +14,8 @@ from .log import getLogger
 
 _logger = getLogger(__name__)
 
-NO_DEP = '_'    # dummy dependency so these also show up in graph
+NO_DEP = "_"  # dummy dependency so these also show up in graph
+
 
 class ProcessNotFoundError(OpgeeException):
     """
@@ -22,7 +23,9 @@ class ProcessNotFoundError(OpgeeException):
     Smart Default processing because the `Process` doesn't exist in
     the `Field` under evaluation.
     """
+
     pass
+
 
 class SmartDefault(OpgeeObject):
     """
@@ -56,9 +59,10 @@ class SmartDefault(OpgeeObject):
     :param dependencies: (list of str) names of attributes on which ``attr_name``
       depends.
     """
-    registry = {}   # Dictionary of ``SmartDefault`` instances keyed by attribute name.
 
-    _run_order = None   # cached result of run_order() method.
+    registry = {}  # Dictionary of ``SmartDefault`` instances keyed by attribute name.
+
+    _run_order = None  # cached result of run_order() method.
 
     def __init__(self, attr_name, wrapper, user_func, dependencies):
         self.attr_name = attr_name
@@ -69,13 +73,13 @@ class SmartDefault(OpgeeObject):
         # func.__qualname__ is a string of format "func_class.func_name"
         # for methods and simply the func_name for normal functions
         qualname = user_func.__qualname__
-        items = qualname.split('.')
+        items = qualname.split(".")
         self.func_class = items[0] if len(items) == 2 else None
         self.func_name = qualname
         self.func_module = user_func.__module__
 
         self.registry[attr_name] = self
-        _logger.debug(f'Saving dependency for attribute {attr_name} of class {self.func_class}')
+        _logger.debug(f"Saving dependency for attribute {attr_name} of class {self.func_class}")
 
     # TBD: consider using @functools.wraps:
     #  def my_decorator(f):
@@ -96,9 +100,12 @@ class SmartDefault(OpgeeObject):
            These follow the same rules for class or Process specifier defined above.
         :return: (function) The decorator function.
         """
+
         def decorator(user_func):
             def wrapper(*args):
-                _logger.debug(f'Calling {user_func.__qualname__} for attribute {attr_name} with dependencies {dependencies}')
+                _logger.debug(
+                    f"Calling {user_func.__qualname__} for attribute {attr_name} with dependencies {dependencies}"
+                )
                 return user_func(*args)
 
             cls(attr_name, wrapper, user_func, dependencies)
@@ -129,7 +136,7 @@ class SmartDefault(OpgeeObject):
             if cycles:
                 raise OpgeeException(f"Smart default dependencies contain cycles: {cycles}")
 
-            cls._run_order = list(nx.topological_sort(g))   # expand generator so we can iterate more than once
+            cls._run_order = list(nx.topological_sort(g))  # expand generator so we can iterate more than once
 
         return cls._run_order
 
@@ -153,7 +160,7 @@ class SmartDefault(OpgeeObject):
                 obj, attr_obj = dep.find_attr(attr_name, analysis, field)
             except ProcessNotFoundError as e:
                 _logger.warning(f"{e} (ignoring)")
-                continue    # skip this smart default
+                continue  # skip this smart default
 
             # Don't set smart defaults on explicitly set values
             if attr_obj.explicit:
@@ -165,7 +172,7 @@ class SmartDefault(OpgeeObject):
                 tups = [dep.find_attr(name, analysis, field) for name in dep.dependencies]
             except ProcessNotFoundError as e:
                 _logger.warning(f"{e} (ignoring)")
-                continue    # skip this smart default
+                continue  # skip this smart default
 
             values = [attr_obj.value for _, attr_obj in tups]
 
@@ -180,7 +187,6 @@ class SmartDefault(OpgeeObject):
                 attr_obj.set_value(result)
             except Exception as e:
                 raise OpgeeException(f"Attempt to set SmartDefault value for attribute '{attr_name}' failed: {e}")
-
 
     def find_attr(self, attr_name, analysis, field):
         """
@@ -202,18 +208,18 @@ class SmartDefault(OpgeeObject):
         class_name, attr_name = split_attr_name(attr_name)
 
         if class_name is None:
-            class_name = self.func_class or 'Field'
+            class_name = self.func_class or "Field"
 
-        if class_name == 'Field':
+        if class_name == "Field":
             obj = field
 
-        elif class_name == 'Analysis':
+        elif class_name == "Analysis":
             obj = analysis
 
         else:
             obj = field.find_process(class_name, raiseError=False)
             if obj is None:
-                    raise ProcessNotFoundError(f"Process not found for '{class_name}.{attr_name}' in {field}")
+                raise ProcessNotFoundError(f"Process not found for '{class_name}.{attr_name}' in {field}")
 
         attr_obj = obj.attr_dict.get(attr_name)
         if attr_obj is None:

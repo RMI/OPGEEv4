@@ -6,11 +6,11 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
 from ..processes.compressor import Compressor
+from ..units import ureg
 from .shared import get_energy_carrier
 
 _logger = getLogger(__name__)
@@ -21,13 +21,9 @@ class GasLiftingCompressor(Process):
         super().__init__(name, **kwargs)
 
         # TODO: avoid process names in contents.
-        self._required_inputs = [
-            "lifting gas"
-        ]
+        self._required_inputs = ["lifting gas"]
 
-        self._required_outputs = [
-            "lifting gas"
-        ]
+        self._required_outputs = ["lifting gas"]
 
         self.res_press = None
         self.prime_mover_type = None
@@ -67,12 +63,9 @@ class GasLiftingCompressor(Process):
         input_tp = input.tp
         discharge_press = (self.res_press + input_tp.P) / 2 + ureg.Quantity(100.0, "psia")
         overall_compression_ratio = discharge_press / input_tp.P
-        energy_consumption, output_temp, _ = \
-            Compressor.get_compressor_energy_consumption(field,
-                                                         self.prime_mover_type,
-                                                         self.eta_compressor,
-                                                         overall_compression_ratio,
-                                                         input)
+        energy_consumption, output_temp, _ = Compressor.get_compressor_energy_consumption(
+            field, self.prime_mover_type, self.eta_compressor, overall_compression_ratio, input
+        )
 
         lifting_gas.tp.set(T=output_temp, P=discharge_press)
 

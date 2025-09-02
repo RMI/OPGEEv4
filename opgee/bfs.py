@@ -6,23 +6,24 @@
 # See LICENSE.txt for license details.
 #
 from collections import deque
+
 from .error import OpgeeException
 
 
 def is_cyclic_until(successor, visited, rec_stack, successors):
     """
-        Helper function to determine if there is a cycle in the given successors starting from the current successor.
+    Helper function to determine if there is a cycle in the given successors starting from the current successor.
 
-        Args:
-            successor (Node): The current node being examined for cycles.
-            visited (dict): A dictionary to keep track of visited nodes.
-            rec_stack (dict): A dictionary to keep track of nodes in the recursion stack.
-            successors (list): A list of successors to check for cycles.
+    Args:
+        successor (Node): The current node being examined for cycles.
+        visited (dict): A dictionary to keep track of visited nodes.
+        rec_stack (dict): A dictionary to keep track of nodes in the recursion stack.
+        successors (list): A list of successors to check for cycles.
 
-        Returns:
-            bool: True if a cycle is found, False otherwise.
+    Returns
+    -------
+        bool: True if a cycle is found, False otherwise.
     """
-
     visited[successor] = True
     rec_stack[successor] = True
 
@@ -41,13 +42,14 @@ def is_cyclic_until(successor, visited, rec_stack, successors):
 
 def is_cyclic(successors):
     """
-        Determines if there is a cycle in the given successors list.
+    Determines if there is a cycle in the given successors list.
 
-        Args:
-            successors (list): A list of successors to check for cycles.
+    Args:
+        successors (list): A list of successors to check for cycles.
 
-        Returns:
-            bool: True if a cycle is found, False otherwise.
+    Returns
+    -------
+        bool: True if a cycle is found, False otherwise.
     """
     visited = {}
     rec_stack = {}
@@ -60,12 +62,12 @@ def is_cyclic(successors):
 
 def find_distance_bfs(start_node, successors_dist_dict, visited):
     """
-        Helper function to perform a Breadth-First Search (BFS) traversal to calculate the maximum distance for each node.
+    Helper function to perform a Breadth-First Search (BFS) traversal to calculate the maximum distance for each node.
 
-        Args:
-            start_node (Node): The starting node for the BFS traversal.
-            successors_dist_dict (dict): A dictionary that stores the maximum distance for each node.
-            visited (dict): A dictionary to keep track of visited nodes during the traversal.
+    Args:
+        start_node (Node): The starting node for the BFS traversal.
+        successors_dist_dict (dict): A dictionary that stores the maximum distance for each node.
+        visited (dict): A dictionary to keep track of visited nodes during the traversal.
     """
     queue = deque([start_node])
 
@@ -88,14 +90,15 @@ def find_distance_bfs(start_node, successors_dist_dict, visited):
 
 def get_successor_pairs(successors):
     """
-       Calculate the maximum distance from the starting node to each node in the successors list.
+    Calculate the maximum distance from the starting node to each node in the successors list.
 
-       Args:
-           successors (list): A list of successors.
+    Args:
+        successors (list): A list of successors.
 
-       Returns:
-           list: A list of tuples, where each tuple contains a successor node and its maximum distance from the starting node.
-   """
+    Returns
+    -------
+        list: A list of tuples, where each tuple contains a successor node and its maximum distance from the starting node.
+    """
     successors_dist_dict = {}
     for successor in successors:
         successors_dist_dict[successor] = 0
@@ -108,16 +111,17 @@ def get_successor_pairs(successors):
 
 def bfs(start_node, unvisited, ordered_cycle):
     """
-        Perform a Breadth-First Search (BFS) traversal on a graph structure starting
-        from ``start_node``.
+    Perform a Breadth-First Search (BFS) traversal on a graph structure starting
+    from ``start_node``.
 
-        Args:
-            start_node: The starting node for the BFS traversal.
-            unvisited: The notes yet to be visited (N.B. caller's list is modified)
-            ordered_cycle: the BFS ordered nodes (N.B. caller's list is modified)
+    Args:
+        start_node: The starting node for the BFS traversal.
+        unvisited: The notes yet to be visited (N.B. caller's list is modified)
+        ordered_cycle: the BFS ordered nodes (N.B. caller's list is modified)
 
-        Returns:
-            none
+    Returns
+    -------
+        none
     """
     deck = deque([start_node])
 
@@ -132,8 +136,7 @@ def bfs(start_node, unvisited, ordered_cycle):
 
             if is_cyclic(successors):
                 raise OpgeeException(f"Cycle detected in process {current_node} with successors {successors}")
-            else:
-                successors_pairs = get_successor_pairs(successors)
+            successors_pairs = get_successor_pairs(successors)
             successors_pairs.sort(key=lambda x: x[1])
             for successor in successors_pairs:
                 deck.append(successor[0])

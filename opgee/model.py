@@ -6,29 +6,28 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-import pint
 
-from .units import ureg
 from .analysis import Analysis
 from .container import Container
 from .core import elt_name, instantiate_subelts
-from .error import OpgeeException, CommandlineError
+from .error import CommandlineError, OpgeeException
 from .field import Field
 from .log import getLogger
 from .table_manager import TableManager
 from .table_update import TableUpdate
+from .units import ureg
 
 DEFAULT_SCHEMA_VERSION = "4.0.0.a"
 
 _logger = getLogger(__name__)
 
-class Model(Container):
 
+class Model(Container):
     def __init__(self, name, attr_dict=None, table_updates=None):
         super().__init__(name, attr_dict=attr_dict, parent=None)
 
         Model.instance = self
-        self.schema_version = attr_dict.get('schema_version', DEFAULT_SCHEMA_VERSION)
+        self.schema_version = attr_dict.get("schema_version", DEFAULT_SCHEMA_VERSION)
 
         # These are set in from_xml after instantiation
         self.analysis_dict = None
@@ -37,20 +36,22 @@ class Model(Container):
         self.pathnames = None  # set by calling set_pathnames(path)
 
         # parameters controlling process cyclic calculations
-        self.maximum_iterations = self.attr('maximum_iterations')
-        self.maximum_change = self.attr('maximum_change')
+        self.maximum_iterations = self.attr("maximum_iterations")
+        self.maximum_change = self.attr("maximum_change")
 
         self.table_mgr = tbl_mgr = TableManager(updates=table_updates)
 
         # load all the GWP options
-        df = tbl_mgr.get_table('GWP')
+        df = tbl_mgr.get_table("GWP")
 
         self.gwp_horizons = list(df.Years.unique())
         self.gwp_versions = list(df.columns[2:])
-        self.gwp_dict = {y: df.query('Years == @y').set_index('Gas', drop=True).drop('Years', axis='columns') for y in
-                         self.gwp_horizons}
+        self.gwp_dict = {
+            y: df.query("Years == @y").set_index("Gas", drop=True).drop("Years", axis="columns")
+            for y in self.gwp_horizons
+        }
 
-        constants_df = tbl_mgr.get_table('constants')
+        constants_df = tbl_mgr.get_table("constants")
         self.constants = {name: ureg.Quantity(float(row.value), row.unit) for name, row in constants_df.iterrows()}
 
         # TODO: to support PRELIM, we might want a way to handle these that is less model-specific
@@ -102,8 +103,8 @@ class Model(Container):
         self.well_completion_and_workover_C1_rate = tbl_mgr.get_table("well-completion-and-workover-C1-rate")
 
         # parameters controlling process cyclic calculations
-        self.maximum_iterations = self.attr('maximum_iterations')
-        self.maximum_change = self.attr('maximum_change')
+        self.maximum_iterations = self.attr("maximum_iterations")
+        self.maximum_change = self.attr("maximum_change")
 
         self.pathnames = None  # set by calling set_pathnames(path)
         # TBD: apply table updates
@@ -176,8 +177,9 @@ class Model(Container):
 
         model.field_dict = model.adopt(fields, asDict=True)
 
-        analyses = instantiate_subelts(elt, Analysis, parent=model, include_names=analysis_names,
-                                       field_names=field_names)
+        analyses = instantiate_subelts(
+            elt, Analysis, parent=model, include_names=analysis_names, field_names=field_names
+        )
         if analysis_names and not analyses:
             raise CommandlineError(f"Specified analyses {analysis_names} not found in model")
 

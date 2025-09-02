@@ -6,11 +6,11 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..emissions import EM_FUGITIVES
 from ..energy import EN_ELECTRICITY
 from ..log import getLogger
 from ..process import Process
+from ..units import ureg
 
 _logger = getLogger(__name__)
 
@@ -56,8 +56,9 @@ class PreMembraneChiller(Process):
         self.set_iteration_value(gas_to_compressor.total_flow_rate())
 
         delta_temp = input.tp.T - self.outlet_temp
-        energy_consumption = (self.compressor_load * input.total_gas_rate() /
-                              self.feed_stream_mass_rate * delta_temp / self.pressure_drop)
+        energy_consumption = (
+            self.compressor_load * input.total_gas_rate() / self.feed_stream_mass_rate * delta_temp / self.pressure_drop
+        )
 
         # energy-use
         energy_use = self.energy

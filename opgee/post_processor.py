@@ -7,9 +7,11 @@
 #
 import glob
 import os
+
 from .config import getParam
 from .core import OpgeeObject
 from .error import AbstractMethodError, McsUserError
+
 
 class PostProcessor(OpgeeObject):
     """
@@ -56,7 +58,7 @@ class PostProcessor(OpgeeObject):
 
     # List subclass instances in order defined on the command-line
     instances = []
-    
+
     _plugins_loaded: bool = False
 
     def __init__(self):
@@ -64,7 +66,6 @@ class PostProcessor(OpgeeObject):
 
     def run(self, analysis, field, results):
         # to avoid an import cycle, args have no type specs
-
         """
         [Required method to be implemented by subclasses.]
 
@@ -76,7 +77,7 @@ class PostProcessor(OpgeeObject):
           the Field.
         :return: nothing
         """
-        raise AbstractMethodError(self.__class__, 'PostProcessor.run')
+        raise AbstractMethodError(self.__class__, "PostProcessor.run")
 
     def save(self, output_dir):
         """
@@ -118,6 +119,7 @@ class PostProcessor(OpgeeObject):
         """
         import inspect
         import os.path
+
         from .utils import loadModuleFromPath
 
         if not os.path.exists(path):
@@ -130,7 +132,7 @@ class PostProcessor(OpgeeObject):
             # Subclasses import PostProcessor, but we want only proper subclasses, not PostProcessor
             if subcls != PostProcessor and inspect.isclass(subcls) and issubclass(subcls, PostProcessor):
                 # ensure that only one instance of a given class is registered
-                if any((isinstance(inst, subcls) for inst in cls.instances)):
+                if any(isinstance(inst, subcls) for inst in cls.instances):
                     continue
                 instance = subcls()
                 cls.instances.append(instance)
@@ -140,7 +142,7 @@ class PostProcessor(OpgeeObject):
 
     @staticmethod
     def _getPluginDirs():
-        pluginPath = getParam('OPGEE.PostProcPluginPath')
+        pluginPath = getParam("OPGEE.PostProcPluginPath")
         if not pluginPath:
             return []
 
@@ -163,7 +165,7 @@ class PostProcessor(OpgeeObject):
             return
 
         for dir in dirs:
-            files = sorted(glob.glob(os.path.join(dir, '*.py')))
+            files = sorted(glob.glob(os.path.join(dir, "*.py")))
             for file in files:
                 cls.load_plugin(file)
         cls._plugins_loaded = True

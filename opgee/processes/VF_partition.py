@@ -18,6 +18,7 @@ class VFPartition(Process):
     """
     VF (Venting and Flaring) partition is to check the reasonable amount of gas goes to venting, flaring and further process
     """
+
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
 
@@ -72,8 +73,7 @@ class VFPartition(Process):
         volume_rate_gas_slip = temp * (1 - self.combusted_gas_frac)
 
         temp = field.gas.component_gas_rho_STP[volume_rate_gas_combusted.index]
-        mass_rate_gas_combusted =\
-            volume_rate_gas_combusted * temp
+        mass_rate_gas_combusted = volume_rate_gas_combusted * temp
         mass_rate_gas_slip = volume_rate_gas_slip * temp
 
         gas_to_flare = self.find_output_stream("gas for flaring")
@@ -83,7 +83,9 @@ class VFPartition(Process):
         methane_slip = self.find_output_stream("methane slip")
         temp = Stream("temp", tp=input.tp)
         temp.copy_flow_rates_from(input)
-        methane_slip.set_rates_from_series(mass_rate_gas_slip, PHASE_GAS, temp.subtract_rates_from(gas_to_flare, PHASE_GAS))
+        methane_slip.set_rates_from_series(
+            mass_rate_gas_slip, PHASE_GAS, temp.subtract_rates_from(gas_to_flare, PHASE_GAS)
+        )
         methane_slip.set_tp(tp=STP)
 
         output_gas = self.find_output_stream("gas for venting")
