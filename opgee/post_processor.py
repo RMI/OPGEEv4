@@ -7,6 +7,7 @@
 #
 import glob
 import os
+
 from .config import getParam
 from .core import OpgeeObject
 from .error import AbstractMethodError, McsUserError
@@ -65,7 +66,6 @@ class PostProcessor(OpgeeObject):
 
     def run(self, analysis, field, results):
         # to avoid an import cycle, args have no type specs
-
         """
         [Required method to be implemented by subclasses.]
 
@@ -119,6 +119,7 @@ class PostProcessor(OpgeeObject):
         """
         import inspect
         import os.path
+
         from .utils import loadModuleFromPath
 
         if not os.path.exists(path):
@@ -131,7 +132,7 @@ class PostProcessor(OpgeeObject):
             # Subclasses import PostProcessor, but we want only proper subclasses, not PostProcessor
             if subcls != PostProcessor and inspect.isclass(subcls) and issubclass(subcls, PostProcessor):
                 # ensure that only one instance of a given class is registered
-                if any((isinstance(inst, subcls) for inst in cls.instances)):
+                if any(isinstance(inst, subcls) for inst in cls.instances):
                     continue
                 instance = subcls()
                 cls.instances.append(instance)

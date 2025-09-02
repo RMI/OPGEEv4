@@ -118,7 +118,7 @@ def create_process_diagram(field: Field):
     for name, stream in field.stream_dict.items():
         contents = ", ".join(stream.contents)
         procs: tuple[str, str] = stream.src_name, stream.dst_name
-        if not all((field.process_dict[prc].enabled for prc in procs)):
+        if not all(field.process_dict[prc].enabled for prc in procs):
             continue
         src, dst = procs
         graph.add_edge(pydot.Edge(src, dst, color="black", label=contents))

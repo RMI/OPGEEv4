@@ -116,20 +116,18 @@ class Parameter(OpgeeObject):
         elif shape == "Normal":
             if stdev == 0.0:
                 _logger.info(f"* Ignoring distribution on {name}, Normal has stdev = 0")
+            elif low is None or high is None:
+                rv = get_frozen_rv("normal", mean=mean, stdev=stdev)
             else:
-                if low is None or high is None:
-                    rv = get_frozen_rv("normal", mean=mean, stdev=stdev)
-                else:
-                    rv = get_frozen_rv("truncated_normal", mean=mean, stdev=stdev, low=low, high=high)
+                rv = get_frozen_rv("truncated_normal", mean=mean, stdev=stdev, low=low, high=high)
 
         elif shape == "Lognormal":
             if log_stdev == 0.0:
                 _logger.info(f"* Ignoring distribution on {name}, Lognormal has stdev = 0")
+            elif low is None or high is None:  # must specify both low and high
+                rv = get_frozen_rv("lognormal", logmean=log_mean, logstdev=log_stdev)
             else:
-                if low is None or high is None:  # must specify both low and high
-                    rv = get_frozen_rv("lognormal", logmean=log_mean, logstdev=log_stdev)
-                else:
-                    rv = get_frozen_rv("truncated_lognormal", logmean=log_mean, logstdev=log_stdev, low=low, high=high)
+                rv = get_frozen_rv("truncated_lognormal", logmean=log_mean, logstdev=log_stdev, low=low, high=high)
 
         elif shape == "Choice":
             _logger.info("* Choice distribution is not yet supported")

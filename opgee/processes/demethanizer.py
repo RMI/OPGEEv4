@@ -8,16 +8,15 @@
 #
 import pandas as pd
 
-from ..units import ureg
 from ..core import STP, TemperaturePressure
 from ..emissions import EM_FUGITIVES
 from ..energy import EN_ELECTRICITY
 from ..log import getLogger
-from ..process import Process
-from ..process import run_corr_eqns
+from ..process import Process, run_corr_eqns
 from ..stream import PHASE_GAS, Stream
+from ..units import ureg
 from .compressor import Compressor
-from .shared import get_energy_carrier, predict_blower_energy_use, get_bounded_value
+from .shared import get_bounded_value, get_energy_carrier, predict_blower_energy_use
 
 _logger = getLogger(__name__)
 
@@ -29,6 +28,7 @@ class Demethanizer(Process):
     and a heavier hydrocarbon stream (LPG).
 
     Attributes
+    ----------
        feed_press_demethanizer : pint.Quantity
            The pressure of the feed gas entering the demethanizer column.
        column_pressure : pint.Quantity
@@ -57,6 +57,7 @@ class Demethanizer(Process):
            The type of prime mover used in the process.
 
     Methods
+    -------
        run(analysis)
            Simulates the Demethanizer process to separate the incoming gas stream
            into a methane-rich stream and a heavier hydrocarbon stream.
@@ -175,14 +176,14 @@ class Demethanizer(Process):
         NGL_mol_frac = pd.Series(
             {
                 name: max(0, corr_result_df.loc[tbl_name, :].sum())
-                for name, tbl_name in zip(hydrocarbon_label, NGL_label)
+                for name, tbl_name in zip(hydrocarbon_label, NGL_label, strict=False)
             },
             dtype="pint[frac]",
         )
         fuel_gas_mol_frac = pd.Series(
             {
                 name: max(0, corr_result_df.loc[tbl_name, :].sum())
-                for name, tbl_name in zip(hydrocarbon_label, fuel_gas_label)
+                for name, tbl_name in zip(hydrocarbon_label, fuel_gas_label, strict=False)
             },
             dtype="pint[frac]",
         )

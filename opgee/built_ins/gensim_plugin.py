@@ -82,7 +82,7 @@ class GensimCommand(SubcommandABC):
         return parser  # for auto-doc generation
 
     def run(self, args, tool):
-        from ..error import McsUserError, CommandlineError
+        from ..error import CommandlineError, McsUserError
         from ..mcs.simulation import Simulation, read_distributions
 
         use_default_model = not args.no_default_model

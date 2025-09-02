@@ -7,19 +7,20 @@
 # See LICENSE.txt for license details.
 #
 import asyncio
+from itertools import islice, product
+
 import dask
 
 # from dask_jobqueue import SLURMCluster
 from dask.distributed import Client, LocalCluster, as_completed
-from itertools import islice, product
+
+from ..config import getParam, getParamAsBoolean, getParamAsInt
 
 # To debug dask, uncomment the following 2 lines
 # import logging
 # logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
 from ..core import OpgeeObject, Timer
-from ..config import getParam, getParamAsInt, getParamAsBoolean
-from ..error import RemoteError, McsSystemError, TrialErrorWrapper
+from ..error import McsSystemError, RemoteError, TrialErrorWrapper
 from ..log import getLogger, setLogFile
 from .simulation import Simulation, combine_results
 
@@ -53,7 +54,7 @@ _task_count = 0
 
 
 class FieldResult(OpgeeObject):
-    __slots__ = ["ok", "field_name", "packet_num", "duration", "completed", "task_count", "error"]
+    __slots__ = ["completed", "duration", "error", "field_name", "ok", "packet_num", "task_count"]
 
     def __init__(self, field_name, duration, completed, packet_num=None, error=None):
         self.ok = error is None

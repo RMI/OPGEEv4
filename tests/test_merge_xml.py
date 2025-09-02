@@ -1,10 +1,13 @@
-import pytest
 import os
-from lxml import etree as ET
 from tempfile import mkdtemp
-from .utils_for_tests import path_to_test_file
-from opgee.xml_utils import merge_siblings, str_to_xml
+
+import pytest
+from lxml import etree as ET
+
 from opgee.tool import opg
+from opgee.xml_utils import merge_siblings, str_to_xml
+
+from .utils_for_tests import path_to_test_file
 
 
 def assert_same_xml(x1, x2):

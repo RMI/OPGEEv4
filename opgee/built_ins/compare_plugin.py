@@ -3,6 +3,7 @@
 # Usually used to compare with similar output from Excel (OPGEEv3) and here (OPGEEv4).
 #
 from enum import Enum
+
 from opgee.subcommand import SubcommandABC
 
 # Convert OPGEEv3 (Excel) process names to OPGEEv4 names

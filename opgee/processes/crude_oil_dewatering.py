@@ -6,12 +6,12 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..core import TemperaturePressure
 from ..error import OpgeeException
 from ..log import getLogger
 from ..process import Process
 from ..stream import PHASE_LIQUID
+from ..units import ureg
 from .shared import get_energy_carrier
 
 _logger = getLogger(__name__)
@@ -22,7 +22,8 @@ class CrudeOilDewatering(Process):
     A subclass of the Process class that represents a crude oil dewatering process
     in an oil and gas production system.
 
-    Attributes:
+    Attributes
+    ----------
         field (Field): The field associated with the dewatering process.
         heater_treater (bool): Whether a heater treater is used in the process.
         temperature_heater_treater (Quantity): Temperature of the heater treater.

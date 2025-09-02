@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import dash
 from dash import dcc, html
-from dash.dependencies import Input, Output, State, ClientsideFunction
-from ..model_file import ModelFile
-from ..log import getLogger
+from dash.dependencies import ClientsideFunction, Input, Output, State
 
-from .widgets import get_analysis_and_field, horiz_space, pulldown_style, label_style
+from ..log import getLogger
+from ..model_file import ModelFile
+from .widgets import get_analysis_and_field, horiz_space, label_style, pulldown_style
 
 _logger = getLogger(__name__)
 
@@ -24,94 +23,88 @@ def app_layout(app, model, analysis):
     analysis_names = [analysis.name for analysis in model.analyses()]
 
     # noinspection PyCallingNonCallable
-    layout = html.Div(
-        [
-            dcc.Store(id="analysis-and-field", storage_type="session"),
-            # TBD: Experiment to see if client-side function fixes graph resizing problem, per
-            #      https://stackoverflow.com/questions/55462861/dash-dynamic-layout-does-not-propagate-resized-graph-dimensions-until-window-i
-            html.Div(id="output-clientside"),
-            html.Div(
-                [
-                    html.H1(app.title),
-                    html.Div(
-                        [
-                            html.Center(
-                                [
-                                    html.Span("Model: ", style=label_style),
-                                    html.Span(f"{model.pathnames}"),
-                                    horiz_space,
-                                    html.Span("Analysis: ", style=label_style),
-                                    dcc.Dropdown(
-                                        id="analysis-selector",
-                                        placeholder="Select analysis...",
-                                        options=[{"value": name, "label": name} for name in analysis_names],
-                                        value=analysis.name,
-                                        style=pulldown_style,
-                                    ),
-                                    horiz_space,
-                                    html.Span("Field: ", style=label_style),
-                                    dcc.Dropdown(
-                                        id="field-selector",
-                                        placeholder="Select field...",
-                                        options=[{"value": "none", "label": "none"}],
-                                        value="none",
-                                        style=pulldown_style,
-                                    ),
-                                ]
+    layout = html.Div([
+        dcc.Store(id="analysis-and-field", storage_type="session"),
+        # TBD: Experiment to see if client-side function fixes graph resizing problem, per
+        #      https://stackoverflow.com/questions/55462861/dash-dynamic-layout-does-not-propagate-resized-graph-dimensions-until-window-i
+        html.Div(id="output-clientside"),
+        html.Div(
+            [
+                html.H1(app.title),
+                html.Div(
+                    [
+                        html.Center([
+                            html.Span("Model: ", style=label_style),
+                            html.Span(f"{model.pathnames}"),
+                            horiz_space,
+                            html.Span("Analysis: ", style=label_style),
+                            dcc.Dropdown(
+                                id="analysis-selector",
+                                placeholder="Select analysis...",
+                                options=[{"value": name, "label": name} for name in analysis_names],
+                                value=analysis.name,
+                                style=pulldown_style,
                             ),
-                            html.Br(),
-                            html.Button("Run model", id="run-button", n_clicks=0),
-                            dcc.Markdown(id="run-model-status"),
-                        ],
-                        # style = {'height': '130px'}
+                            horiz_space,
+                            html.Span("Field: ", style=label_style),
+                            dcc.Dropdown(
+                                id="field-selector",
+                                placeholder="Select field...",
+                                options=[{"value": "none", "label": "none"}],
+                                value="none",
+                                style=pulldown_style,
+                            ),
+                        ]),
+                        html.Br(),
+                        html.Button("Run model", id="run-button", n_clicks=0),
+                        dcc.Markdown(id="run-model-status"),
+                    ],
+                    # style = {'height': '130px'}
+                ),
+            ],
+            style={"textAlign": "center"},
+        ),
+        html.Div([
+            dcc.Tabs(
+                id="tabs",
+                value="processes",
+                parent_className="custom-tabs",
+                className="custom-tabs-container",
+                children=[
+                    dcc.Tab(
+                        children=[],  # see processes_layout()
+                        label="Processes",
+                        value="processes",
+                        className="custom-tab",
+                        selected_className="custom-tab--selected",
+                    ),
+                    dcc.Tab(
+                        children=[],  # see settings_layout()
+                        label="Settings",
+                        value="settings",
+                        className="custom-tab",
+                        selected_className="custom-tab--selected",
+                    ),
+                    dcc.Tab(
+                        children=[],  # see results_layout()
+                        label="Results",
+                        value="results",
+                        className="custom-tab",
+                        selected_className="custom-tab--selected",
                     ),
                 ],
-                style={"textAlign": "center"},
             ),
-            html.Div(
-                [
-                    dcc.Tabs(
-                        id="tabs",
-                        value="processes",
-                        parent_className="custom-tabs",
-                        className="custom-tabs-container",
-                        children=[
-                            dcc.Tab(
-                                children=[],  # see processes_layout()
-                                label="Processes",
-                                value="processes",
-                                className="custom-tab",
-                                selected_className="custom-tab--selected",
-                            ),
-                            dcc.Tab(
-                                children=[],  # see settings_layout()
-                                label="Settings",
-                                value="settings",
-                                className="custom-tab",
-                                selected_className="custom-tab--selected",
-                            ),
-                            dcc.Tab(
-                                children=[],  # see results_layout()
-                                label="Results",
-                                value="results",
-                                className="custom-tab",
-                                selected_className="custom-tab--selected",
-                            ),
-                        ],
-                    ),
-                    html.Div(id="tab-content"),
-                ]
-            ),
-        ]
-    )
+            html.Div(id="tab-content"),
+        ]),
+    ])
     return layout
 
 
 def main(args):
     from ..version import VERSION
     from .process_pane import ProcessPane
-    from .settings_pane import SettingsPane
     from .results_pane import ResultsPane
+    from .settings_pane import SettingsPane
 
     use_default_model = not args.no_default_model
 
@@ -188,8 +181,7 @@ def main(args):
             field.run(analysis)
             field.report()
             return "Model has been run"
-        else:
-            return "Model has not been run"
+        return "Model has not been run"
 
     @app.callback(
         Output("tab-content", "children"),
@@ -202,10 +194,10 @@ def main(args):
         if tab == "processes":
             return process_pane.get_layout(field)
 
-        elif tab == "settings":
+        if tab == "settings":
             return settings_pane.get_layout(field)
 
-        elif tab == "results":
+        if tab == "results":
             return results_pane.get_layout(field)
 
     # @app.callback(

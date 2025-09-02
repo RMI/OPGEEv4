@@ -5,7 +5,7 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 
-from ..error import OpgeeException, CommandlineError
+from ..error import CommandlineError, OpgeeException
 from ..subcommand import SubcommandABC, clean_help
 
 
@@ -63,7 +63,8 @@ class ConfigCommand(SubcommandABC):
     def run(self, args, tool):
         import re
         import subprocess
-        from ..config import getParam, _ConfigParser, USR_CONFIG_FILE
+
+        from ..config import USR_CONFIG_FILE, _ConfigParser, getParam
 
         if args.edit:
             editor = getParam("OPGEE.TextEditor")

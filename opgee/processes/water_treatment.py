@@ -6,13 +6,13 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..core import TemperaturePressure
 from ..energy import EN_ELECTRICITY
 from ..error import OpgeeException
 from ..import_export import WATER
 from ..log import getLogger
 from ..process import Process
+from ..units import ureg
 
 _logger = getLogger(__name__)
 
@@ -39,12 +39,10 @@ class WaterTreatment(Process):
 
         field = self.field
         if field.steam_flooding:
-            self._required_outputs.extend(
-                [
-                    "makeup water",
-                    "produced water",
-                ]
-            )
+            self._required_outputs.extend([
+                "makeup water",
+                "produced water",
+            ])
 
         if field.water_flooding or field.water_reinjection:
             self._required_outputs.append("water")
@@ -167,11 +165,10 @@ class WaterTreatment(Process):
         prod_water_elec = self.get_water_treatment_elec(self.water_treatment_table, input_water_volume_rate)
         if self.makeup_water_treatment_tbl:
             makeup_water_table = self.water_treatment_table
+        elif self.makeup_water_treatment is None:
+            raise OpgeeException("no makeup water table provided")
         else:
-            if self.makeup_water_treatment is None:
-                raise OpgeeException("no makeup water table provided")
-            else:
-                makeup_water_table = self.makeup_water_treatment
+            makeup_water_table = self.makeup_water_treatment
         makeup_water_elec = self.get_water_treatment_elec(makeup_water_table, makeup_water_vol_downstream)
 
         energy_use_prod, emissions_prod = self.intermediate_results["Produced Water"]

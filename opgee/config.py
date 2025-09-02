@@ -55,7 +55,6 @@ def unixPath(path, abspath=False):
       using the current working directory as the starting point.
     :return: (str) the modified pathname
     """
-
     # Use str values, not Paths
     path = str(path).replace("\\", "/")
 
@@ -205,11 +204,10 @@ def getConfig(reload=False, allowMissing=False, createDefault=False, systemConfi
 def _readConfigResourceFile(filename, package="opgee", raiseError=True):
     try:
         data = getResource(filename, decode="utf-8")
-    except IOError:
+    except OSError:
         if raiseError:
             raise
-        else:
-            return None
+        return None
 
     _ConfigParser.read_string(data, source=filename)
     return data
@@ -299,12 +297,11 @@ def readConfigFiles(allowMissing=False, systemConfigOnly=False):
         try:
             readConfigFile(usrConfigPath)
 
-        except IOError:
+        except OSError:
             if not allowMissing:
                 if not os.path.lexists(usrConfigPath):
                     raise ConfigFileError(f"Missing user config file '{usrConfigPath}'")
-                else:
-                    raise ConfigFileError(f"Can't read user config file '{usrConfigPath}'")
+                raise ConfigFileError(f"Can't read user config file '{usrConfigPath}'")
 
         # Dynamically set (if not defined) OPGEE.ProjectName in each section, holding the
         # section (i.e., project) name. If user has set this, the value is unchanged.
@@ -336,7 +333,6 @@ def getConfigDict(section=DEFAULT_SECTION, raw=False):
     :return: (dict) all variables defined in the section (which includes
        those defined in DEFAULT.)
     """
-
     # Deprecated (docker)
     # Translation function of identity
     # func = _translatePath if _PathMap else lambda x: x
@@ -395,14 +391,12 @@ def getParam(name, section=None, raw=False, raiseError=True):
     except configparser.NoSectionError:
         if raiseError:
             raise OpgeeException(f'getParam: unknown section "{section}"')
-        else:
-            return None
+        return None
 
     except configparser.NoOptionError:
         if raiseError:
             raise OpgeeException(f'getParam: unknown variable "{name}"')
-        else:
-            return None
+        return None
 
     # Deprecated (docker)
     # perform pathname translation for use of opgee.cfg in Docker images
@@ -426,10 +420,9 @@ def stringTrue(value, raiseError=True):
         return False
 
     if raiseError:
-        msg = 'Unrecognized boolean value: "{}". Must one of {}'.format(value, _True + _False)
+        msg = f'Unrecognized boolean value: "{value}". Must one of {_True + _False}'
         raise ConfigFileError(msg)
-    else:
-        return None
+    return None
 
 
 def getParamAsBoolean(name, section=None):
@@ -452,7 +445,7 @@ def getParamAsBoolean(name, section=None):
     result = stringTrue(value, raiseError=False)
 
     if result is None:
-        msg = 'The value of variable "{}", {}, could not converted to boolean.'.format(name, value)
+        msg = f'The value of variable "{name}", {value}, could not converted to boolean.'
         raise ConfigFileError(msg)
 
     return result

@@ -1,7 +1,9 @@
 import pytest
+
 from opgee.process import Process
-from .utils_for_tests import load_test_model
 from opgee.units import ureg
+
+from .utils_for_tests import load_test_model
 
 
 class CopyingProcess(Process):

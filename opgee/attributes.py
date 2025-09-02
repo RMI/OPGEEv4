@@ -10,10 +10,10 @@ from collections import defaultdict
 
 import pandas as pd
 
-from .units import ureg, validate_unit, magnitude
-from .core import OpgeeObject, XmlInstantiable, A, instantiate_subelts, elt_name
+from .core import A, OpgeeObject, XmlInstantiable, elt_name, instantiate_subelts
 from .error import AttributeError, ModelValidationError
 from .log import getLogger
+from .units import magnitude, ureg, validate_unit
 from .utils import coercible
 
 _logger = getLogger(__name__)
@@ -371,7 +371,7 @@ class AttributeMixin:
             values = [attr_dict[attr_name].value for attr_name in attr_names]
 
             if sum(values) not in (0, 1):
-                items = list(zip(attr_names, values))
+                items = list(zip(attr_names, values, strict=False))
                 raise ModelValidationError(f"Exclusive attribute group '{group}' has multiple items selected: {items}")
 
         # Check synchronized groups

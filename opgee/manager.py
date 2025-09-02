@@ -7,28 +7,28 @@
 # Junior University. See LICENSE.txt for license details.
 #
 import asyncio
-import dask
-from dask_jobqueue import SLURMCluster
-from dask.distributed import Client, SubprocessCluster, as_completed
-from glob import glob
 import os
+import re
+from collections.abc import Sequence
+from glob import glob
+
+import dask
 import pandas as pd
 import pint
-import re
-from typing import Sequence
+from dask.distributed import Client, SubprocessCluster, as_completed
+from dask_jobqueue import SLURMCluster
 
-
-from .audit import audit_required, audit_field
+from .audit import audit_field, audit_required
+from .config import getParam, getParamAsBoolean, getParamAsInt, pathjoin
+from .constants import CLUSTER_NONE, DETAILED_RESULT, ERROR_RESULT, SIMPLE_RESULT
 from .core import OpgeeObject, Timer
-from .config import getParam, getParamAsInt, getParamAsBoolean, pathjoin
-from .constants import CLUSTER_NONE, SIMPLE_RESULT, DETAILED_RESULT, ERROR_RESULT
-from .error import McsSystemError, AbstractMethodError
+from .error import AbstractMethodError, McsSystemError
 from .field import FieldResult
 from .log import getLogger, setLogFile
+from .mcs.simulation import FAILURES_CSV, RESULTS_CSV, Simulation
 from .model_file import extract_model
 from .post_processor import PostProcessor
-from .utils import flatten, pushd, mkdirs
-from .mcs.simulation import Simulation, RESULTS_CSV, FAILURES_CSV
+from .utils import flatten, mkdirs, pushd
 
 # To debug dask, uncomment the following 2 lines
 # import logging
@@ -340,7 +340,6 @@ class Manager(OpgeeObject):
             self.stop_cluster()
 
         _logger.info(timer.stop())
-        return None
 
 
 def _run_field(analysis_name, field_name, xml_string, result_type, use_default_model=True):

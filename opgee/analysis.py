@@ -8,7 +8,7 @@ import re
 
 from .config import getParamAsList
 from .container import Container
-from .core import elt_name, OpgeeObject
+from .core import OpgeeObject, elt_name
 from .emissions import Emissions
 from .error import OpgeeException
 from .field import Field
@@ -124,8 +124,7 @@ class Analysis(Container):
         if enabled_only:
             names = [f.name for f in self.fields()]
             return names
-        else:
-            return self._field_names
+        return self._field_names
 
     def first_field(self):
         return self.get_field(self._field_names[0])

@@ -6,7 +6,7 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from typing import Optional, Sequence, Tuple
+from collections.abc import Sequence
 
 from pint.facets.plain import PlainQuantity as Quantity
 
@@ -17,7 +17,7 @@ from opgee.units import ureg
 
 # type aliases
 Q_Float = Quantity[float]
-Q_IntTuple = Tuple[Q_Float, int]
+Q_IntTuple = tuple[Q_Float, int]
 
 
 _power = [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5]
@@ -35,7 +35,7 @@ class Compressor(OpgeeObject):
         gas_stream,
         compression_ratio,
         num_of_compression,
-    ) -> Tuple[Q_Float, Q_Float, Q_Float]:
+    ) -> tuple[Q_Float, Q_Float, Q_Float]:
         """
 
         :param field:
@@ -70,14 +70,14 @@ class Compressor(OpgeeObject):
 
     @staticmethod
     def get_compression_ratio_stages(overall_compression_ratio_stages: Sequence[Q_Float]) -> Sequence[Q_IntTuple]:
-        compression_ratios: map[Optional[Q_IntTuple]] = map(
+        compression_ratios: map[Q_IntTuple | None] = map(
             Compressor.get_compression_ratio_and_stage, overall_compression_ratio_stages
         )
         return [ratio for ratio in compression_ratios if ratio is not None]
 
     @staticmethod
     @ureg.wraps(("frac", None), "frac", strict=False)
-    def get_compression_ratio_and_stage(overall_compression_ratio: float) -> Optional[Q_IntTuple]:
+    def get_compression_ratio_and_stage(overall_compression_ratio: float) -> Q_IntTuple | None:
         max_stages = len(_power)
         for pow in _power:
             comp_raised = overall_compression_ratio**pow
@@ -92,7 +92,7 @@ class Compressor(OpgeeObject):
         eta_compressor,
         overall_compression_ratio,
         inlet_stream: Stream,
-        inlet_tp: Optional[TemperaturePressure] = None,
+        inlet_tp: TemperaturePressure | None = None,
     ):
         """
         Calculate compressor energy consumption

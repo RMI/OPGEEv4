@@ -13,13 +13,13 @@ import pandas as pd
 import pint
 import pint_pandas  # noqa: F401
 
-from .units import ureg, magnitude
 from .attributes import AttributeMixin
-from .core import XmlInstantiable, elt_name, TemperaturePressure
-from .error import OpgeeException, ModelValidationError
+from .core import TemperaturePressure, XmlInstantiable, elt_name
+from .error import ModelValidationError, OpgeeException
 from .log import getLogger
 from .table_manager import TableManager
-from .utils import getBooleanXML, coercible
+from .units import magnitude, ureg
+from .utils import coercible, getBooleanXML
 
 _logger = getLogger(__name__)
 
@@ -321,7 +321,7 @@ class Stream(AttributeMixin, XmlInstantiable):
 
     def total_flow_rate(self):
         """
-        total mass flow rate
+        Total mass flow rate
 
         :return:
         """
@@ -457,7 +457,7 @@ class Stream(AttributeMixin, XmlInstantiable):
 
     def set_rates_from_series(self, series, phase, upper_bound_stream=None):
         """
-        set rates from pandas series given phase given the upper bound stream
+        Set rates from pandas series given phase given the upper bound stream
 
         :param series:
         :param phase:
@@ -535,7 +535,6 @@ class Stream(AttributeMixin, XmlInstantiable):
             the source stream's API is copied.
         :return: none
         """
-
         if stream.is_uninitialized():
             raise OpgeeException(f"Can't copy from uninitialized stream: {stream}")
 
@@ -648,8 +647,7 @@ class Stream(AttributeMixin, XmlInstantiable):
         """
         if regex:
             return any(re.fullmatch(stream_type, name) for name in self.contents)
-        else:
-            return stream_type in self.contents
+        return stream_type in self.contents
 
     @classmethod
     def from_xml(cls, elt, parent=None):

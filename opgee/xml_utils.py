@@ -27,8 +27,8 @@ def str_to_xml(s):
 
 
 def save_xml(path, root, backup=False, overwrite=False):
-    from pathlib import Path
     import os
+    from pathlib import Path
 
     if path:
         p = Path(path)
@@ -51,8 +51,8 @@ def save_xml(path, root, backup=False, overwrite=False):
 
 def _load_opgee_template(template):
     from .config import getParam
-    from .pkg_utils import resourceStream
     from .model_file import XMLFile
+    from .pkg_utils import resourceStream
 
     opgee_xml = getParam("OPGEE.ModelFile")
     base_stream = resourceStream(opgee_xml, stream_type="bytes", decode=None)
@@ -73,8 +73,8 @@ def _find_proc_in_agg(process_name, aggs):
 
 
 def attr_to_xml(fields, dtypes, xml_path, analysis_name, modifies="default"):
-    from lxml import etree as ET
     import numpy as np
+    from lxml import etree as ET
 
     known_types = {"int": int, "float": float, "str": str}
 

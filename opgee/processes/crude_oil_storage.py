@@ -6,12 +6,11 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
-from ..stream import PHASE_GAS
-from ..stream import Stream
+from ..stream import PHASE_GAS, Stream
+from ..units import ureg
 
 _logger = getLogger(__name__)
 
@@ -32,7 +31,8 @@ class CrudeOilStorage(Process):
 
     This process does not use any energy, and only produces emissions from the gas fugitives stream.
 
-    Attributes:
+    Attributes
+    ----------
         field: The `Field` object that this process belongs to.
         oil: The `Oil` object representing the type of crude oil being stored.
         oil_sands_mine: A string representing the name of the oil sands mine, or "None" if there is no mine.

@@ -1,4 +1,5 @@
 import pytest
+
 from opgee.manager import FieldPacket, TrialPacket, _batched
 
 

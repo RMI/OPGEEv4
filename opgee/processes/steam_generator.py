@@ -8,9 +8,9 @@
 #
 import pandas as pd
 
-from ..units import ureg
 from ..core import OpgeeObject
 from ..stream import PHASE_GAS
+from ..units import ureg
 
 
 class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
@@ -117,7 +117,6 @@ class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
         :return: Tuple with fuel consumption for steam generation (MJ/day), mass flow rate in (kg/day),
                  mass flow rate out (kg/day), energy flow rate in (MJ/day), and energy flow rate out (MJ/day)
         """
-
         (
             prod_water_enthalpy_rate,
             makeup_water_enthalpy_rate,
@@ -382,7 +381,7 @@ class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
     @staticmethod
     def get_combustion_comp(coeff_table, gas_comp):
         """
-        calculate reaction gas comp using combustion table and gas comp
+        Calculate reaction gas comp using combustion table and gas comp
 
         :param coeff_table:
         :param gas_comp:
@@ -405,7 +404,6 @@ class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
         :param comp_series_MW: DataFrame, exhaust composition molar weight
         :return: Tuple with LHV fuel series and LHV steam series
         """
-
         LHV_fuel = pd.Series(dtype="pint[joule/gram]")
         LHV_stream = pd.Series(dtype="pint[joule/gram]")
 
@@ -424,7 +422,6 @@ class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
         :param SG_type:
         :return: (float, Pandas.Series) air_requirement_fuel; (float) air_requirement_LHV_fuel (unit = MJ/kg)
         """
-
         liquid_fuel_comp = self.oil.liquid_fuel_composition(self.field.attr("API"))
 
         if SG_type == "OTSG":
@@ -530,17 +527,16 @@ class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
 
         if counter >= max_iter:
             raise ValueError("Maximum number of iterations reached in HRSG inlet combustion calculation")
-        else:
-            HRSG_inlet = HRSG_inlet.drop(labels=["C1"])
+        HRSG_inlet = HRSG_inlet.drop(labels=["C1"])
 
-            return (
-                HRSG_inlet,
-                HRSG_inlet_sum,
-                HRSG_inlet_MW,
-                HRSG_inlet_LHV_fuel,
-                HRSG_inlet_LHV_stream,
-                duct_additional_fuel,
-            )
+        return (
+            HRSG_inlet,
+            HRSG_inlet_sum,
+            HRSG_inlet_MW,
+            HRSG_inlet_LHV_fuel,
+            HRSG_inlet_LHV_stream,
+            duct_additional_fuel,
+        )
 
     def get_water_steam_enthalpy_rate(
         self, prod_water_mass_rate, makeup_water_mass_rate, water_mass_rate_for_injection, blowdown_water_mass_rate
@@ -554,7 +550,6 @@ class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
         :param blowdown_water_mass_rate:
         :return:
         """
-
         prod_water_enthalpy_rate = self.water.enthalpy_PT(
             self.prod_water_inlet_press, self.field.attr("prod_water_inlet_temp"), prod_water_mass_rate
         )
@@ -601,7 +596,6 @@ class SteamGenerator(OpgeeObject):  # N.B. NOT a subclass of Process
         :param SG_type: (str) steam generator type such as "OTSG" and "HRSG"
         :return:
         """
-
         processed_prod_gas_comp = self.processed_prod_gas_comp
         exported_gas_stream = self.field.get_process_data("exported_gas")
         if exported_gas_stream and exported_gas_stream.total_flow_rate().m != 0.0:

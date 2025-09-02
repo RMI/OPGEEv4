@@ -1,7 +1,8 @@
 import pandas as pd
 import pytest
+
 from opgee.core import TemperaturePressure
-from opgee.stream import Stream, PHASE_GAS, PHASE_LIQUID
+from opgee.stream import PHASE_GAS, PHASE_LIQUID, Stream
 from opgee.units import ureg
 
 

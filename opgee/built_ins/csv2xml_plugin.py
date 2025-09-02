@@ -6,8 +6,9 @@
 """
 
 from pathlib import Path
-from ..subcommand import SubcommandABC
+
 from ..log import getLogger
+from ..subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -29,6 +30,7 @@ def read_fields(csv_path, from_package=False, skip_fields=None):
        the type ("str", "int", or "float") of the attribute.
     """
     import pandas as pd
+
     from ..pkg_utils import resourceStream
 
     stream = resourceStream(csv_path) if from_package else csv_path

@@ -1,7 +1,8 @@
 import pytest
-from opgee.units import ureg, magnitude, _undefined_units, validate_unit
-from opgee.core import dict_from_list, XmlInstantiable, A
-from opgee.error import OpgeeException, AbstractMethodError
+
+from opgee.core import A, XmlInstantiable, dict_from_list
+from opgee.error import AbstractMethodError, OpgeeException
+from opgee.units import _undefined_units, magnitude, ureg, validate_unit
 
 
 def test_magnitude_error():

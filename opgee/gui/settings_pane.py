@@ -1,14 +1,14 @@
 from collections import defaultdict
+from pathlib import Path
+
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
-from pathlib import Path
 
 from ..attributes import AttrDefs
 from ..config import getParam
 from ..gui.widgets import attr_inputs
 from ..log import getLogger
 from ..utils import mkdirs
-
 from .widgets import OpgeePane
 
 _logger = getLogger(__name__)
@@ -97,9 +97,8 @@ class SettingsPane(OpgeePane):
         def func(n_clicks, xml_path, *values):
             if n_clicks == 0 or not values or not xml_path:
                 return "Save attributes to an xml file"
-            else:
-                self.save_attributes(xml_path, ids, values, analysis, field)
-                return f"Attributes saved to '{xml_path}'"
+            self.save_attributes(xml_path, ids, values, analysis, field)
+            return f"Attributes saved to '{xml_path}'"
 
         app.callback(
             Output("save-button-status", "children"),
@@ -122,6 +121,7 @@ class SettingsPane(OpgeePane):
         :return: none
         """
         from lxml import etree as ET
+
         from ..units import magnitude
         from ..utils import coercible
 
@@ -130,7 +130,7 @@ class SettingsPane(OpgeePane):
 
         class_value_dict = defaultdict(list)
 
-        for id, value in zip(ids, values):
+        for id, value in zip(ids, values, strict=False):
             class_name, attr_name = id.split(":")
 
             # Don't write out values that are equal to defaults

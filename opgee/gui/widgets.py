@@ -13,7 +13,7 @@ pulldown_style = {"width": "200px", "textAlign": "center", "vertical-align": "mi
 label_style = {"font-weight": "bold"}
 
 
-class OpgeePane(object):
+class OpgeePane:
     def __init__(self, app, model):
         self.app = app
         self.model = model

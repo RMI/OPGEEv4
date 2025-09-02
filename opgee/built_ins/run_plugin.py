@@ -5,9 +5,10 @@
    See the https://opensource.org/licenses/MIT for license details.
 """
 
-from ..subcommand import SubcommandABC
 from opgee.constants import SIMPLE_RESULT
+
 from ..log import getLogger
+from ..subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 
@@ -226,10 +227,10 @@ class RunCommand(SubcommandABC):
     def run(self, args, tool):
         from ..config import setParam
         from ..error import CommandlineError
-        from ..model_file import model_analysis_names, fields_for_analysis
-        from ..manager import Manager, save_results, TrialPacket, FieldPacket
-        from ..utils import parseTrialString, mkdirs
+        from ..manager import FieldPacket, Manager, TrialPacket, save_results
         from ..mcs.simulation import Simulation, model_file_path
+        from ..model_file import fields_for_analysis, model_analysis_names
+        from ..utils import mkdirs, parseTrialString
 
         analysis_names = args.analyses or []
         batch_size = args.batch_size

@@ -6,23 +6,22 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from typing import Union, Optional
 
 import pandas as pd
 import pint
 
-from .units import ureg, magnitude
 from .attributes import AttrDefs, AttributeMixin
 from .combine_streams import combine_streams
 from .config import getParamAsBoolean
 from .container import Container
 from .core import OpgeeObject, XmlInstantiable, elt_name, instantiate_subelts
-from .emissions import Emissions, EM_COMBUSTION
+from .emissions import EM_COMBUSTION, Emissions
 from .energy import EN_ELECTRICITY, Energy
-from .error import OpgeeException, AbstractMethodError, OpgeeIterationConverged, ModelValidationError
+from .error import AbstractMethodError, ModelValidationError, OpgeeException, OpgeeIterationConverged
 from .import_export import ImportExport
 from .log import getLogger
 from .stream import Stream
+from .units import magnitude, ureg
 from .utils import getBooleanXML
 
 _logger = getLogger(__name__)
@@ -51,13 +50,12 @@ def _subclass_dict(superclass):
 
         if prior is None:
             d[name] = cls
-        else:
-            if prior != cls:
-                msg = f"Class '{name}' is defined by both {cls} and {prior}"
-                if allow_redef:
-                    print(msg)
-                else:
-                    raise OpgeeException(msg)
+        elif prior != cls:
+            msg = f"Class '{name}' is defined by both {cls} and {prior}"
+            if allow_redef:
+                print(msg)
+            else:
+                raise OpgeeException(msg)
 
     return d
 
@@ -65,7 +63,7 @@ def _subclass_dict(superclass):
 #
 # Cache of known subclasses of Aggregator and Process
 #
-_Subclass_dict: Optional[dict] = None
+_Subclass_dict: dict | None = None
 
 
 def decache_subclasses():
@@ -136,7 +134,6 @@ def run_corr_eqns(x1, x2, x3, x4, x5, coef_df):
     :param coef_df: (pandas.DataFrame) data values
     :return: pandas.Series
     """
-
     x = pd.Series(
         data=[
             1,
@@ -381,7 +378,7 @@ class Process(AttributeMixin, XmlInstantiable):
         visited = dict()
 
         def _visit(proc):
-            if proc is None or visited.get(id(proc), False):
+            if proc is None or visited.get(id(proc)):
                 return
 
             visited[id(proc)] = proc
@@ -403,7 +400,7 @@ class Process(AttributeMixin, XmlInstantiable):
         visited = dict()
 
         def _visit(proc):
-            if proc is None or visited.get(id(proc), False):
+            if proc is None or visited.get(id(proc)):
                 return
 
             visited[id(proc)] = proc
@@ -517,7 +514,7 @@ class Process(AttributeMixin, XmlInstantiable):
     def set_gas_fugitives(self, stream, loss_rate) -> Stream:
         # TODO: complete this using Jeff's code
         """
-        initialize the gas fugitives stream, get loss rate, copy..
+        Initialize the gas fugitives stream, get loss rate, copy..
 
         :param loss_rate:
         :param stream:
@@ -536,7 +533,8 @@ class Process(AttributeMixin, XmlInstantiable):
         Args:
             inlet_stream: A Stream object representing the inlet stream to the system.
 
-        Returns:
+        Returns
+        -------
             A Quantity object representing the compressor and well loss rate for the given inlet stream.
 
 
@@ -547,7 +545,6 @@ class Process(AttributeMixin, XmlInstantiable):
         compressor, the compressor loss rate is returned, otherwise the well loss rate is returned. The
         result is returned as a Quantity object with units of "frac".
         """
-
         if inlet_stream.total_flow_rate() == 0:
             return ureg.Quantity(0, "frac")
 
@@ -586,7 +583,7 @@ class Process(AttributeMixin, XmlInstantiable):
 
     def _find_streams_by_type(
         self, direction, stream_type, combine=False, as_list=False, regex=False, raiseError=True
-    ) -> Union[Stream, list, dict]:
+    ) -> Stream | list | dict:
         """
         Find the input or output streams (indicated by `direction`) that contain the indicated
         `stream_type`, e.g., 'oil', 'water' and so on.
@@ -614,7 +611,7 @@ class Process(AttributeMixin, XmlInstantiable):
 
     def find_input_streams(
         self, stream_type, combine=False, as_list=False, regex=False, raiseError=True
-    ) -> Union[Stream, list, dict]:
+    ) -> Stream | list | dict:
         """
         Convenience method to call `_find_streams_by_type` with direction "input"
 
@@ -632,7 +629,7 @@ class Process(AttributeMixin, XmlInstantiable):
 
     def find_output_streams(
         self, stream_type, combine=False, as_list=False, regex=False, raiseError=True
-    ) -> Union[Stream, list, dict]:
+    ) -> Stream | list | dict:
         """
         Convenience method to call `_find_streams_by_type` with direction "output"
 
@@ -648,7 +645,7 @@ class Process(AttributeMixin, XmlInstantiable):
             self.OUTPUT, stream_type, regex=regex, combine=combine, as_list=as_list, raiseError=raiseError
         )
 
-    def find_input_stream(self, stream_type, regex=False, raiseError=True) -> Union[Stream, None]:
+    def find_input_stream(self, stream_type, regex=False, raiseError=True) -> Stream | None:
         """
         Find exactly one input stream connected to a downstream Process that produces the indicated
         `stream_type`, e.g., 'oil', 'water' and so on.
@@ -667,7 +664,7 @@ class Process(AttributeMixin, XmlInstantiable):
 
         return streams[0]
 
-    def find_output_stream(self, stream_type, regex=False, raiseError=True) -> Union[Stream, None]:
+    def find_output_stream(self, stream_type, regex=False, raiseError=True) -> Stream | None:
         """
         Find exactly one output stream connected to a downstream Process that consumes the indicated
         `stream_type`, e.g., 'oil', 'water' and so on.
@@ -777,7 +774,9 @@ class Process(AttributeMixin, XmlInstantiable):
                     _logger.debug(f"prior value is {prior_value}")
             else:
                 pairs = (
-                    zip(prior_value, value) if isinstance(value, (tuple, list)) else [(prior_value, value)]
+                    zip(prior_value, value, strict=False)
+                    if isinstance(value, (tuple, list))
+                    else [(prior_value, value)]
                 )  # make a list of the one pair
 
                 if all([converged(old, new) for old, new in pairs]):
@@ -897,7 +896,6 @@ class Process(AttributeMixin, XmlInstantiable):
 
         :return: A dictionary of energy and emission instances or None
         """
-
         return self.intermediate_results
 
     def sum_intermediate_results(self):
@@ -906,7 +904,6 @@ class Process(AttributeMixin, XmlInstantiable):
 
         :return:
         """
-
         if self.intermediate_results is None:
             return
 

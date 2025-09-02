@@ -8,8 +8,9 @@
 """
 
 from pathlib import Path
-from ..subcommand import SubcommandABC
+
 from ..log import getLogger
+from ..subcommand import SubcommandABC
 
 _logger = getLogger(__name__)
 

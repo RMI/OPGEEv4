@@ -10,7 +10,6 @@ import pandas as pd
 import pint
 
 from .core import OpgeeObject
-from .error import OpgeeException
 from .energy import (
     EN_CRUDE_OIL,
     EN_DIESEL,
@@ -21,6 +20,7 @@ from .energy import (
     EN_RESID,
     EN_UPG_PROC_GAS,
 )
+from .error import OpgeeException
 from .log import getLogger
 
 _logger = getLogger(__name__)

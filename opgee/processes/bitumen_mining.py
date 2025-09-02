@@ -6,14 +6,14 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..core import TemperaturePressure
 from ..emissions import EM_FUGITIVES
-from ..energy import EN_NATURAL_GAS, EN_ELECTRICITY, EN_DIESEL
+from ..energy import EN_DIESEL, EN_ELECTRICITY, EN_NATURAL_GAS
+from ..error import OpgeeException
 from ..log import getLogger
 from ..process import Process
 from ..stream import Stream
-from ..error import OpgeeException
+from ..units import ureg
 
 _logger = getLogger(__name__)
 
@@ -31,7 +31,8 @@ class BitumenMining(Process):
         - Bitumen stream for upgrading or dilution
         - Gas stream for partition
 
-    Attributes:
+    Attributes
+    ----------
         - oil_sands_mine: Name of the oil sands mine
         - API_bitumen: API gravity of the bitumen
         - bitumen_SG: Specific gravity of the bitumen

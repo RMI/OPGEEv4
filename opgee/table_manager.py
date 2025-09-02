@@ -18,7 +18,7 @@ from .pkg_utils import resourceStream
 _logger = getLogger(__name__)
 
 
-class TableDef(object):
+class TableDef:
     """
     Holds meta-data for built-in tables (CSV files loaded into `pandas.DataFrames`).
     """
@@ -99,8 +99,7 @@ class TableManager(OpgeeObject):
             except KeyError:
                 if raiseError:
                     raise OpgeeException(f"Unknown table '{name}'")
-                else:
-                    return None
+                return None
 
             relpath = f"tables/{name}.csv"
             s = resourceStream(relpath, stream_type="text")

@@ -1,5 +1,6 @@
 from io import StringIO
-from opgee.built_ins.compare_plugin import compare, ComparisonStatus
+
+from opgee.built_ins.compare_plugin import ComparisonStatus, compare
 
 results1 = """
 process,field_1,field_2,foobar,bumble

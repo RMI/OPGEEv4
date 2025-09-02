@@ -18,7 +18,7 @@
 import logging
 import os
 
-from .config import getParam, getParamAsBoolean, configLoaded
+from .config import configLoaded, getParam, getParamAsBoolean
 
 PKGNAME = __name__.split(".")[0]
 
@@ -214,7 +214,7 @@ def configureLogs(force=False):
 
     # Next do all the implicit ones, setting their log levels
     # to their parent log levels and setting propagate to False.
-    for name in _Loggers.keys():
+    for name in _Loggers:
         if name not in explicit:
             _configureLogger(name, force=force)
 

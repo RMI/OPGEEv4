@@ -6,12 +6,13 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-import pint
-import time
 import datetime
+import time
 
+import pint
+
+from .error import AbstractMethodError, ModelValidationError, OpgeeException
 from .units import ureg, validate_unit
-from .error import OpgeeException, AbstractMethodError, ModelValidationError
 from .utils import coercible, getBooleanXML
 
 
@@ -52,8 +53,7 @@ def instantiate_subelts(elt, cls, parent=None, as_dict=False, include_names=None
     if as_dict:
         d = {obj.name: obj for obj in objs}
         return d
-    else:
-        return objs
+    return objs
 
 
 def dict_from_list(objs):
@@ -243,8 +243,7 @@ class A(OpgeeObject):
             if value.units == unit_obj:
                 self.value = value
                 return value
-            else:
-                value = value.magnitude
+            value = value.magnitude
 
         if self.pytype:
             value = coercible(value, self.pytype)
@@ -275,7 +274,7 @@ class TemperaturePressure(OpgeeObject):
     Stores temperature and pressure together for convenience.
     """
 
-    __slots__ = ("T", "P")  # keeps instances small and fast
+    __slots__ = ("P", "T")  # keeps instances small and fast
 
     def __init__(self, T, P):
         self.T = None

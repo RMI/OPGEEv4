@@ -1,4 +1,5 @@
 from opgee.units import ureg
+
 from .utils_for_tests import load_model_from_str
 
 template = """<?xml version='1.0' encoding='UTF-8'?>
@@ -40,11 +41,11 @@ def test_model_1(configure_logging_for_tests):
     model = model_for_country("USA")
     field = model.get_field("test")
     T = field.attr("prod_water_inlet_temp")
-    assert T == ureg.Quantity(140, "degF")
+    assert ureg.Quantity(140, "degF") == T
 
 
 def test_model_2(configure_logging_for_tests):
     model = model_for_country("Canada")
     field = model.get_field("test")
     T = field.attr("prod_water_inlet_temp")
-    assert T == ureg.Quantity(340, "degF")
+    assert ureg.Quantity(340, "degF") == T

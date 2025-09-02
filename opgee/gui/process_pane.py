@@ -1,11 +1,12 @@
-from dash import dcc, html, dash_table
-import dash_cytoscape as cyto
-from dash.dependencies import Input, Output, State
 from textwrap import dedent as d
+
+import dash_cytoscape as cyto
+from dash import dash_table, dcc, html
+from dash.dependencies import Input, Output, State
 
 from ..core import name_of
 from ..log import getLogger
-from .widgets import get_analysis_and_field, gui_switches, OpgeePane
+from .widgets import OpgeePane, get_analysis_and_field, gui_switches
 
 _logger = getLogger(__name__)
 
@@ -154,8 +155,7 @@ class ProcessPane(OpgeePane):
                         intermediate_str += f"\n\n{key}:\n{em_str}\n{en_str}"
 
                 return header + emissions_str + energy_str + intermediate_str
-            else:
-                return ""
+            return ""
 
         @app.callback(
             Output("stream-data", "children"),
@@ -234,8 +234,7 @@ def field_network_graph(field, show_stream_contents=False, show_disabled_procs=F
     def edge_class(stream):
         if stream.enabled and stream.dst_proc.enabled and stream.src_proc.enabled:
             return "enabled-edge"
-        else:
-            return "disabled-edge"
+        return "disabled-edge"
 
     def node_class(proc):
         return "disabled-node" if not proc.enabled else ("boundary-node" if proc.boundary else "enabled-node")
@@ -349,6 +348,7 @@ def field_network_graph(field, show_stream_contents=False, show_disabled_procs=F
 
 def emissions_table(analysis, procs):
     import pandas as pd
+
     from ..emissions import Emissions
 
     columns = [{"name": "Name", "id": "Name"}] + [{"name": col, "id": col} for col in Emissions.categories]
@@ -369,7 +369,7 @@ def emissions_table(analysis, procs):
     # convert to scientific notation
     for col_name, col in df.iteritems():
         if col.dtype == float:
-            df[col_name] = col.apply(lambda x: "{:.2E}".format(x))
+            df[col_name] = col.apply(lambda x: f"{x:.2E}")
 
     data = df.to_dict("records")
 

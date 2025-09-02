@@ -1,14 +1,15 @@
 from contextlib import contextmanager
 from io import StringIO
-from opgee.config import pathjoin, getParam, setParam, readConfigFile
+
+from opgee.config import getParam, pathjoin, readConfigFile, setParam
 from opgee.model_file import ModelFile
 from opgee.process import Process
 
 
 @contextmanager
 def tempdir():
-    import tempfile
     import shutil
+    import tempfile
 
     d = tempfile.mkdtemp()
     try:
@@ -87,8 +88,8 @@ def tmpdir(*args):
 
 @contextmanager
 def tempdir():
-    import tempfile
     import shutil
+    import tempfile
 
     d = tempfile.mkdtemp()
     try:

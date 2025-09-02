@@ -1,5 +1,5 @@
+from opgee.import_export import ELECTRICITY, NATURAL_GAS, ImportExport
 from opgee.units import ureg
-from opgee.import_export import ImportExport, ELECTRICITY, NATURAL_GAS
 
 
 def test_import():

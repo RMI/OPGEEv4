@@ -8,19 +8,19 @@
 #
 import json
 import os
-import pandas as pd
 import traceback
 
+import pandas as pd
+
 from ..config import pathjoin
-from ..constants import SIMPLE_RESULT, ERROR_RESULT
+from ..constants import ERROR_RESULT, SIMPLE_RESULT
 from ..core import OpgeeObject, split_attr_name
-from ..error import OpgeeException, McsSystemError, McsUserError, CommandlineError
+from ..error import CommandlineError, McsSystemError, McsUserError, OpgeeException
 from ..field import FieldResult
 from ..log import getLogger
 from ..model_file import ModelFile
 from ..pkg_utils import resourceStream
 from ..utils import mkdirs, removeTree
-
 from .distro import get_frozen_rv
 from .LHS import lhs
 
@@ -283,7 +283,7 @@ class Simulation(OpgeeObject):
     def _load_meta_data(self, field_names):
         metadata_path = self.metadata_path()
         try:
-            with open(metadata_path, "r") as fp:
+            with open(metadata_path) as fp:
                 self.metadata = metadata = json.load(fp)
         except Exception as e:
             raise McsUserError(f"Failed to load simulation '{metadata_path}' : {e}")

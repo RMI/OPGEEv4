@@ -1,9 +1,8 @@
 from opgee.analysis import Analysis
 from opgee.core import A
 from opgee.field import Field
-from opgee.mcs.simulation import Simulation
+from opgee.mcs.simulation import Distribution, Simulation
 from opgee.smart_defaults import SmartDefault
-from opgee.mcs.simulation import Distribution
 
 
 @SmartDefault.register("TEST_abcdef", ["TEST_foo", "TEST_bar"])

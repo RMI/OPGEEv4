@@ -14,9 +14,9 @@ import os
 import re
 
 import numpy as np
-from scipy.stats import lognorm, triang, uniform, norm, rv_discrete, truncnorm
+from scipy.stats import lognorm, norm, rv_discrete, triang, truncnorm, uniform
 
-from ..error import OpgeeException, DistributionSpecError, McsUserError
+from ..error import DistributionSpecError, McsUserError, OpgeeException
 from ..log import getLogger
 from ..pkg_utils import resourceStream
 
@@ -310,7 +310,7 @@ class Empirical:
         cls.file_cache.clear()
 
 
-class GridRV(object):
+class GridRV:
     """
     Return an object that behaves like an RV in that it returns N values when
     when requested via the ppf (percent point function), though the N values are
@@ -340,7 +340,7 @@ class GridRV(object):
         return tiled
 
 
-class linkedDistro(object):
+class linkedDistro:
     def __init__(self, parameter):
         """Linked to (i.e., shares RV data with) `withParameter`"""
         self.parameter = parameter
@@ -360,7 +360,7 @@ class linkedDistro(object):
         return self.trialData[self.parameter]  # TBD: return as an ndarray
 
 
-class DistroGen(object):
+class DistroGen:
     """
     Stores information required to generate a Distro instance from an argDict
     """

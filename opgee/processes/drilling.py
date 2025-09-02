@@ -8,12 +8,12 @@
 #
 import numpy as np
 
-from ..units import ureg
 from ..emissions import EM_LAND_USE
 from ..energy import EN_DIESEL
 from ..log import getLogger
 from ..process import Process
 from ..stream import Stream
+from ..units import ureg
 
 _logger = getLogger(__name__)
 
@@ -23,6 +23,7 @@ class Drilling(Process):
         A class representing the drilling process in a field.
 
     Attributes
+    ----------
         fraction_wells_fractured : float
             The fraction of wells that are fractured.
         fracture_consumption_tbl : pandas.DataFrame
@@ -125,7 +126,6 @@ class Drilling(Process):
 
         :return:Array list of const [a, b, c]
         """
-
         value = self.pressure_gradient_fracturing
         tbl = self.fracture_consumption_tbl
         result = [np.interp(value.m, tbl[col].index, tbl[col].values) for col in ["a", "b", "c"]]

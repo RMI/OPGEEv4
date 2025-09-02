@@ -1,7 +1,9 @@
 import pytest
 from lxml import etree
-from opgee.XMLFile import XMLFile
+
 from opgee.error import XmlFormatError
+from opgee.XMLFile import XMLFile
+
 from .utils_for_tests import path_to_test_file
 
 

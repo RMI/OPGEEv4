@@ -6,13 +6,13 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from .compressor import Compressor
-from .shared import get_energy_carrier
 from ..core import TemperaturePressure
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
-from ..stream import Stream, PHASE_LIQUID, PHASE_GAS
+from ..stream import PHASE_GAS, PHASE_LIQUID, Stream
+from .compressor import Compressor
+from .shared import get_energy_carrier
 
 _logger = getLogger(__name__)
 
@@ -23,7 +23,8 @@ class CrudeOilStabilization(Process):
     This class handles the stabilization of oil by removing gas, managing energy use, and calculating emissions associated
     with the stabilization process.
 
-    Attributes:
+    Attributes
+    ----------
         field (Field): The field associated with the stabilization process.
         stab_tp (TemperaturePressure): The temperature and pressure of the stabilizer column.
         mol_per_scf (float): The number of moles per standard cubic feet.

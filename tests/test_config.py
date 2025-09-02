@@ -1,19 +1,22 @@
 import os
+
 import pytest
+
 from opgee.config import (
-    unixPath,
-    getHomeDir,
-    pathjoin,
+    USR_CONFIG_FILE,
     getConfig,
+    getHomeDir,
     getParam,
     getParamAsBoolean,
-    getParamAsInt,
     getParamAsFloat,
+    getParamAsInt,
+    pathjoin,
     setSection,
-    USR_CONFIG_FILE,
     stringTrue,
+    unixPath,
 )
-from opgee.error import OpgeeException, ConfigFileError
+from opgee.error import ConfigFileError, OpgeeException
+
 from .utils_for_tests import load_config_from_string
 
 

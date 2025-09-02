@@ -1,12 +1,12 @@
 import os
 from pathlib import Path
 from unittest.mock import patch
-import pytest
 
 import pandas as pd
+import pytest
 
 from opgee.audit import AuditRow, _generate_field_audit_report, audit_field
-from opgee.config import setParam, getConfig
+from opgee.config import getConfig, setParam
 from opgee.error import OpgeeException
 from opgee.model_file import ModelFile
 from tests.utils_for_tests import path_to_test_file
@@ -18,7 +18,7 @@ def audit_model_file(configure_logging_for_tests):
 
     mf = ModelFile(model_path, use_default_model=True)
 
-    yield mf
+    return mf
 
 
 def find_audit_row(report_data: list[AuditRow], attr_name: str) -> AuditRow:
@@ -30,7 +30,6 @@ def find_audit_row(report_data: list[AuditRow], attr_name: str) -> AuditRow:
 
 def test_audit_source_input(audit_model_file: ModelFile):
     """Verify explicitly set attributes have source='input'."""
-
     model = audit_model_file.model
     field = model.get_field("audit-field")
 

@@ -1,17 +1,19 @@
-from glob import glob
 import os
+from glob import glob
+
 import pytest
-from opgee.config import setParam, pathjoin
+
+from opgee.config import pathjoin, setParam
 from opgee.error import CommandlineError
 from opgee.post_processor import PostProcessor
 from opgee.tool import opg
+
 from .utils_for_tests import path_to_test_file, tempdir
 
 
 @pytest.fixture(autouse=True)
 def decache_post_plugins():
     PostProcessor.decache()
-    yield
 
 
 def test_missing_output_dir(opgee_main):

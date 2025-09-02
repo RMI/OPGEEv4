@@ -8,10 +8,10 @@
 #
 import pandas as pd
 
-from ..units import ureg
 from ..core import OpgeeObject
-from ..error import OpgeeException
 from ..energy import EN_DIESEL
+from ..error import OpgeeException
+from ..units import ureg
 
 
 class TransportEnergy(OpgeeObject):
@@ -151,7 +151,6 @@ class TransportEnergy(OpgeeObject):
         :param parameter_table: DataFrame with transport parameters
         :return: Energy intensity for ocean tankers from origin to destination (unit: btu/tonne/mile)
         """
-
         field = self.field
 
         parameter_dict = TransportEnergy.get_parameter_dict(parameter_table)
@@ -200,7 +199,6 @@ class TransportEnergy(OpgeeObject):
         :param hp: (pint.Quantity, optional) Horsepower of the transport, required for energy consumption calculation.
         :return: (float) Transport energy intensity.
         """
-
         residual_oil_LHV = self.residual_oil_LHV
         residual_oil_density = self.residual_oil_density
 

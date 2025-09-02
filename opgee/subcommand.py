@@ -14,7 +14,7 @@ def clean_help(s):
     return " ".join(map(lambda s: s.strip(), lines))
 
 
-class SubcommandABC(object):
+class SubcommandABC:
     """
     Abstract base class for sub-commands. Defines the protocol expected by ``gt``
     for defining sub-commands. Plugin files should be named ``'*_plugin.py'`` and must

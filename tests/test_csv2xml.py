@@ -1,6 +1,8 @@
 import os
-from opgee.tool import opg
+
 from opgee.model_file import ModelFile
+from opgee.tool import opg
+
 from .utils_for_tests import path_to_test_file, tempdir
 
 

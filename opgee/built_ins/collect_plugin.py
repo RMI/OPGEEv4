@@ -50,7 +50,7 @@ class CollectCommand(SubcommandABC):
         return parser  # for auto-doc generation
 
     def run(self, args, tool):
-        from ..manager import combine_mcs_results, combine_field_results
+        from ..manager import combine_field_results, combine_mcs_results
 
         if args.sim_dir:
             combine_mcs_results(args.sim_dir, args.fields, args.delete)

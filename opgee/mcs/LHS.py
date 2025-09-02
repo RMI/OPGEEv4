@@ -15,8 +15,8 @@
 # Heavily modified from http://nullege.com/codes/show/src@m@o@model-builder-HEAD@Bayes@lhs.py
 #
 import numpy as np
-from scipy import stats
 from pandas import DataFrame
+from scipy import stats
 
 from ..log import getLogger
 

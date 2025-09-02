@@ -1,6 +1,7 @@
 import pytest
+
 from opgee.error import OpgeeException
-from opgee.stream import molecule_to_carbon, carbon_to_molecule
+from opgee.stream import carbon_to_molecule, molecule_to_carbon
 
 parameterize_args = ["c_name, m_name", [("C1", "CH4"), ("C2", "C2H6"), ("C5", "C5H12")]]
 

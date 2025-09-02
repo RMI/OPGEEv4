@@ -1,10 +1,11 @@
 import pandas as pd
 import pytest
-from opgee.units import ureg
-from opgee.energy import EN_NATURAL_GAS, EN_CRUDE_OIL
+
 from opgee.emissions import EM_FLARING
+from opgee.energy import EN_CRUDE_OIL, EN_NATURAL_GAS
 from opgee.error import OpgeeException, ZeroEnergyFlowError
-from opgee.process import Process, _get_subclass, Reservoir
+from opgee.process import Process, Reservoir, _get_subclass
+from opgee.units import ureg
 
 
 class NotProcess:
@@ -38,7 +39,7 @@ def test_set_emission_rates(test_model_with_change):
     df = procA.get_emission_rates(analysis)
     rates = df[EM_FLARING]
 
-    assert rates.N2O == rate_n2o and rates.CH4 == rate_ch4 and rates.CO2 == rate_co2
+    assert rate_n2o == rates.N2O and rate_ch4 == rates.CH4 and rate_co2 == rates.CO2
 
 
 def test_add_energy_rates(test_model_with_change):
@@ -702,7 +703,7 @@ def test_WaterTreatment(test_model):
 
 # TODO: RP created this test. Wennan should improve it!
 def test_CrudeOilTransport():
-    from .utils_for_tests import path_to_test_file, load_test_model
+    from .utils_for_tests import load_test_model, path_to_test_file
 
     model2 = load_test_model("test_model2.xml", class_path=path_to_test_file("user_processes.py"))
 

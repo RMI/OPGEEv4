@@ -12,7 +12,7 @@ from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
 from ..processes.compressor import Compressor
-from ..stream import Stream, PHASE_GAS
+from ..stream import PHASE_GAS, Stream
 from .shared import get_energy_carrier, get_energy_consumption_stages
 
 _logger = getLogger(__name__)
@@ -233,7 +233,6 @@ class Separation(Process):
         :param gas_compression_volume_stages: (float) a list contains gas compression volume for each stages
         :return: (float) compresssor brake horsepower for each stages
         """
-
         temperature_of_stages, pressure_of_stages = self.get_stages_temperature_and_pressure()
 
         overall_compression_ratio_stages = [
@@ -243,7 +242,11 @@ class Separation(Process):
 
         brake_horsepower_of_stages = []
         for inlet_temp, inlet_press, (compression_ratio, num_of_compression), gas_compression_volume in zip(
-            temperature_of_stages, pressure_of_stages, compression_ratio_per_stages, gas_compression_volume_stages
+            temperature_of_stages,
+            pressure_of_stages,
+            compression_ratio_per_stages,
+            gas_compression_volume_stages,
+            strict=False,
         ):
             work_sum, _, _ = Compressor.get_compressor_work_temp(
                 field, inlet_temp, inlet_press, gas_stream, compression_ratio, num_of_compression

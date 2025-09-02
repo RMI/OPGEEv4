@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from opgee.process import Process, _subclass_dict
 
 N = 1000

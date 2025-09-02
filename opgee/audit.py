@@ -1,7 +1,7 @@
 """Provides functionality for auditing the source of field attribute values."""
 
 from enum import Flag, auto
-from typing import Literal, TypeGuard, TypedDict
+from typing import Literal, TypedDict, TypeGuard
 
 from lxml import etree
 from pint import Quantity
@@ -56,8 +56,7 @@ def audit_required(audit_level: str | None):
 
     if _audit_level == "none":
         return False
-    else:
-        return True
+    return True
 
 
 def _is_audit_level_str(level: str) -> TypeGuard[AuditLevelStr]:
@@ -70,12 +69,11 @@ def _translate_audit_level(
     _level = str(level).strip().lower()
     if _level == "all":
         return AuditFlag.ALL
-    elif _level == "field":
+    if _level == "field":
         return AuditFlag.FIELD
-    elif _level == "processes":
+    if _level == "processes":
         return AuditFlag.PROCESSES
-    else:
-        return AuditFlag.NONE
+    return AuditFlag.NONE
 
 
 def _generate_field_audit_report(field: Field, original_field_element: etree._Element) -> list[AuditRow]:

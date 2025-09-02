@@ -8,16 +8,16 @@
 #
 import math
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pint
 from pyXSteam.XSteam import XSteam
 from thermosteam import Chemical, IdealMixture
 
-from .units import ureg
-from .core import OpgeeObject, STP, TemperaturePressure
+from .core import STP, OpgeeObject, TemperaturePressure
 from .error import ModelValidationError
 from .stream import PHASE_GAS, PHASE_LIQUID, PHASE_SOLID, Stream
+from .units import ureg
 
 
 class ChemicalInfo(OpgeeObject):
@@ -143,7 +143,7 @@ def Cp(component, kelvin, with_units=True):
 #           return chemical.H('g', T=temp_K)
 def Enthalpy(component, kelvin, phase=PHASE_GAS, with_units=True):
     """
-    calculate enthalpy of component given temperature and phase
+    Calculate enthalpy of component given temperature and phase
 
     :param phase:
     :param component:
@@ -379,7 +379,6 @@ class Oil(AbstractSubstance):
 
         :return: (float) gas specific gravity (unit = fraction)
         """
-
         gas_SG = self.total_molar_weight / self.dry_air.mol_weight
         return gas_SG.to("frac")
 
@@ -416,7 +415,6 @@ class Oil(AbstractSubstance):
         :param SG:
         :return:
         """
-
         SG = SG.to("frac").m if isinstance(SG, pint.Quantity) else SG
         result = 141.5 / SG - 131.5
         return ureg.Quantity(result, "degAPI")
@@ -581,7 +579,7 @@ class Oil(AbstractSubstance):
 
     def formation_volume_factor(self, stream, oil_specific_gravity, gas_specific_gravity, gas_oil_ratio):
         """
-        the formation volume factor is defined as the ratio of the volume of oil (plus the gas in solution)
+        The formation volume factor is defined as the ratio of the volume of oil (plus the gas in solution)
         at the prevailing reservoir temperature and pressure to the volume of oil at standard conditions
 
         :return:(float) final formation volume factor (unit = fraction)
@@ -590,7 +588,7 @@ class Oil(AbstractSubstance):
 
         result = (
             self.saturated_formation_volume_factor(stream, oil_specific_gravity, gas_specific_gravity, gas_oil_ratio)
-            if stream.tp.P < p_bubblepoint
+            if p_bubblepoint > stream.tp.P
             else self.unsat_formation_volume_factor(stream, oil_specific_gravity, gas_specific_gravity, gas_oil_ratio)
         )
         return result
@@ -627,7 +625,6 @@ class Oil(AbstractSubstance):
 
         :return:(float) oil volume flow rate (unit = bbl/day)
         """
-
         mass_flow_rate = stream.liquid_flow_rate("oil")
         density = self.density(stream, oil_specific_gravity, gas_specific_gravity, gas_oil_ratio)
 
@@ -711,7 +708,7 @@ class Oil(AbstractSubstance):
     @staticmethod
     def liquid_fuel_composition(API):
         """
-        calculate Carbon, Hydrogen, Sulfur, Nitrogen mol per crude oil
+        Calculate Carbon, Hydrogen, Sulfur, Nitrogen mol per crude oil
         reference: Fuel Specs, Table Crude oil chemical composition
 
         :return:(float) liquid fuel composition (unit = mol/kg)
@@ -766,14 +763,13 @@ class Gas(AbstractSubstance):
 
     def molar_flow_rate(self, stream, name):
         """
-        get molar flow rate from stream
+        Get molar flow rate from stream
 
         :param stream:
         :param name:
 
         :return: (float) molar flow rate (unit = mol/day)
         """
-
         mass_flow_rate = stream.gas_flow_rate(name)
         molar_flow_rate = (mass_flow_rate / self.component_MW[name]).to("mol/day")
 
@@ -781,14 +777,13 @@ class Gas(AbstractSubstance):
 
     def molar_flow_rates(self, stream):
         """
-        get molar flow rate from stream
+        Get molar flow rate from stream
 
         :param stream:
         :param name:
 
         :return: (float) molar flow rate (unit = mol/day)
         """
-
         return pd.Series({name: self.molar_flow_rate(stream, name) for name in stream.component_names})
 
     def component_molar_fraction(self, name, stream):
@@ -815,7 +810,6 @@ class Gas(AbstractSubstance):
 
         :return:(float) Panda Series component molar fractions
         """
-
         total_molar_flow_rate = self.total_molar_flow_rate(stream)
         gas_flow_rates = stream.gas_flow_rates(index)
 
@@ -833,7 +827,7 @@ class Gas(AbstractSubstance):
 
     def component_mass_fractions(self, molar_fracs):
         """
-        generate mass fractions from molar fractions
+        Generate mass fractions from molar fractions
 
         :param molar_fracs:
 
@@ -994,7 +988,8 @@ class Gas(AbstractSubstance):
             reduced_temperature (pint.Quantity): Reduced temperature as a Pint Quantity object, defined as T/Tc (ratio of temperature to critical temperature).
             reduced_pressure (pint.Quantity): Reduced pressure as a Pint Quantity object, defined as P/Pc (ratio of pressure to critical pressure).
 
-        Returns:
+        Returns
+        -------
             pint.Quantity: Compressibility factor (Z) as a Pint Quantity object (dimensionless fraction) for the given reduced temperature and reduced pressure.
 
         """
@@ -1031,7 +1026,6 @@ class Gas(AbstractSubstance):
 
         :return:
         """
-
         z_factor = self.Z_factor(self.reduced_temperature(stream), self.reduced_pressure(stream))
         stream_T = stream.tp.T.to("rankine")
         stream_P = stream.tp.P
@@ -1154,7 +1148,7 @@ class Gas(AbstractSubstance):
 
     def mass_energy_density_from_molar_fracs(self, molar_fracs):
         """
-        calculate gas mass energy density from series
+        Calculate gas mass energy density from series
 
         :param molar_fracs:
         :return: (float) gas mass energy density (unit = MJ/kg)
@@ -1170,14 +1164,13 @@ class Gas(AbstractSubstance):
     @staticmethod
     def combustion_enthalpy(molar_fracs, temperature, phase):
         """
-        calculate OTSG/HRSG combustion enthalpy
+        Calculate OTSG/HRSG combustion enthalpy
 
         :param molar_fracs:
         :param temperature:
 
         :return:
         """
-
         enthalpy = pd.Series(
             {name: Enthalpy(name, temperature, phase=phase, with_units=False) for name in molar_fracs.index},
             dtype="pint[joule/mole]",
@@ -1248,11 +1241,10 @@ class Water(AbstractSubstance):
 
     def density(self, temperature=None, pressure=None):
         """
-        water density
+        Water density
 
         :return: (float) water density (unit = kg/m3)
         """
-
         temp = temperature if temperature is not None else self.model.const("std-temperature")
         press = pressure if pressure is not None else self.model.const("std-pressure")
 
@@ -1308,13 +1300,12 @@ class Water(AbstractSubstance):
     @staticmethod
     def saturated_temperature(saturated_pressure):
         """
-        calculate water saturated temperature given the saturated pressure
+        Calculate water saturated temperature given the saturated pressure
 
         :param saturated_pressure:
 
         :return: (float) water saturated temperature (unit = degF)
         """
-
         psat = saturated_pressure.to("Pa").m
         saturated_temp = Tsat("H2O", psat, with_units=True)
 
@@ -1322,7 +1313,7 @@ class Water(AbstractSubstance):
 
     def enthalpy_PT(self, pressure, temperature, mass_rate):
         """
-        calculate water enthalpy given pressure and temperature
+        Calculate water enthalpy given pressure and temperature
 
         :param pressure:
         :param temperature:
@@ -1343,7 +1334,7 @@ class Water(AbstractSubstance):
 
     def steam_enthalpy(self, pressure, steam_quality, mass_rate):
         """
-        calculate steam enthalpy from steam quality
+        Calculate steam enthalpy from steam quality
 
         :param pressure:
         :param steam_quality:

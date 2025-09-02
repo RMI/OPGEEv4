@@ -1,4 +1,4 @@
-from typing import Final, Optional
+from typing import Final
 
 import pint
 from pint.registry import ApplicationRegistry
@@ -10,7 +10,7 @@ from opgee.pkg_utils import resourceStream
 _logger = getLogger(__name__)
 
 # "shadowed" variable here to improve type hinting for `ureg`
-_ureg: Optional[ApplicationRegistry] = None
+_ureg: ApplicationRegistry | None = None
 
 if _ureg is None:
     _ureg = pint.get_application_registry()
@@ -69,5 +69,4 @@ def magnitude(value, units=None):
                 raise OpgeeException(f"magnitude: value {value} units are not {units}")
 
         return value.m
-    else:
-        return value
+    return value

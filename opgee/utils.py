@@ -229,8 +229,7 @@ def coercible(value, pytype, raiseError=True):
     except (TypeError, ValueError):
         if raiseError:
             raise OpgeeException("%s: %r is not coercible to %s" % (getFuncName(1), value, pytype))
-        else:
-            return None
+        return None
 
     return value
 

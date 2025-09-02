@@ -7,36 +7,36 @@
 # See LICENSE.txt for license details.
 #
 import networkx as nx
-import pint
 import pandas as pd
+import pint
 
-from .units import ureg
+from .bfs import bfs
+from .combine_streams import combine_streams
 from .config import getParamAsList
 from .constants import DETAILED_RESULT
 from .container import Container
-from .core import elt_name, instantiate_subelts, dict_from_list, STP
+from .core import STP, dict_from_list, elt_name, instantiate_subelts
 from .energy import Energy
 from .error import (
-    OpgeeException,
-    OpgeeStopIteration,
-    OpgeeMaxIterationsReached,
-    OpgeeIterationConverged,
     ModelValidationError,
+    OpgeeException,
+    OpgeeIterationConverged,
+    OpgeeMaxIterationsReached,
+    OpgeeStopIteration,
     ZeroEnergyFlowError,
 )
 from .import_export import ImportExport
 from .log import getLogger
 from .post_processor import PostProcessor
-from .process import Process, Aggregator, Reservoir, decache_subclasses
+from .process import Aggregator, Process, Reservoir, decache_subclasses
 from .process_groups import ProcessChoice
 from .processes.steam_generator import SteamGenerator
 from .processes.transport_energy import TransportEnergy
 from .smart_defaults import SmartDefault
 from .stream import Stream
-from .thermodynamics import Oil, Gas, Water
+from .thermodynamics import Gas, Oil, Water
+from .units import ureg
 from .utils import getBooleanXML, roundup
-from .combine_streams import combine_streams
-from .bfs import bfs
 
 _logger = getLogger(__name__)
 
@@ -582,8 +582,7 @@ class Field(Container):
         if energy.m == 0:
             if raiseError:
                 raise ZeroEnergyFlowError(boundary_proc)
-            else:
-                _logger.warning(f"Zero energy flow rate for {boundary_proc.boundary} boundary process {boundary_proc}")
+            _logger.warning(f"Zero energy flow rate for {boundary_proc.boundary} boundary process {boundary_proc}")
 
         return energy
 
@@ -746,7 +745,7 @@ class Field(Container):
         :param net_import: (Pandas.Series) net import energy rates (water is mass rate)
         :return: total emissions (units of g CO2)
         """
-        from .import_export import WATER, N2, CO2_Flooding, ELECTRICITY
+        from .import_export import ELECTRICITY, N2, WATER, CO2_Flooding
 
         imported_emissions = ureg.Quantity(0.0, "tonne/day")
 
@@ -776,7 +775,6 @@ class Field(Container):
         :param net_import: (Pandas.Series) net import energy rates (water is mass rate)
         :return: total emissions (units of g CO2)
         """
-
         carbon_credit = ureg.Quantity(0.0, "tonne/day")
         export = self.import_export.export_df
         process_names = set(export.index)
@@ -857,12 +855,12 @@ class Field(Container):
             )
 
             field_productivity["Mean gas rate (Mscf/well/day)"] = (
-                prod_mat_gas["Normalized rate"] if GOR > GOR_cutoff else prod_mat_oil["Normalized rate"]
+                prod_mat_gas["Normalized rate"] if GOR_cutoff < GOR else prod_mat_oil["Normalized rate"]
             )
             field_productivity["Mean gas rate (Mscf/well/day)"] *= productivity
 
             field_productivity["Frac total gas"] = (
-                prod_mat_gas["Frac total gas"] if GOR > GOR_cutoff else prod_mat_oil["Frac total gas"]
+                prod_mat_gas["Frac total gas"] if GOR_cutoff < GOR else prod_mat_oil["Frac total gas"]
             )
 
             field_productivity["Assignment"] = field_productivity.apply(
@@ -893,8 +891,8 @@ class Field(Container):
             loss_mat_gas_ave = loss_mat_gas_ave.reshape(len(tranch), len(cols_gas))
             loss_mat_gas_ave_df = pd.DataFrame(data=loss_mat_gas_ave, index=prod_mat_gas["Bin low"], columns=cols_gas)
 
-            cols = cols_gas if GOR > GOR_cutoff else cols_oil
-            loss_mat = loss_mat_gas if GOR > GOR_cutoff else loss_mat_oil
+            cols = cols_gas if GOR_cutoff < GOR else cols_oil
+            loss_mat = loss_mat_gas if GOR_cutoff < GOR else loss_mat_oil
             loss_mat_ave = loss_mat.mean(axis=0).values
             loss_mat_ave = loss_mat_ave.reshape(len(tranch), len(cols))
             df = pd.DataFrame(loss_mat_ave, columns=cols, index=range(len(tranch)))
@@ -909,7 +907,7 @@ class Field(Container):
             pump_loss_rate.drop("Separator", inplace=True)  # TBD: drop both at same time
             pump_loss_rate.drop("Flash factor", inplace=True)
 
-            if GOR > GOR_cutoff:
+            if GOR_cutoff < GOR:
                 pump_loss_rate["LU-plunger-norm"] = (
                     pump_loss_rate["LU-plunger"] * frac_wells_with_plunger
                     + pump_loss_rate["LU-no plunger"] * frac_wells_with_non_plunger
@@ -939,7 +937,8 @@ class Field(Container):
         to determine the C1 rates for completion and workover events. The calculation uses a dataframe
         containing C1 rates for different scenarios of hydraulic fracturing, well type, flaring, and REC.
 
-        Returns:
+        Returns
+        -------
             float: The total C1 rate for completion and workover events in the well system.
         """
         oil_sands_mine = self.oil_sands_mine
@@ -987,7 +986,6 @@ class Field(Container):
         :return: none
         :raises ModelValidationError: raised if any validation condition is violated.
         """
-
         # Allow test models to skip validation to avoid overly complicating all tests
         if self.model.attr("skip_validation"):
             _logger.warning(f"{self} skipping Process and Stream validation")
@@ -1076,7 +1074,6 @@ class Field(Container):
         :param visited: (set) the Processes we've already encountered in our search.
         :return: (bool) True if ``process`` depends on any cycle, False otherwise.
         """
-
         visited = visited or set()
 
         for predecessor in process.predecessors():
@@ -1130,7 +1127,6 @@ class Field(Container):
         """
         Iterate all processes and allow them to check if they should be disabled before they run.
         """
-
         processes = self.processes()
 
         for proc in processes:
@@ -1411,8 +1407,7 @@ class Field(Container):
         except KeyError:
             if raiseError:
                 raise OpgeeException(f"Process data dictionary does not include {name}")
-            else:
-                return None
+            return None
 
     def resolve_process_choices(self, process_choice_dict=None):
         """
@@ -1565,10 +1560,9 @@ class Field(Container):
         # =IF(API_grav<20,1122.4,IF(AND(API_grav>=20,API_grav<=30),1205.4,2429.3))
         if api < 20:
             return 1122.4
-        elif 20 <= api <= 30:
+        if 20 <= api <= 30:
             return 1205.4
-        else:
-            return 2429.3
+        return 2429.3
 
     # TODO: handle special case of API depending on GOR
     # @SmartDefault.register('API', ['GOR'])
@@ -1602,14 +1596,13 @@ class Field(Container):
         if flood_gas_type == 1:
             return 1.5 * GOR
 
-        elif flood_gas_type == 2:
+        if flood_gas_type == 2:
             return 1200
 
-        elif flood_gas_type == 3:
+        if flood_gas_type == 3:
             return 10000
 
-        else:
-            return 1.5 * GOR
+        return 1.5 * GOR
 
     @SmartDefault.register("depth", ["GOR"])
     def depth_default(self, GOR):

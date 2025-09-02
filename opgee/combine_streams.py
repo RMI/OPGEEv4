@@ -8,12 +8,11 @@
 #
 import pandas as pd
 
-from .units import ureg
-from .core import STP
-from .core import TemperaturePressure
+from .core import STP, TemperaturePressure
 from .log import getLogger
 from .stream import Stream
-from .thermodynamics import Oil, Gas, Water
+from .thermodynamics import Gas, Oil, Water
+from .units import ureg
 
 _logger = getLogger(__name__)
 
@@ -48,7 +47,8 @@ def combine_streams(streams):
         Args:
             streams (List): A list of crude oil stream objects.
 
-        Returns:
+        Returns
+        -------
             float: The combined API of the crude oil streams.
         """
         if len(streams) == 1:

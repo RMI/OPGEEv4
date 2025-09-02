@@ -41,9 +41,11 @@ class UpdateCommand(SubcommandABC):
         return parser  # used for auto-doc generation
 
     def run(self, args, tool):
-        from collections import OrderedDict
         import os
+        from collections import OrderedDict
+
         from lxml import etree as ET
+
         from opgee.error import CommandlineError, XmlFormatError
         from opgee.XMLFile import XMLFile
 

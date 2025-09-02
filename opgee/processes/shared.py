@@ -6,10 +6,10 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
-from ..energy import EN_NATURAL_GAS, EN_ELECTRICITY, EN_DIESEL, EN_RESID
+from ..energy import EN_DIESEL, EN_ELECTRICITY, EN_NATURAL_GAS, EN_RESID
 from ..error import OpgeeException
-from ..stream import Stream, PHASE_GAS
+from ..stream import PHASE_GAS, Stream
+from ..units import ureg
 
 _slope = {"NG_engine": -0.6035, "NG_turbine": -0.1279}
 
@@ -47,7 +47,6 @@ def get_init_lifting_stream(gas, lifting_gas_stream, gas_lifting_vol_rate):
     :param gas: (Gas) the current Field's ``Gas`` instance
     :return: (Stream) initial gas lifting stream
     """
-
     lifting_gas_mass_fracs = gas.component_mass_fractions(gas.component_molar_fractions(lifting_gas_stream))
 
     series = (

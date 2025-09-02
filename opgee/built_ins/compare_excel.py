@@ -1,6 +1,7 @@
-from matplotlib import pyplot as plt
 import pandas as pd
 import seaborn as sns
+from matplotlib import pyplot as plt
+
 # from scipy import stats
 
 # Could load this from opgee.built_ins.compare_plugin (RP)

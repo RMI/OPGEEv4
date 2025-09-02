@@ -6,13 +6,13 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..emissions import EM_FUGITIVES
 from ..energy import EN_ELECTRICITY
 from ..log import getLogger
 from ..process import Process, run_corr_eqns
+from ..units import ureg
 from .compressor import Compressor
-from .shared import get_energy_carrier, predict_blower_energy_use, get_bounded_value, get_energy_consumption
+from .shared import get_bounded_value, get_energy_carrier, get_energy_consumption, predict_blower_energy_use
 
 _logger = getLogger(__name__)
 
@@ -30,7 +30,8 @@ class AcidGasRemoval(Process):
        - gas for demethanizer: Gas stream with CO2 and H2S removed, and fed to the demethanizer.
        - gas for CO2 compressor: Gas stream containing CO2 to be compressed and injected back into the reservoir.
 
-    Attributes:
+    Attributes
+    ----------
        - type_amine: The type of amine solution used for CO2 and H2S removal.
        - ratio_reflux_reboiler: The reflux-to-reboil ratio used in the process.
        - AGR_feedin_press: The feed-in pressure of the gas stream.
@@ -48,7 +49,8 @@ class AcidGasRemoval(Process):
        - prime_mover_type: The type of prime mover used in the process.
        - amine_solution_K_value: The K value of the amine solution used for CO2 and H2S removal.
 
-    Methods:
+    Methods
+    -------
        - run(analysis): Runs the acid gas removal process.
        - calculate_energy_consumption_from_Aspen(input_stream, output_stream, mol_frac_CO2, mol_frac_H2S): Calculates energy
          consumption for the acid gas removal process using Aspen HYSYS simulation.
@@ -220,7 +222,6 @@ class AcidGasRemoval(Process):
         :return: (tuple) Compressor energy consumption (Quantity), Reboiler fuel use (Quantity), and
             Electricity consumption (Quantity)
         """
-
         # Define a dictionary of the bounds for each variable used in the calculation from HYSYS
         variable_bound_dict = {
             "mol_frac_CO2": [0.0, 0.2],
@@ -289,7 +290,6 @@ class AcidGasRemoval(Process):
         :return: (tuple) Compressor energy consumption (Quantity) == 0, Reboiler fuel use (Quantity), and
                     Electricity consumption (Quantity)
         """
-
         # Calculate feed gas volume rate at STP
         feedin_gas_volume_rate_STP = self.gas.volume_flow_rates_STP(input)
 

@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 from opgee.constants import DETAILED_RESULT
@@ -82,7 +83,7 @@ def test_missing_subclass():
         PostProcessor.load_plugin(path)
 
 
-@pytest.mark.skip()
+@pytest.mark.skip
 def test_cmd_line_post_proc(opgee_main):
     PostProcessor.decache()
     plugin_path = path_to_test_file("simple_post_processor.py")
@@ -149,7 +150,7 @@ def test_auto_loading(opgee_main):
             assert os.path.exists(csv_file)
 
 
-@pytest.mark.skip()
+@pytest.mark.skip
 def test_no_auto_loading(opgee_main):
     from opgee.config import setParam
 

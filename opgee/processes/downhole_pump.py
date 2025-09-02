@@ -8,13 +8,13 @@
 #
 import numpy as np
 
-from ..units import ureg
+from ..combine_streams import combine_streams
 from ..core import TemperaturePressure
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
-from ..stream import Stream, PHASE_GAS
-from ..combine_streams import combine_streams
+from ..stream import PHASE_GAS, Stream
+from ..units import ureg
 from .shared import get_energy_carrier, get_energy_consumption_stages
 
 _logger = getLogger(__name__)
@@ -26,6 +26,7 @@ class DownholePump(Process):
     crude oil from a reservoir to the surface using a downhole pump.
 
     Attributes
+    ----------
         gas_lifting : bool
             Whether gas lifting is enabled in the field.
         res_temp : pint.Quantity
@@ -56,6 +57,7 @@ class DownholePump(Process):
             Whether the field is an oil sands mine.
 
     Methods
+    -------
         run(analysis)
             Simulates the DownholePump process to lift crude oil from the reservoir
             to the surface and calculates the energy consumption and emissions.

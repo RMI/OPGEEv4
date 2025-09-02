@@ -6,7 +6,7 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from .core import elt_name, XmlInstantiable, OpgeeObject
+from .core import OpgeeObject, XmlInstantiable, elt_name
 
 
 class Cell(OpgeeObject):

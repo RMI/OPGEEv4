@@ -6,11 +6,11 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-from ..units import ureg
 from ..emissions import EM_FUGITIVES
 from ..log import getLogger
 from ..process import Process
 from ..processes.compressor import Compressor
+from ..units import ureg
 from .shared import get_energy_carrier
 
 _logger = getLogger(__name__)
@@ -26,7 +26,8 @@ class CO2ReinjectionCompressor(Process):
     Outputs:
     - gas: The outlet stream of CO2 gas that is reinjected into the reservoir.
 
-    Attributes:
+    Attributes
+    ----------
     - res_press: The reservoir pressure in psia.
     - eta_compressor: The compressor efficiency.
     - prime_mover_type: The type of prime mover used to power the compressor.

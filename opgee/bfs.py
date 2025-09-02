@@ -6,6 +6,7 @@
 # See LICENSE.txt for license details.
 #
 from collections import deque
+
 from .error import OpgeeException
 
 
@@ -19,10 +20,10 @@ def is_cyclic_until(successor, visited, rec_stack, successors):
         rec_stack (dict): A dictionary to keep track of nodes in the recursion stack.
         successors (list): A list of successors to check for cycles.
 
-    Returns:
+    Returns
+    -------
         bool: True if a cycle is found, False otherwise.
     """
-
     visited[successor] = True
     rec_stack[successor] = True
 
@@ -46,7 +47,8 @@ def is_cyclic(successors):
     Args:
         successors (list): A list of successors to check for cycles.
 
-    Returns:
+    Returns
+    -------
         bool: True if a cycle is found, False otherwise.
     """
     visited = {}
@@ -93,7 +95,8 @@ def get_successor_pairs(successors):
     Args:
         successors (list): A list of successors.
 
-    Returns:
+    Returns
+    -------
         list: A list of tuples, where each tuple contains a successor node and its maximum distance from the starting node.
     """
     successors_dist_dict = {}
@@ -116,7 +119,8 @@ def bfs(start_node, unvisited, ordered_cycle):
         unvisited: The notes yet to be visited (N.B. caller's list is modified)
         ordered_cycle: the BFS ordered nodes (N.B. caller's list is modified)
 
-    Returns:
+    Returns
+    -------
         none
     """
     deck = deque([start_node])
@@ -132,8 +136,7 @@ def bfs(start_node, unvisited, ordered_cycle):
 
             if is_cyclic(successors):
                 raise OpgeeException(f"Cycle detected in process {current_node} with successors {successors}")
-            else:
-                successors_pairs = get_successor_pairs(successors)
+            successors_pairs = get_successor_pairs(successors)
             successors_pairs.sort(key=lambda x: x[1])
             for successor in successors_pairs:
                 deck.append(successor[0])

@@ -1,13 +1,14 @@
-from pathlib import Path
-import pytest
 from io import StringIO
+from pathlib import Path
+
+import pytest
 
 from opgee.error import McsUserError
-from opgee.mcs.simulation import read_distributions, Simulation, Distribution
 from opgee.mcs.parameter_list import ParameterList
+from opgee.mcs.simulation import Distribution, Simulation, read_distributions
 from opgee.tool import opg
 
-from .utils_for_tests import tmpdir, path_to_test_file
+from .utils_for_tests import path_to_test_file, tmpdir
 
 
 def test_distro_xml():

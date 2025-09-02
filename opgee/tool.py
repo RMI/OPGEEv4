@@ -13,16 +13,16 @@ import os
 import sys
 from glob import glob
 
-from .config import pathjoin, getParam, getConfig, getParamAsBoolean, setParam, getSection, setSection
-from .error import OpgeeException, CommandlineError
-from .log import setLogLevels, configureLogs
+from .config import getConfig, getParam, getParamAsBoolean, getSection, pathjoin, setParam, setSection
+from .error import CommandlineError, OpgeeException
+from .log import configureLogs, setLogLevels
 from .subcommand import clean_help
 from .version import VERSION
 
 PROGRAM = "opg"
 
 
-class Opgee(object):
+class Opgee:
     # plugin instances by command name
     _plugins = {}
 

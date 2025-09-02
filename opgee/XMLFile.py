@@ -17,7 +17,7 @@ from .log import getLogger
 _logger = getLogger(__name__)
 
 
-class XMLFile(object):
+class XMLFile:
     parsed_schemas = {}  # cache parsed schemas to avoid re-reading and parsing opgee.xsd
 
     def __init__(

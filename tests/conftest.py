@@ -1,8 +1,10 @@
 import pytest
+
 from opgee.config import getConfig
-from opgee.log import setLogLevels, configureLogs
+from opgee.log import configureLogs, setLogLevels
 from opgee.model_file import ModelFile
 from opgee.tool import Opgee
+
 from .utils_for_tests import load_test_model
 
 
@@ -12,7 +14,6 @@ def configure_logging_for_tests():
     getConfig()
     setLogLevels("ERROR")
     configureLogs(force=True)
-    return None
 
 
 @pytest.fixture(scope="function")

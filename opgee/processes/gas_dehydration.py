@@ -8,14 +8,13 @@
 #
 import numpy as np
 
-from ..units import ureg
 from ..emissions import EM_FUGITIVES
-from ..energy import EN_NATURAL_GAS, EN_ELECTRICITY
+from ..energy import EN_ELECTRICITY, EN_NATURAL_GAS
 from ..error import OpgeeException
 from ..log import getLogger
-from ..process import Process
-from ..process import run_corr_eqns
+from ..process import Process, run_corr_eqns
 from ..thermodynamics import ChemicalInfo
+from ..units import ureg
 from .shared import get_bounded_value, predict_blower_energy_use
 
 _logger = getLogger(__name__)
@@ -26,7 +25,8 @@ class GasDehydration(Process):
     This class represents the gas dehydration process in an oil and gas field.
     It calculates the energy consumption and emissions related to the gas dehydration process.
 
-    Attributes:
+    Attributes
+    ----------
         gas_dehydration_tbl (DataFrame): A table containing gas dehydration correlations.
         mol_to_scf (float): Constant to convert moles to standard cubic feet.
         air_elevation_const (float): Constant used for air elevation correction.
@@ -195,7 +195,6 @@ class GasDehydration(Process):
         :param critical_pressure: water critical pressure (unit = "Pa")
         :return: (flaot) pseudo pressure (unit = "Pa")
         """
-
         a1 = -7.85951783
         a2 = 1.84408259
         a3 = -11.7866497

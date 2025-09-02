@@ -26,7 +26,7 @@ from .XMLFile import XMLFile
 _logger = getLogger(__name__)
 
 
-class ModelCache(object):
+class ModelCache:
     """
     Support for optimizing reading / running fields from large (i.e., thousands)
     of Fields from Model files generated from XML. XMLFile instances are cached by
@@ -385,7 +385,7 @@ class ModelFile(XMLFile):
         if found is None or len(found) == 0:
             raise XmlFormatError(f"Missing <AttrDefs> as child of <Model> in '{pathnames}'")
 
-        elif len(found) > 1:
+        if len(found) > 1:
             raise XmlFormatError("Multiple <AttrDefs> appear as children of <Model> in '{pathnames}'")
 
         AttrDefs.load_attr_defs(found[0])
