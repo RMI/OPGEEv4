@@ -23,80 +23,86 @@ def app_layout(app, model, analysis):
     analysis_names = [analysis.name for analysis in model.analyses()]
 
     # noinspection PyCallingNonCallable
-    layout = html.Div([
-        dcc.Store(id="analysis-and-field", storage_type="session"),
-        # TBD: Experiment to see if client-side function fixes graph resizing problem, per
-        #      https://stackoverflow.com/questions/55462861/dash-dynamic-layout-does-not-propagate-resized-graph-dimensions-until-window-i
-        html.Div(id="output-clientside"),
-        html.Div(
-            [
-                html.H1(app.title),
-                html.Div(
-                    [
-                        html.Center([
-                            html.Span("Model: ", style=label_style),
-                            html.Span(f"{model.pathnames}"),
-                            horiz_space,
-                            html.Span("Analysis: ", style=label_style),
-                            dcc.Dropdown(
-                                id="analysis-selector",
-                                placeholder="Select analysis...",
-                                options=[{"value": name, "label": name} for name in analysis_names],
-                                value=analysis.name,
-                                style=pulldown_style,
+    layout = html.Div(
+        [
+            dcc.Store(id="analysis-and-field", storage_type="session"),
+            # TBD: Experiment to see if client-side function fixes graph resizing problem, per
+            #      https://stackoverflow.com/questions/55462861/dash-dynamic-layout-does-not-propagate-resized-graph-dimensions-until-window-i
+            html.Div(id="output-clientside"),
+            html.Div(
+                [
+                    html.H1(app.title),
+                    html.Div(
+                        [
+                            html.Center(
+                                [
+                                    html.Span("Model: ", style=label_style),
+                                    html.Span(f"{model.pathnames}"),
+                                    horiz_space,
+                                    html.Span("Analysis: ", style=label_style),
+                                    dcc.Dropdown(
+                                        id="analysis-selector",
+                                        placeholder="Select analysis...",
+                                        options=[{"value": name, "label": name} for name in analysis_names],
+                                        value=analysis.name,
+                                        style=pulldown_style,
+                                    ),
+                                    horiz_space,
+                                    html.Span("Field: ", style=label_style),
+                                    dcc.Dropdown(
+                                        id="field-selector",
+                                        placeholder="Select field...",
+                                        options=[{"value": "none", "label": "none"}],
+                                        value="none",
+                                        style=pulldown_style,
+                                    ),
+                                ]
                             ),
-                            horiz_space,
-                            html.Span("Field: ", style=label_style),
-                            dcc.Dropdown(
-                                id="field-selector",
-                                placeholder="Select field...",
-                                options=[{"value": "none", "label": "none"}],
-                                value="none",
-                                style=pulldown_style,
-                            ),
-                        ]),
-                        html.Br(),
-                        html.Button("Run model", id="run-button", n_clicks=0),
-                        dcc.Markdown(id="run-model-status"),
-                    ],
-                    # style = {'height': '130px'}
-                ),
-            ],
-            style={"textAlign": "center"},
-        ),
-        html.Div([
-            dcc.Tabs(
-                id="tabs",
-                value="processes",
-                parent_className="custom-tabs",
-                className="custom-tabs-container",
-                children=[
-                    dcc.Tab(
-                        children=[],  # see processes_layout()
-                        label="Processes",
-                        value="processes",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected",
-                    ),
-                    dcc.Tab(
-                        children=[],  # see settings_layout()
-                        label="Settings",
-                        value="settings",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected",
-                    ),
-                    dcc.Tab(
-                        children=[],  # see results_layout()
-                        label="Results",
-                        value="results",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected",
+                            html.Br(),
+                            html.Button("Run model", id="run-button", n_clicks=0),
+                            dcc.Markdown(id="run-model-status"),
+                        ],
+                        # style = {'height': '130px'}
                     ),
                 ],
+                style={"textAlign": "center"},
             ),
-            html.Div(id="tab-content"),
-        ]),
-    ])
+            html.Div(
+                [
+                    dcc.Tabs(
+                        id="tabs",
+                        value="processes",
+                        parent_className="custom-tabs",
+                        className="custom-tabs-container",
+                        children=[
+                            dcc.Tab(
+                                children=[],  # see processes_layout()
+                                label="Processes",
+                                value="processes",
+                                className="custom-tab",
+                                selected_className="custom-tab--selected",
+                            ),
+                            dcc.Tab(
+                                children=[],  # see settings_layout()
+                                label="Settings",
+                                value="settings",
+                                className="custom-tab",
+                                selected_className="custom-tab--selected",
+                            ),
+                            dcc.Tab(
+                                children=[],  # see results_layout()
+                                label="Results",
+                                value="results",
+                                className="custom-tab",
+                                selected_className="custom-tab--selected",
+                            ),
+                        ],
+                    ),
+                    html.Div(id="tab-content"),
+                ]
+            ),
+        ]
+    )
     return layout
 
 

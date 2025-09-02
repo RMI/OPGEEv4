@@ -39,10 +39,12 @@ class WaterTreatment(Process):
 
         field = self.field
         if field.steam_flooding:
-            self._required_outputs.extend([
-                "makeup water",
-                "produced water",
-            ])
+            self._required_outputs.extend(
+                [
+                    "makeup water",
+                    "produced water",
+                ]
+            )
 
         if field.water_flooding or field.water_reinjection:
             self._required_outputs.append("water")

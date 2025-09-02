@@ -31,11 +31,13 @@ class ResultsPane(OpgeePane):
                     className="row",
                     # style={'textAlign': "center"},
                 ),
-                html.Center([
-                    dcc.Graph(id="ci-barchart", style=barchart_style),
-                    horiz_space,
-                    dcc.Graph(id="energy-barchart", style=barchart_style),
-                ]),
+                html.Center(
+                    [
+                        dcc.Graph(id="ci-barchart", style=barchart_style),
+                        horiz_space,
+                        dcc.Graph(id="energy-barchart", style=barchart_style),
+                    ]
+                ),
             ],
             className="row",
             style={  # 'display': 'flex',
@@ -82,11 +84,13 @@ class ResultsPane(OpgeePane):
 
             fn_unit = analysis.fn_unit.title()
 
-            df = pd.DataFrame({
-                "category": [pair[0] for pair in top_level],
-                "value": [pair[1] for pair in top_level],
-                "unit": [fn_unit] * len(top_level),
-            })
+            df = pd.DataFrame(
+                {
+                    "category": [pair[0] for pair in top_level],
+                    "value": [pair[1] for pair in top_level],
+                    "unit": [fn_unit] * len(top_level),
+                }
+            )
 
             fig = go.Figure(
                 data=[
@@ -127,11 +131,13 @@ class ResultsPane(OpgeePane):
             # Show results for top-level aggregators and procs for the selected field that are within the boundary
             top_level = [(obj.name, obj.energy.data.sum() / energy) for obj in field.children() if obj not in beyond]
 
-            df = pd.DataFrame({
-                "category": [pair[0] for pair in top_level],
-                "value": [pair[1] for pair in top_level],
-                "unit": [fn_unit] * len(top_level),
-            })
+            df = pd.DataFrame(
+                {
+                    "category": [pair[0] for pair in top_level],
+                    "value": [pair[1] for pair in top_level],
+                    "unit": [fn_unit] * len(top_level),
+                }
+            )
 
             fig = go.Figure(
                 data=[

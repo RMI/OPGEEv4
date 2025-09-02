@@ -8,30 +8,34 @@ def app_layout(app):
     label_style = {"font-weight": "bold"}
 
     # noinspection PyCallingNonCallable
-    layout = html.Div([
-        dcc.Store(id="analysis-and-field", storage_type="session"),
-        # TBD: Experiment to see if client-side function fixes graph resizing problem, per
-        # https://stackoverflow.com/questions/55462861/dash-dynamic-layout-does-not-propagate-resized-graph-dimensions-until-window-i
-        # html.Div(id="output-clientside"),
-        html.Div(
-            [
-                html.H1(app.title),
-                html.Div(
-                    [
-                        html.Center([
-                            html.Span("Model: ", style=label_style),
-                            html.Span("Not a real model"),
-                        ]),
-                        html.Br(),
-                        html.Button("Run model", id="run-button", n_clicks=0),
-                        dcc.Markdown(id="run-model-status"),
-                    ],
-                    # style = {'height': '130px'}
-                ),
-            ],
-            style={"textAlign": "center"},
-        ),
-    ])
+    layout = html.Div(
+        [
+            dcc.Store(id="analysis-and-field", storage_type="session"),
+            # TBD: Experiment to see if client-side function fixes graph resizing problem, per
+            # https://stackoverflow.com/questions/55462861/dash-dynamic-layout-does-not-propagate-resized-graph-dimensions-until-window-i
+            # html.Div(id="output-clientside"),
+            html.Div(
+                [
+                    html.H1(app.title),
+                    html.Div(
+                        [
+                            html.Center(
+                                [
+                                    html.Span("Model: ", style=label_style),
+                                    html.Span("Not a real model"),
+                                ]
+                            ),
+                            html.Br(),
+                            html.Button("Run model", id="run-button", n_clicks=0),
+                            dcc.Markdown(id="run-model-status"),
+                        ],
+                        # style = {'height': '130px'}
+                    ),
+                ],
+                style={"textAlign": "center"},
+            ),
+        ]
+    )
     return layout
 
 
