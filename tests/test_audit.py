@@ -1,19 +1,14 @@
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
 from unittest.mock import patch
 import pytest
 
-from pandas import DataFrame
 import pandas as pd
 
 from opgee.audit import AuditRow, _generate_field_audit_report, audit_field
-from opgee.config import getParam, setParam, getConfig
-from opgee.constants import DETAILED_RESULT
+from opgee.config import setParam, getConfig
 from opgee.error import OpgeeException
 from opgee.model_file import ModelFile
-from opgee.field import Field
-from opgee.units import ureg
 from tests.utils_for_tests import path_to_test_file
 
 

@@ -1,6 +1,5 @@
 import pytest
 
-from opgee.units import ureg
 from opgee.model_file import ModelFile
 from tests.utils_for_tests import path_to_test_file
 

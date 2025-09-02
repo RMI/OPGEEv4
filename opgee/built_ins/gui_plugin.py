@@ -28,7 +28,7 @@ class GUICommand(SubcommandABC):
                             help=f'''The field to display. Default (for testing) is "{DFLT_FIELD}"''')
 
         parser.add_argument('-m', '--model-file', default=None,
-                            help=f'''The OPGEE model XML file to read. By default it is merged with the built-in
+                            help='''The OPGEE model XML file to read. By default it is merged with the built-in
                              model file, "etc/opgee.xml". If no model file is specified, etc/opgee.xml is read.
                              Use --no-default-model to avoid reading the default model file.''')
 
@@ -37,10 +37,10 @@ class GUICommand(SubcommandABC):
 
         # TBD: apparently action=argparse.BooleanOptionalAction requires py 3.9
         parser.add_argument('--add-stream-components', action='store_true',
-                            help=f'''Include additional stream components listed in config variable "OPGEE.StreamComponents"''')
+                            help='''Include additional stream components listed in config variable "OPGEE.StreamComponents"''')
 
         parser.add_argument('--use-class-path', action='store_true',
-                            help=f'''Search for Process subclasses in Python files found in the path(s) listed in config variable "OPGEE.ClassPath"''')
+                            help='''Search for Process subclasses in Python files found in the path(s) listed in config variable "OPGEE.ClassPath"''')
 
         return parser
 

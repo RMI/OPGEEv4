@@ -182,7 +182,7 @@ class AcidGasRemoval(Process):
         mol_frac_CO2 = feed_gas_mol_frac["CO2"] if "CO2" in feed_gas_mol_frac else ureg.Quantity(0, "frac")
 
         if mol_frac_H2S.m == 0.0 and mol_frac_CO2 == 0.0:
-            _logger.warning(f"Feed gas does not contain H2S and CO2, please consider using non-AGR gas processing path")
+            _logger.warning("Feed gas does not contain H2S and CO2, please consider using non-AGR gas processing path")
             return
 
         if mol_frac_H2S.m <= 0.15 and mol_frac_CO2 <= 0.2:

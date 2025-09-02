@@ -11,7 +11,6 @@ from .bitumen_mining import BitumenMining
 from .crude_oil_dewatering import CrudeOilDewatering
 from .crude_oil_stabilization import CrudeOilStabilization
 from .crude_oil_storage import CrudeOilStorage
-from .crude_oil_storage import CrudeOilStorage
 from .crude_oil_transport import CrudeOilTransport
 from .demethanizer import Demethanizer
 from .downhole_pump import DownholePump

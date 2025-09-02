@@ -67,7 +67,7 @@ def model_analysis_names(model_xml):
     xml_file_obj = ModelCache.get_xml_file(model_xml)
 
     root = xml_file_obj.getRoot()
-    analyses = root.xpath(f'/Model/Analysis/@name')
+    analyses = root.xpath('/Model/Analysis/@name')
     return analyses
 
 def fields_for_analysis(model_xml, analysis_name):
@@ -282,7 +282,7 @@ class ModelFile(XMLFile):
             pathnames = [] if pathnames is None else [pathnames]
 
         if not (pathnames or use_default_model or xml_string):
-            raise OpgeeException(f"ModelFile: no model XML file or string specified")
+            raise OpgeeException("ModelFile: no model XML file or string specified")
 
         opgee_xml = getParam('OPGEE.ModelFile')           # default is 'etc/opgee.xml'
         attributes_xml = getParam('OPGEE.AttributesFile') # default is 'etc/attributes.xml'

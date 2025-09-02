@@ -136,7 +136,7 @@ class SteamGeneration(Process):
             ureg.Quantity(max(steam_quality_diff_between_blowndown_and_outlet.to("frac").m, 0.0), "frac")
 
         if steam_quality_diff_between_blowndown_and_outlet.m < 0:
-            _logger.warning(f"steam quality after blowdown is smaller than steam quality at outlet")
+            _logger.warning("steam quality after blowdown is smaller than steam quality at outlet")
 
         blowdown_water_mass_rate = \
             water_mass_rate_for_injection * steam_quality_diff_between_blowndown_and_outlet / self.steam_quality_outlet

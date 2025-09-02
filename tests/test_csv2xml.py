@@ -1,7 +1,7 @@
 import os
 from opgee.tool import opg
 from opgee.model_file import ModelFile
-from .utils_for_tests import tmpdir, path_to_test_file, tempdir
+from .utils_for_tests import path_to_test_file, tempdir
 
 def test_csv2xml():
     with tempdir() as output_dir:

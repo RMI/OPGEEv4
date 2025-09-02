@@ -164,7 +164,7 @@ class Distribution(OpgeeObject):
         self.full_name = full_name
         try:
             self.class_name, self.attr_name = split_attr_name(full_name)
-        except OpgeeException as e:
+        except OpgeeException:
             raise McsUserError(
                 f"attribute name format is 'ATTR' (same as 'Field.ATTR) or 'CLASS.ATTR'; got '{full_name}'"
             )

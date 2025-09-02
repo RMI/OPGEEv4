@@ -298,7 +298,7 @@ def _main(argv=None):
 
     # Set specified config vars
     for arg in ns.configVars:
-        if not '=' in arg:
+        if '=' not in arg:
             raise CommandlineError(f'--set requires an argument of the form variable=value, got "{arg}"')
 
         name, value = arg.split('=')
@@ -332,7 +332,7 @@ def main(argv=None, raiseError=False):
     except CommandlineError as e:
         print(e)
 
-    except Exception as e:
+    except Exception:
         if raiseError:
             raise
 

@@ -11,7 +11,6 @@ from copy import copy
 
 import pandas as pd
 import pint
-import pint_pandas
 
 from .units import ureg, magnitude
 from .attributes import AttributeMixin

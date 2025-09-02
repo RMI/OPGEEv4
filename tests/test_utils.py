@@ -31,13 +31,13 @@ def test_coercible(value, pytype, result):
 
 
 def test_coercible_failure():
-    with pytest.raises(OpgeeException, match=f".*is not coercible.*"):
+    with pytest.raises(OpgeeException, match=".*is not coercible.*"):
         coercible(10.7, "int")
 
-    with pytest.raises(OpgeeException, match=f".*not a recognized type string.*"):
+    with pytest.raises(OpgeeException, match=".*not a recognized type string.*"):
         coercible(10.7, "blah-blah-blah")
 
-    with pytest.raises(OpgeeException, match=f".*is not coercible.*"):
+    with pytest.raises(OpgeeException, match=".*is not coercible.*"):
         coercible("foobar", float)
 
 def test_mkdirs():
@@ -63,7 +63,7 @@ def test_mkdirs():
 
 
 def test_load_module_failure():
-    with pytest.raises(OpgeeException, match=f".*Can't load module.*"):
+    with pytest.raises(OpgeeException, match=".*Can't load module.*"):
         loadModuleFromPath("/not/a/rea/path.py", raiseError=True)
 
     loadModuleFromPath("/not/a/rea/path.py", raiseError=False)

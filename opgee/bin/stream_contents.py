@@ -2,7 +2,6 @@
 #
 # Read opgee.xml and write out a sorted list of unique stream content names
 #
-from lxml import etree as ET
 
 from opgee.config import getParam
 from opgee.pkg_utils import resourceStream

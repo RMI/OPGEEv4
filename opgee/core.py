@@ -80,7 +80,7 @@ def split_attr_name(attr_name):
     count = len(splits)
 
     if count == 0:
-        raise OpgeeException(f"Attribute name is empty")
+        raise OpgeeException("Attribute name is empty")
 
     if count == 1:
         class_name, attr_name = None, splits[0]

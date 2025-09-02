@@ -1,4 +1,3 @@
-import pytest
 from .utils_for_tests import load_model_from_str
 
 field_groups_model_xml = """

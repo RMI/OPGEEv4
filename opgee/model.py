@@ -6,7 +6,6 @@
 # Copyright (c) 2021-2022 The Board of Trustees of the Leland Stanford Junior University.
 # See LICENSE.txt for license details.
 #
-import pint
 
 from .units import ureg
 from .analysis import Analysis

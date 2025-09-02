@@ -139,14 +139,14 @@ class Demethanizer(Process):
         feed_gas_mol_frac = self.gas.component_molar_fractions(input)
 
         if "C1" not in feed_gas_mol_frac.index:
-            _logger.warning(f"Feed gas does not contain C1")
+            _logger.warning("Feed gas does not contain C1")
             inlet_C1_mol_frac = 0
         else:
             inlet_C1_mol_frac =\
                 get_bounded_value(feed_gas_mol_frac["C1"].to("frac").m, "inlet_C1_mol_frac", variable_bound_dict)
 
         if "C2" not in feed_gas_mol_frac.index:
-            _logger.warning(f"Feed gas does not contain C2")
+            _logger.warning("Feed gas does not contain C2")
             inlet_C2_mol_frac = 0
         else:
             inlet_C2_mol_frac =\

@@ -75,7 +75,7 @@ def test_find_stream(stream_model):
     streams = proc3.find_output_streams('hydrogen', as_list=True)
     assert streams and type(streams) == list and len(streams) == 2
 
-    with pytest.raises(OpgeeException, match=f".*both 'combine' and 'as_list' cannot be True"):
+    with pytest.raises(OpgeeException, match=".*both 'combine' and 'as_list' cannot be True"):
         proc3.find_output_streams('hydrogen', as_list=True, combine=True)
 
     streams = proc3.find_input_streams('gas.*', as_list=False, regex=True)

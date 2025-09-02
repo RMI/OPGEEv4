@@ -200,7 +200,7 @@ class Manager(OpgeeObject):
                 # print('.', sep='', end='')
                 client.wait_for_workers(1, 15) # wait for 1 worker with 15 sec timeout
                 break
-            except (dask.distributed.TimeoutError, asyncio.exceptions.TimeoutError) as e:
+            except (dask.distributed.TimeoutError, asyncio.exceptions.TimeoutError):
                 pass
                 #print(e) # prints "Only 0/1 workers arrived after 15"
 

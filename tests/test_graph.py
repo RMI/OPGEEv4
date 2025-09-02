@@ -23,7 +23,7 @@ def test_graphing(opgee_main, args):
     try:
         opgee_main.run(None, args)
         good = True
-    except Exception as e:
+    except Exception:
         # print(e)
         good = False
 

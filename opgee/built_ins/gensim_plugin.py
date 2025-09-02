@@ -60,7 +60,6 @@ class GensimCommand(SubcommandABC):
     def run(self, args, tool):
         from ..error import McsUserError, CommandlineError
         from ..mcs.simulation import Simulation, read_distributions
-        from ..mcs.parameter_list import ParameterList
 
         use_default_model = not args.no_default_model
         model_files = args.model_file

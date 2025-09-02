@@ -6,7 +6,7 @@
 """
 from ..subcommand import SubcommandABC
 from opgee.constants import SIMPLE_RESULT
-from ..log import getLogger, setLogFile
+from ..log import getLogger
 
 _logger = getLogger(__name__)
 
@@ -229,7 +229,6 @@ class RunCommand(SubcommandABC):
         from ..manager import Manager, save_results, TrialPacket, FieldPacket
         from ..utils import parseTrialString, mkdirs
         from ..mcs.simulation import Simulation, model_file_path
-        from ..post_processor import PostProcessor
 
         analysis_names = args.analyses or []
         batch_size = args.batch_size

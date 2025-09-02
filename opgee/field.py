@@ -1248,7 +1248,6 @@ class Field(Container):
             # Walk the cycle, starting at the indicated start process to generate an ordered list
             unvisited = procs_in_cycles.copy()
             start_proc = start_procs[0]
-            import opgee  # TBD: what is this doing here?
 
             if any(isinstance(obj, Reservoir) for obj in unvisited):
                 for obj in unvisited:
@@ -1574,7 +1573,7 @@ class Field(Container):
             for stream in process.outputs:
                 debug(f"  * {stream}")
                 dst = stream.dst_proc
-                if not dst in visited:
+                if dst not in visited:
                     next.append(dst)
 
             for proc in next:
