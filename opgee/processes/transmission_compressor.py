@@ -63,7 +63,7 @@ class TransmissionCompressor(Process):
     def run(self, analysis):
         self.print_running_msg()
 
-        input = self.find_input_stream("gas")
+        input = self.find_input_streams(".*gas", regex=True, combine=True)
 
         if input.is_uninitialized():
             return
