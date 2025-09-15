@@ -26,7 +26,7 @@ class TransmissionCompressor(Process):
 
         # TODO: avoid process names in contents.
         self._required_inputs = [
-            "gas",
+            ".*gas",
         ]
 
         self._required_outputs = [
