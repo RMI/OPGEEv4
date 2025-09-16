@@ -1032,7 +1032,7 @@ class Boundary(Process):
             if not is_chosen_boundary:
                 for in_stream in self.inputs:
                     if in_stream.is_uninitialized():
-                        break
+                        continue
                     contents = in_stream.contents
                     if len(contents) != 1:
                         raise ModelValidationError(f"Streams to and from boundaries must have only a "

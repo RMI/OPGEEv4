@@ -68,8 +68,8 @@ class CrudeOilStorage(Process):
 
     def cache_attributes(self):
         self.oil_sands_mine = self.field.oil_sands_mine
-        self.f_FG_CS_VRU = self.attr("f_FG_CS_VRU")
-        self.f_FG_CS_FL = self.attr("f_FG_CS_FL")
+        self.f_FG_CS_VRU = self.attr("f_FG_CS_VRU") # default 0.9
+        self.f_FG_CS_FL = self.attr("f_FG_CS_FL") # default 0.1
 
     def run(self, analysis):
         self.print_running_msg()

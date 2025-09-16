@@ -577,6 +577,10 @@
 			<Contains>gas</Contains>
 		</Stream>
 
+		<Stream name="prod exported gas" src="ProductionBoundary" dst="TransmissionCompressor">
+			<Contains>exported gas</Contains>
+		</Stream>
+
 		<Stream src="GasPartition" dst="ProductionBoundary">
 			<Contains>exported gas</Contains>
 		</Stream>
