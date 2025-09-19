@@ -673,6 +673,7 @@
       <AttrDef name="transmission_dist" type="float" unit="mile" desc="Gas transmission distance">680.0</AttrDef>
       <AttrDef name="transmission_freq" type="float" unit="mile" desc="Frequency of gas transmission compressors"> 200.0</AttrDef>
       <AttrDef name="transmission_inlet_press" type="float" unit="psia" desc="First compressor stage inlet pressure">1015.26</AttrDef>
+      <AttrDef name="transmission_loss_rate" type="float" unit="percent" desc="Percent transmission gas loss rate">3.0</AttrDef>
       <Options name="prime_mover_type" default="NG_engine">
         <Option>NG_engine</Option>
         <Option>Electric_motor</Option>

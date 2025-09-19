@@ -58,7 +58,7 @@ class TransmissionCompressor(Process):
         self.gas_to_storage_frac = self.attr("gas_to_storage_frac")
         self.natural_gas_to_liquefaction_frac = self.field.natural_gas_to_liquefaction_frac
         self.transmission_sys_discharge = self.attr("transmission_sys_discharge")
-        self.loss_rate = self.venting_fugitive_rate()
+        self.loss_rate = self.attr("transmission_loss_rate")
 
     def run(self, analysis):
         self.print_running_msg()
