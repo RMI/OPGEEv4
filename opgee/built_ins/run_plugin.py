@@ -290,6 +290,7 @@ class RunCommand(SubcommandABC):
             raise CommandlineError(
                 "No model to run: the --model-file option was not used and --no-default-model was specified."
             )
+        setParam("OPGEE.UseDefaultModel", str(use_default_model))
 
         # TBD: unclear if this is necessary
         setParam(

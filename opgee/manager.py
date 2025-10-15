@@ -387,10 +387,12 @@ def run_serial(model_xml_file, analysis_name, field_names, result_type=DETAILED_
 
     results = []
 
+    use_default_model = getParam("OPGEE.UseDefaultModel") or "False"
+
     # even though we pass 10 field names by default, each is passed singularly to `_run_field`
     for field_name, xml_string in extract_model(model_xml_file, analysis_name,
                                                 field_names):
-        result = _run_field(analysis_name, field_name, xml_string, result_type)
+        result = _run_field(analysis_name, field_name, xml_string, result_type, use_default_model == str(True))
         if result.error:
             _logger.error(f"Failed: {result}")
 
