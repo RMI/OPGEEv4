@@ -133,7 +133,7 @@ class RunCommand(SubcommandABC):
         parser.add_argument(
             "-n",
             "--no-default-model",
-            action="store_true",
+            action="store_const",
             help="""Don't load the built-in opgee.xml model definition.""",
         )
 
@@ -251,7 +251,7 @@ class RunCommand(SubcommandABC):
         start_with = args.start_with
         trial_nums = None
         trials = args.trials
-        use_default_model = not args.no_default_model
+        use_default_model = not args.no_default_model if args.no_default_model is not None else None
 
         # TBD: conceptual problem: XML model merging doesn't happen until after we look for
         #  analyses and fields in the model XML. Might want to do XML-level merging before
@@ -290,7 +290,8 @@ class RunCommand(SubcommandABC):
             raise CommandlineError(
                 "No model to run: the --model-file option was not used and --no-default-model was specified."
             )
-        setParam("OPGEE.UseDefaultModel", str(use_default_model))
+        if use_default_model is not None:
+            setParam("OPGEE.UseDefaultModel", str(use_default_model))
 
         # TBD: unclear if this is necessary
         setParam(
