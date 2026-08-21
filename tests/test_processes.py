@@ -603,9 +603,10 @@ def test_CrudeOilStorage(test_model):
     field = analysis.get_field('test_CrudeOilStorage')
     field.run(analysis)
     proc = field.find_process('CrudeOilStorage')
-    # ensure total emission flow rates
+    # ensure total emission flow rates. Defaults f_FG_CS_VRU (6%) and f_FG_CS_FL
+    # (43%) sum to less than 100%, so the balance is vented as fugitives.
     total = proc.emissions.data.loc["GHG"].sum()
-    expected = ureg.Quantity(0.0, "tonne/day")
+    expected = ureg.Quantity(7784.36854608845, "tonne/day")
     assert approx_equal(total, expected)
 
     # ensure total oil flow rates
